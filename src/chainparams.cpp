@@ -117,7 +117,6 @@ public:
         bnProofOfStakeLimit = CBigNum(~uint256(0) >> 20);
         bnProofOfStakeReset = CBigNum(~uint256(0) >> 32); // 1
         nLastProofOfWorkHeight = 2000;
-        vDevPubKey = ParseHex("03c8fc5c87f00bcc32b5ce5c036957f8befeff05bf4d88d2dcde720249f78d9313");
         nStakeMinAge = 8 * 60 * 60; // 8 hours
         nStakeMaxAge = 45 * 24 *  60 * 60; // 45 days
 
@@ -203,7 +202,6 @@ public:
         nMaxTipAge = 0x7fffffff;
 
         nLastProofOfWorkHeight = 1440 - 1; // Last POW block
-        vDevPubKey = ParseHex("03d4b22ae69b0ff7554f4c343cd213d00fd5131466cc21d8ebfab97c52ec9a00c9");
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1642570147;

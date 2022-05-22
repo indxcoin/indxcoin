@@ -45,7 +45,6 @@ public:
     const uint256& HashGenesisBlock() const { return hashGenesisBlock; }
     const MessageStartChars& MessageStart() const { return pchMessageStart; }
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
-    const std::vector<unsigned char>& DevKey() const { return vDevPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
     const CBigNum& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
     /** Used to check majorities for block version upgrade */
@@ -96,8 +95,6 @@ protected:
     MessageStartChars pchMessageStart;
     //! Raw pub key bytes for the broadcast alert signing key.
     std::vector<unsigned char> vAlertPubKey;
-    // Raw pub key bytes for the dev funding.
-    std::vector<unsigned char> vDevPubKey;
     int nDefaultPort;
     CBigNum bnProofOfWorkLimit;
     int nEnforceBlockUpgradeMajority;

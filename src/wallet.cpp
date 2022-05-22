@@ -1926,10 +1926,7 @@ bool CWallet::CreateCoinStake(unsigned int nBits, int64_t nSearchInterval, CAmou
         }
     }
 
-    // Add Dev fund output
-    txNew.vout.push_back(CTxOut(0, CScript() << Params().DevKey() << OP_CHECKSIG));
     CAmount nEndCredit = 0;
-    CAmount nDevCredit = 0;
 
     // Calculate coin age reward
     {
@@ -1939,50 +1936,35 @@ bool CWallet::CreateCoinStake(unsigned int nBits, int64_t nSearchInterval, CAmou
         if (!nCoinAge)
             return error("CreateCoinStake : failed to calculate coin age");
 
-        if(nVer == 2)
-        {
-        	double fInflationAdjustment = GetInflationAdjustment(pindexBest);
-        	nReward = GetProofOfStakeReward(nCoinAge, nFees, fInflationAdjustment);
-        }
-        else
-        {
-        	nReward = GetProofOfStakeReward(nCoinAge, nFees);
-        }
-
+        nReward = GetProofOfStakeReward(nCoinAge, nFees);
+        
+        if(fDebug)
         LogPrintf("nReward=%s\n", nReward);
 
-        if (nReward <= 0)
+        if (nReward != nFees)
             return false;
 
-        if(nVer == 2)
-        {
-        	// Split fund output 92-8%
-        	nEndCredit += nReward * 0.92;
-        	nDevCredit += nReward - nEndCredit;
-        }
-        else
-        {
-        	nEndCredit += nReward;
-			nDevCredit += 0;
-        }
+
+        nEndCredit += nReward;
+
 
         nCredit += nEndCredit;
+        if(fDebug)
         LogPrintf("nCredit=%s\n", nCredit);
     }
 
-    LogPrintf("nCredit=%s nEndCredit=%s nDevCredit=%s\n", nCredit, nEndCredit, nDevCredit);
+    if(fDebug)
+    LogPrintf("nCredit=%s nEndCredit=%s", nCredit, nEndCredit);
 
     // Set output amount
-    if (txNew.vout.size() == 4)
+    if (txNew.vout.size() == 3)
     {
         txNew.vout[1].nValue = (nCredit / 2 / CENT) * CENT;
         txNew.vout[2].nValue = nCredit - txNew.vout[1].nValue;
-        txNew.vout[3].nValue = nDevCredit;
     }
     else
     {
         txNew.vout[1].nValue = nCredit;
-    	txNew.vout[2].nValue = nDevCredit;
     }
 
     // Sign

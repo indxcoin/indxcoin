@@ -34,7 +34,7 @@ public:
     // Block Version 3 : Introduction of POSV Block
     // Block Version 4 : Introduction of BIP66
 	// Block Version 5 : Introduction of Developers Funding // Removed
-    static const int32_t CURRENT_VERSION=4;
+    static const int32_t CURRENT_VERSION=4; 
     int32_t nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;

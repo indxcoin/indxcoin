@@ -765,27 +765,6 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
     return true;
 }
 
-// Check stake is paying to correct dev fund
-bool IsDevTx(const CTransaction& tx)
-{
-    AssertLockHeld(cs_main);
-    if (tx.IsCoinStake()) {
-        int i = tx.vout.size();
-        CScript mkey(CScript() << Params().DevKey() << OP_CHECKSIG);
-        CScript pkey(tx.vout[i - 1].scriptPubKey);
-
-        if (fDebug) {
-            LogPrintf("- mkey=%s\n", mkey.ToString());
-            LogPrintf("- pkey=%s\n", pkey.ToString());
-            LogPrintf("- pkey==mkey %s\n", (mkey == pkey));
-        }
-
-        if (mkey == pkey) {
-            return true;
-        }
-    }
-    return false;
-}
 
 /**
  * Check transaction inputs to mitigate two
@@ -1950,12 +1929,6 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
         if(block.nVersion <= 4) {
             nCalculatedStakeReward = GetProofOfStakeReward(nCoinAge, nFees);
         }
-        else
-        {
-        	// New PoSV stake reward calculation for ver 5 blocks
-            double fInflationAdjustment = GetInflationAdjustment(pindex->pprev);
-        	nCalculatedStakeReward = GetProofOfStakeReward(nCoinAge, nFees, fInflationAdjustment);
-        }
 
         if (nStakeReward > nCalculatedStakeReward)
             return state.DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%s vs calculated=%s)", nStakeReward, nCalculatedStakeReward));
@@ -2907,14 +2880,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
                                  REJECT_OBSOLETE, "bad-version");
         }
 
-        // Reject block.nVersion=4 blocks when 95% (75% on testnet) of the network has upgraded:
-        // block header includes dev funding
-		if (block.nVersion < 5 && 
-            CBlockIndex::IsSuperMajority(5, pindexPrev, Params().RejectBlockOutdatedMajority()))
-       {
-            return state.Invalid(error("%s : rejected nVersion=4 block", __func__),
-                                 REJECT_OBSOLETE, "bad-version");
-       }
+
     }
 
     if (pindex == NULL)
@@ -2979,23 +2945,6 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
         }
         */
 
-
-        // Verify dev transaction of coinstake tx
-        if (block.IsProofOfStake())
-        {
-            // Check that dev fund transactions is correct
-            // Dev fund transactions introduced in version 5 blocks
-            if (block.nVersion >= 5 && 
-                CBlockIndex::IsSuperMajority(5, pindex->pprev, Params().EnforceBlockUpgradeMajority_5()))
-            {
-                if (!IsDevTx(block.vtx[1]))
-                {
-                    LogPrintf("WARNING: AcceptBlock(): check proof-of-stake developer address failed for block %s\n", hash.ToString().c_str());
-                    return state.DoS(100, error("AcceptBlock() : contains a incorrect developer transaction"),
-                                                     REJECT_INVALID, "bad-dev-address");
-                }
-            }
-        }
 
     // Write block to history file
     try {
