@@ -3019,19 +3019,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
 
 bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired)
 {
-    unsigned int nToCheck;
-    if (minVersion == 3)
-    {
-    	nToCheck = Params().ToCheckBlockUpgradeMajority();
-    }
-    else if (minVersion == 4)
-    {
-    	nToCheck = Params().ToCheckBlockUpgradeMajority_4();
-    }
-    else if (minVersion == 5)
-    {
-    	nToCheck = Params().ToCheckBlockUpgradeMajority_5();
-    }
+    unsigned int nToCheck = Params().ToCheckBlockUpgradeMajority();
     unsigned int nFound = 0;
     for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
     {
@@ -3040,6 +3028,7 @@ bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, uns
         pstart = pstart->pprev;
     }
 
+    if (fDebug)
 	LogPrint("super", "IsSuperMajority(): Version %s block: %s found of %s required in last %s blocks.\n", minVersion, nFound, nRequired, nToCheck);
 
     return (nFound >= nRequired);
