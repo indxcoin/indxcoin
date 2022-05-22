@@ -1849,8 +1849,10 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
 
     unsigned int flags = SCRIPT_VERIFY_P2SH;
 
+    // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=4 blocks,
+    // when 75% of the network has upgraded:
     if (block.nVersion >= 4 &&
-    	CBlockIndex::IsSuperMajority(4, pindex->pprev, Params().RejectBlockOutdatedMajority_4()))
+    	CBlockIndex::IsSuperMajority(4, pindex->pprev, Params().EnforceBlockUpgradeMajority()))
     {
     	flags |= SCRIPT_VERIFY_DERSIG;
     }
@@ -2899,7 +2901,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
 
         // Reject block.nVersion=3 blocks when 95% (51% on testnet) of the network has upgraded:
         if (block.nVersion < 4 && 
-            CBlockIndex::IsSuperMajority(4, pindexPrev, Params().RejectBlockOutdatedMajority_4()))
+            CBlockIndex::IsSuperMajority(4, pindexPrev, Params().RejectBlockOutdatedMajority()))
         {
             return state.Invalid(error("%s : rejected nVersion=3 block", __func__),
                                  REJECT_OBSOLETE, "bad-version");
@@ -2908,7 +2910,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
         // Reject block.nVersion=4 blocks when 95% (75% on testnet) of the network has upgraded:
         // block header includes dev funding
 		if (block.nVersion < 5 && 
-            CBlockIndex::IsSuperMajority(5, pindexPrev, Params().RejectBlockOutdatedMajority_5()))
+            CBlockIndex::IsSuperMajority(5, pindexPrev, Params().RejectBlockOutdatedMajority()))
        {
             return state.Invalid(error("%s : rejected nVersion=4 block", __func__),
                                  REJECT_OBSOLETE, "bad-version");

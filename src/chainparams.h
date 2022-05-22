@@ -48,17 +48,10 @@ public:
     const std::vector<unsigned char>& DevKey() const { return vDevPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
     const CBigNum& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
-    int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
     /** Used to check majorities for block version upgrade */
     int EnforceBlockUpgradeMajority() const { return nEnforceBlockUpgradeMajority; }
-    int EnforceBlockUpgradeMajority_4() const { return nEnforceBlockUpgradeMajority_4; }
-    int EnforceBlockUpgradeMajority_5() const { return nEnforceBlockUpgradeMajority_5; }
     int RejectBlockOutdatedMajority() const { return nRejectBlockOutdatedMajority; }
-    int RejectBlockOutdatedMajority_4() const { return nRejectBlockOutdatedMajority_4; }
-    int RejectBlockOutdatedMajority_5() const { return nRejectBlockOutdatedMajority_5; }
     int ToCheckBlockUpgradeMajority() const { return nToCheckBlockUpgradeMajority; }
-    int ToCheckBlockUpgradeMajority_4() const { return nToCheckBlockUpgradeMajority_4; }
-    int ToCheckBlockUpgradeMajority_5() const { return nToCheckBlockUpgradeMajority_5; }
     int MaxReorganizationDepth() const { return nMaxReorganizationDepth; }
 
     /** Used if GenerateBitcoins is called with a negative number of threads */
@@ -107,16 +100,9 @@ protected:
     std::vector<unsigned char> vDevPubKey;
     int nDefaultPort;
     CBigNum bnProofOfWorkLimit;
-    int nSubsidyHalvingInterval;
     int nEnforceBlockUpgradeMajority;
-    int nEnforceBlockUpgradeMajority_4;
-    int nEnforceBlockUpgradeMajority_5;
     int nRejectBlockOutdatedMajority;
-    int nRejectBlockOutdatedMajority_4;
-    int nRejectBlockOutdatedMajority_5;
     int nToCheckBlockUpgradeMajority;
-    int nToCheckBlockUpgradeMajority_4;
-    int nToCheckBlockUpgradeMajority_5;
     int nMaxReorganizationDepth;
     int64_t nTargetTimespan;
     int64_t nTargetSpacing;
@@ -154,7 +140,6 @@ protected:
 class CModifiableParams {
 public:
     //! Published setters to allow changing values in unit test cases
-    virtual void setSubsidyHalvingInterval(int anSubsidyHalvingInterval) =0;
     virtual void setEnforceBlockUpgradeMajority(int anEnforceBlockUpgradeMajority)=0;
     virtual void setRejectBlockOutdatedMajority(int anRejectBlockOutdatedMajority)=0;
     virtual void setToCheckBlockUpgradeMajority(int anToCheckBlockUpgradeMajority)=0;

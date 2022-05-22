@@ -2028,11 +2028,6 @@ bool CWallet::SignBlock(CBlock *pblock, CAmount& nFees)
     if (nSearchTime > nLastCoinStakeSearchTime) {
         if (fDebug) {
             LogPrintf("SignBlock : about to create coinstake: nFees=%ld\n", nFees);
-            LogPrintf("SignBlock : SuperMajority = %s\n", CBlockIndex::IsSuperMajority(5, pindexBest->pprev, Params().EnforceBlockUpgradeMajority_5()));
-        }
-
-        if (CBlockIndex::IsSuperMajority(5, pindexBest->pprev, Params().EnforceBlockUpgradeMajority_5())) {
-            nPosvVer = 2;
         }
 
         if (CreateCoinStake(pblock->nBits, nSearchTime - nLastCoinStakeSearchTime, nFees, txCoinStake, key, nPosvVer)) {
