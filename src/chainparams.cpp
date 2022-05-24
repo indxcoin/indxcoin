@@ -66,12 +66,12 @@ static const Checkpoints::CCheckpointData data = {
 
 static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
     boost::assign::map_list_of
-    ( 0, uint256(""))
+    ( 0, uint256("0x07c86fc46a37990a0afab3e1208a11f88e8e852c61710dc523f473fd5da43998"))
 
     ;
 static const Checkpoints::CCheckpointData dataTestnet = {
     &mapCheckpointsTestnet,
-    0, // * UNIX timestamp of last checkpoint block
+    1653219000, // * UNIX timestamp of last checkpoint block
     0,     // * total number of transactions between genesis and last checkpoint
                 //   (the tx=... number in the SetBestChain debug.log lines)
     2000        // * estimated number of transactions per day after checkpoint
@@ -131,7 +131,7 @@ public:
          *   vMerkleTree: 97ddfbbae6
          */
         const char* pszTimestamp = "As Russia intensifies push for Donbas, Ukraine rules out ceasefire ...";
-        uint32_t nTime = 1653301800;
+        uint32_t nTime = 1653364800;
         CMutableTransaction txNew(nTime);
         txNew.nVersion = 1;
         txNew.vin.resize(1);
@@ -143,12 +143,12 @@ public:
         genesis.hashPrevBlock = 0;
         genesis.hashMerkleRoot = genesis.BuildMerkleTree();
         genesis.nVersion = 1;
-        genesis.nTime    = 1653301800;
+        genesis.nTime    = 1653364800;
         genesis.nBits    = 0x1e0ffff0;
-        genesis.nNonce   = 226723532;
+        genesis.nNonce   = 227676566;
 
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0xa6d77ca282d13e0b824404c8be68882b503f7451fc1fa49d12a83342086c14ab"));
+        assert(hashGenesisBlock == uint256("0x37e1050c4b80faeba37bf1636c022cdefd2425df22a913b575f798ff6f696752"));
         assert(genesis.hashMerkleRoot == uint256("0xd269874a2404b6ed63b1546f17b13c4181a382424871adffa9aa60f5304546dc"));
 
         vSeeds.push_back(CDNSSeedData("indxcoin.org", "seed.indxcoin.org"));
