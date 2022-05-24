@@ -95,12 +95,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     // PoSV
     { "reservebalance", 0 },
     { "reservebalance",  1 },
-    { "getinterest", 0 },
-    { "getinterest", 1 },
-	{ "getinflation", 0 },
-	{ "getinflation", 1 },
-	{ "getinflationmultiplier", 0 },
-	{ "getinflationmultiplier", 1 },
 
 };
 

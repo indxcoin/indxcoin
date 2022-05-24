@@ -255,7 +255,6 @@ Value getmininginfo(const Array& params, bool fHelp)
     weight.push_back(Pair("average", nAverageWeight));
     weight.push_back(Pair("total", nTotalWeight));
     obj.push_back(Pair("stakeweight", weight));
-    obj.push_back(Pair("stakeinterest",  (uint64_t)COIN_YEAR_REWARD));
     obj.push_back(Pair("netstakeweight", (uint64_t)GetPoSVKernelPS()));
 #endif
     return obj;

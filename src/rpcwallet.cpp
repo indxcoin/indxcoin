@@ -1902,41 +1902,6 @@ Value reservebalance(const Array& params, bool fHelp)
     return result;
 }
 
-// PoSV: interest received
-Value getinterest(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() > 2)
-        throw runtime_error(
-            "getinterest [start] [end]\n"
-            "Both [start] and [end] are inclusive and in the form of UNIX timestamps.");
-
-    unsigned int nTimeStart = 0;
-    unsigned int nTimeEnd = -1;
-    if (params.size() >= 1)
-        nTimeStart = (unsigned int)(params[0].get_int());
-    if (params.size() == 2)
-        nTimeEnd = (unsigned int)(params[1].get_int());
-
-    isminefilter filter = ISMINE_SPENDABLE;
-
-    CAmount nInterest = 0;
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
-    {
-        const CWalletTx& wtx = (*it).second;
-        if (!wtx.IsCoinStake() || wtx.nTime < nTimeStart || wtx.nTime > nTimeEnd)
-            continue;
-
-        CAmount nDebit = wtx.GetDebit(filter);
-        CAmount nCredit = wtx.GetCredit(filter);
-
-        if (nDebit <= 0 || nCredit <= 0 || nDebit >= nCredit)
-            continue;
-        else
-            nInterest += nCredit - nDebit;
-    }
-
-    return  ValueFromAmount(nInterest);
-}
 
 Value lockunspent(const Array& params, bool fHelp)
 {

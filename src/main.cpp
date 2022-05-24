@@ -1262,7 +1262,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
     }
 
     // Check the header
-    if (block.GetBlockTime() > CHECK_POW_FROM_NTIME && block.IsProofOfWork() && !CheckProofOfWork(block.GetPoWHash(), block.nBits))
+    if (block.IsProofOfWork() && !CheckProofOfWork(block.GetPoWHash(), block.nBits))
         return error("ReadBlockFromDisk : Errors in block header");
 
     return true;
@@ -1279,38 +1279,30 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex)
 
 CAmount GetBlockValue(int nHeight, const CAmount& nFees)
 {
-    int64_t nSubsidy = 100000 * COIN;
+    CAmount nSubsidy;
 
-    if (nHeight == 0) {
-        // Genesis block
-        nSubsidy = 10000 * COIN;
-    } else if (nHeight < 11) {
-        // Premine: First 10 block are 545,000,000 RDD (5% of the total coin)
-        nSubsidy = 545000000 * COIN;
-    } else if (nHeight < 10000) {
-        // Bonus reward for block 10-9,999 of 300,000 coins
-        nSubsidy = 300000 * COIN;
-    } else if (nHeight < 20000) {
-        // Bonus reward for block 10,000 - 19,999 of 200,000 coins
-        nSubsidy = 200000 * COIN;
-    } else if (nHeight < 30000) {
-        // Bonus reward for block 20,000 - 29,999 of 150,000 coins
-        nSubsidy = 150000 * COIN;
-    } else if (nHeight >= 140000) {
-      // Subsidy is cut in half every 50,000 blocks starting at block 140000
-      nSubsidy >>= ((nHeight - 140000 + 50000) / 50000);
+    //genesis block case
+    if(nHeight == 0){
+        nSubsidy = 33 * COIN;
+        return nSubsidy + nFees;
+    }else if(nHeight >= 1 && nHeight <= 999){
+        nSubsidy = 500000 * COIN;
+        return nSubsidy + nFees;
+    }else if(nHeight == 1000){
+        nSubsidy = 499967 * COIN;
+        return nSubsidy + nFees;
+    }else if(nHeight >1000){
+        return nFees;
     }
 
-    return nSubsidy + nFees;
+    return nFees;
 }
 
 // PoSV: coinstake reward based on coin age spent (coin-days)
 CAmount GetProofOfStakeReward(int64_t nCoinAge, const CAmount& nFees)
 {
-    // some scary rounding dirty trick here for leap / non-leap years
-    // CoinAge=365 -> nSubsidy=9993
-    // CoinAge=366 -> nSubsidy=10020
-    CAmount nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8);
+    // coinstake reward = nFees
+    CAmount nSubsidy = 0;
 
     if (fDebug && GetBoolArg("-printcreation", false))
         LogPrintf("GetProofOfStakeReward(): nSubsidy=%s nCoinAge=%s nFees=%s\n", FormatMoney(nSubsidy).c_str(), nCoinAge, FormatMoney(nFees));
@@ -1318,19 +1310,6 @@ CAmount GetProofOfStakeReward(int64_t nCoinAge, const CAmount& nFees)
     return nSubsidy + nFees;
 }
 
-// PoSV v2: coinstake reward based on coin age spent (coin-days) with inflation adjustment to target 5% network inflation
-CAmount GetProofOfStakeReward(int64_t nCoinAge, const CAmount& nFees, double fInflationAdjustment)
-{
-    // some scary rounding dirty trick here for leap / non-leap years
-    // CoinAge=365 -> nSubsidy=9993
-    // CoinAge=366 -> nSubsidy=10020
-    CAmount nSubsidy = (nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8)) * fInflationAdjustment;
-
-    if (fDebug && GetBoolArg("-printcreation", false))
-    	LogPrintf("GetProofOfStakeReward(): nSubsidy=%s nCoinAge=%s nFees=%s fInflationAdjustment=%s\n", FormatMoney(nSubsidy).c_str(), nCoinAge, FormatMoney(nFees), fInflationAdjustment);
-
-    return nSubsidy + nFees;
-}
 
 bool IsStaking()
 {
@@ -2662,7 +2641,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW)
 {
     // Check proof of work matches claimed amount
-    if (block.GetBlockTime() > CHECK_POW_FROM_NTIME && fCheckPOW && block.IsProofOfWork() && !CheckProofOfWork(block.GetPoWHash(), block.nBits))
+    if (fCheckPOW && block.IsProofOfWork() && !CheckProofOfWork(block.GetPoWHash(), block.nBits))
         return state.DoS(50, error("CheckBlockHeader() : proof of work failed"),
                          REJECT_INVALID, "high-hash");
 

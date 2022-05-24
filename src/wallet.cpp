@@ -53,7 +53,7 @@ unsigned int nStakeSplitAge = 45 * 24 * 60 * 60; // 45 days
  * optimally each output stakes once every week so 50k * 52 = 2.6m
  * but only a fraction of the total money supply is staked on the network
  */
-CAmount nStakeCombineThreshold = 2000000 * COIN;
+CAmount nStakeCombineThreshold = 20 * COIN;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
 CFeeRate CWallet::minTxFee = CFeeRate(100000);  // Override with -mintxfee

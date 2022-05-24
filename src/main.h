@@ -104,8 +104,7 @@ static const unsigned int BLOCK_DOWNLOAD_WINDOW = 1024;
 static const unsigned int DATABASE_WRITE_INTERVAL = 3600;
 /** Maximum length of reject messages. */
 static const unsigned int MAX_REJECT_MESSAGE_LENGTH = 111;
-/** Start checking POW after block 44877 http://live.reddcoin.com/block/4253e7618d40aded00d11b664e874245ae74d55b976f4ac087d1a9db2f5f3cda */
-static const int64_t CHECK_POW_FROM_NTIME = 1394048078;
+
 
 /** "reject" message codes **/
 static const unsigned char REJECT_MALFORMED = 0x01;
@@ -121,7 +120,6 @@ static const unsigned char REJECT_HIGHFEE = 0x44;
 // PoSV
 inline int64_t PastDrift(int64_t nTime)   { return nTime - 2 * 60 * 60; } // up to 2 hours from the past
 inline int64_t FutureDrift(int64_t nTime) { return nTime + 2 * 60 * 60; } // up to 2 hours from the future
-static const int64_t COIN_YEAR_REWARD = 5 * CENT; // 5% per year
 
 
 struct BlockHasher
@@ -247,7 +245,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
 // PoSV
 CAmount GetProofOfStakeReward(int64_t nCoinAge, const CAmount& nFees);
-CAmount GetProofOfStakeReward(int64_t nCoinAge, const CAmount& nFees, double fInflationAdjustment);
 const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake);
 bool IsStaking();
 
