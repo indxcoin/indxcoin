@@ -73,12 +73,12 @@ static const Checkpoints::CCheckpointData data = {
 
 static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
     boost::assign::map_list_of
-    ( 0, uint256("0x07c86fc46a37990a0afab3e1208a11f88e8e852c61710dc523f473fd5da43998"))
+    ( 0, uint256("0xa029892224d0039961fd76b5e203fa080f3c5a5ac0be97bfd26a9440c8f94efb"))
 
     ;
 static const Checkpoints::CCheckpointData dataTestnet = {
     &mapCheckpointsTestnet,
-    1653219000, // * UNIX timestamp of last checkpoint block
+    1653544800, // * UNIX timestamp of last checkpoint block
     0,     // * total number of transactions between genesis and last checkpoint
                 //   (the tx=... number in the SetBestChain debug.log lines)
     2000        // * estimated number of transactions per day after checkpoint
@@ -211,10 +211,10 @@ public:
         nLastProofOfWorkHeight = 1440 - 1; // Last POW block
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
-        genesis.nTime = 1653219000;
-        genesis.nNonce = 694225;
+        genesis.nTime = 1653544800;
+        genesis.nNonce = 2109928;
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0x07c86fc46a37990a0afab3e1208a11f88e8e852c61710dc523f473fd5da43998"));
+        assert(hashGenesisBlock == uint256("0xa029892224d0039961fd76b5e203fa080f3c5a5ac0be97bfd26a9440c8f94efb"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
