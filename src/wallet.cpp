@@ -1251,7 +1251,7 @@ void CWallet::AvailableCoinsMinConf(vector<COutput>& vCoins, int nConf) const
             if (!pcoin->IsTrusted())
                 continue;
 
-            if ((pcoin->IsCoinBase() ) && pcoin->GetBlocksToMaturity() > 0)
+            if ((pcoin->IsCoinBase() || pcoin->IsCoinStake()) && pcoin->GetBlocksToMaturity() > 0)
                 continue;
 
             int nDepth = pcoin->GetDepthInMainChain();

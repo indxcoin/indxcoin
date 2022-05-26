@@ -1285,11 +1285,8 @@ CAmount GetBlockValue(int nHeight, const CAmount& nFees)
     if(nHeight == 0){
         nSubsidy = 33 * COIN;
         return nSubsidy + nFees;
-    }else if(nHeight >= 1 && nHeight <= 999){
+    }else if(nHeight >= 1 && nHeight <= 2000){
         nSubsidy = 500000 * COIN;
-        return nSubsidy + nFees;
-    }else if(nHeight == 1000){
-        nSubsidy = 499967 * COIN;
         return nSubsidy + nFees;
     }else if(nHeight >1000){
         return nFees;

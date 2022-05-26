@@ -21,12 +21,10 @@ unsigned int nModifierInterval = 13 * 60;
 
 // FIXME
 // Hard checkpoints of stake modifiers to ensure they are deterministic
-// boost::assign::map_list_of(0, 0xfd11f4e7)(1000, 0x71168906)(2000, 0x4f2ef99d);
 static map<int, uint64_t> mapStakeModifierCheckpoints =
-    boost::assign::map_list_of(0, 0x0e00670b);
+    boost::assign::map_list_of(0, 0xfd11f4e7)(2201, 0x6ea9bab9)(2250, 0x637ce256)(2500, 0x04f7069b);
                                   
 // Hard checkpoints of stake modifiers to ensure they are deterministic (testNet)
-// boost::assign::map_list_of(0, 0x0e00670b);
 static map<int, uint64_t> mapStakeModifierCheckpointsTestNet =
     boost::assign::map_list_of(0, 0xfd11f4e7);
                                   
