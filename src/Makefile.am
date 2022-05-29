@@ -460,6 +460,8 @@ crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/muhash.cpp \
   crypto/ripemd160.cpp \
   crypto/ripemd160.h \
+  crypto/scrypt.cpp \
+  crypto/scrypt.h \
   crypto/sha1.cpp \
   crypto/sha1.h \
   crypto/sha256.cpp \
@@ -657,7 +659,7 @@ bitcoin_bin_ldadd = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-bitcoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
+bitcoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
 indxcoind_SOURCES = $(bitcoin_daemon_sources) init/bitcoind.cpp
 indxcoind_CPPFLAGS = $(bitcoin_bin_cppflags)
@@ -687,7 +689,7 @@ indxcoin_cli_LDADD = \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-indxcoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
+indxcoin_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # bitcoin-tx binary #
@@ -708,7 +710,7 @@ indxcoin_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-indxcoin_tx_LDADD += $(BOOST_LIBS)
+indxcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
 # bitcoin-wallet binary #
