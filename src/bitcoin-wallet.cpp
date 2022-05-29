@@ -49,14 +49,14 @@ static bool WalletAppInit(ArgsManager& args, int argc, char* argv[])
         return false;
     }
     if (argc < 2 || HelpRequested(args) || args.IsArgSet("-version")) {
-        std::string strUsage = strprintf("%s bitcoin-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n";
+        std::string strUsage = strprintf("%s indxcoin-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n";
         if (!args.IsArgSet("-version")) {
             strUsage += "\n"
-                        "bitcoin-wallet is an offline tool for creating and interacting with " PACKAGE_NAME " wallet files.\n"
-                        "By default bitcoin-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n"
+                        "indxcoin-wallet is an offline tool for creating and interacting with " PACKAGE_NAME " wallet files.\n"
+                        "By default indxcoin-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n"
                         "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n"
                         "Usage:\n"
-                        "  bitcoin-wallet [options] <command>\n";
+                        "  indxcoin-wallet [options] <command>\n";
             strUsage += "\n" + args.GetHelpMessage();
         }
         tfm::format(std::cout, "%s", strUsage);
