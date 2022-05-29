@@ -208,7 +208,7 @@ public:
         nTargetSpacing = 60; //! 1 minute
         nMaxTipAge = 0x7fffffff;
 
-        nLastProofOfWorkHeight = 1440 - 1; // Last POW block
+        nLastProofOfWorkHeight = 2200 ; // Last POW block
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1653544800;
@@ -231,11 +231,11 @@ public:
 
         fRequireRPCPassword = true;
         fMiningRequiresPeers = true;
-        fAllowMinDifficultyBlocks = true;
+        fAllowMinDifficultyBlocks = false;
         fDefaultConsistencyChecks = false;
-        fRequireStandard = false;
+        fRequireStandard = true;
         fMineBlocksOnDemand = false;
-        fTestnetToBeDeprecatedFieldRPC = true;
+        fTestnetToBeDeprecatedFieldRPC = false;
     }
     const Checkpoints::CCheckpointData& Checkpoints() const 
     {

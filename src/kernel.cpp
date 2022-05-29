@@ -26,7 +26,7 @@ static map<int, uint64_t> mapStakeModifierCheckpoints =
                                   
 // Hard checkpoints of stake modifiers to ensure they are deterministic (testNet)
 static map<int, uint64_t> mapStakeModifierCheckpointsTestNet =
-    boost::assign::map_list_of(0, 0xfd11f4e7);
+    boost::assign::map_list_of(0, 0x0e00670b);
                                   
 // linear coin-aging function
 int64_t GetCoinAgeWeightLinear(int64_t nIntervalBeginning, int64_t nIntervalEnd)
@@ -418,7 +418,7 @@ bool CheckStakeModifierCheckpoints(int nHeight, uint64_t nStakeModifierChecksum)
     if (fDebug)
         LogPrintf("CheckStakeModifierCheckpoints : nHeight=%d, nStakeModifierChecksum=0x%016x\n", nHeight, nStakeModifierChecksum);
 
-    MapModifierCheckpoints& checkpoints = Params().AllowMinDifficultyBlocks() ? mapStakeModifierCheckpointsTestNet : mapStakeModifierCheckpoints;
+    MapModifierCheckpoints& checkpoints = GetBoolArg("-testnet", false) ? mapStakeModifierCheckpointsTestNet : mapStakeModifierCheckpoints;
     if (checkpoints.count(nHeight))
         return nStakeModifierChecksum == checkpoints[nHeight];
     return true;
