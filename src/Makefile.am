@@ -356,6 +356,11 @@ libbitcoin_server_a_SOURCES = \
   policy/packages.cpp \
   policy/rbf.cpp \
   policy/settings.cpp \
+  pos/modifiercache.cpp \
+  pos/kernel.cpp \
+  pos/kernelrecord.cpp \
+  pos/signer.cpp \
+  pos/stake.cpp \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
@@ -781,6 +786,7 @@ CLEANFILES += interfaces/*.gcda interfaces/*.gcno
 CLEANFILES += node/*.gcda node/*.gcno
 CLEANFILES += policy/*.gcda policy/*.gcno
 CLEANFILES += primitives/*.gcda primitives/*.gcno
+CLEANFILES += pos/*.gcda pos/*.gcno
 CLEANFILES += rpc/*.gcda rpc/*.gcno
 CLEANFILES += script/*.gcda script/*.gcno
 CLEANFILES += support/*.gcda support/*.gcno

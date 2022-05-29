@@ -16,6 +16,8 @@
 #include <deploymentstatus.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
+#include <pos/signer.h>
+#include <pos/stake.h>
 #include <pow.h>
 #include <primitives/transaction.h>
 #include <timedata.h>
