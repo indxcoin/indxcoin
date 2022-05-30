@@ -22,6 +22,8 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
     CAmount nValueOut = 0;
     for (const auto& txout : tx.vout)
     {
+        if (txout.IsEmpty() && (!tx.IsCoinBase()) && (!tx.IsCoinStake()))
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-empty-txout");
         if (txout.nValue < 0)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vout-negative");
         if (txout.nValue > MAX_MONEY)
