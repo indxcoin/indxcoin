@@ -1310,7 +1310,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
 
     // Sent
-    if (!filter_label)
+    if ((!wtx.IsCoinStake()) && !filter_label)
     {
         for (const COutputEntry& s : listSent)
         {
@@ -1351,12 +1351,14 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
                 entry.pushKV("involvesWatchonly", true);
             }
             MaybePushAddress(entry, r.destination);
-            if (wtx.IsCoinBase())
+            if (wtx.IsCoinBase() || wtx.IsCoinStake())
             {
                 if (wtx.GetDepthInMainChain() < 1)
                     entry.pushKV("category", "orphan");
                 else if (wtx.IsImmatureCoinBase())
                     entry.pushKV("category", "immature");
+                else if (wtx.IsCoinStake())
+                    entry.pushKV("category", "stake");
                 else
                     entry.pushKV("category", "generate");
             }

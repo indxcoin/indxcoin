@@ -18,6 +18,7 @@
 #include <util/string.h>
 #include <util/system.h>
 #include <util/ui_change_type.h>
+#include <validation.h>
 #include <validationinterface.h>
 #include <wallet/coinselection.h>
 #include <wallet/crypter.h>
@@ -56,6 +57,7 @@ void UnloadWallet(std::shared_ptr<CWallet>&& wallet);
 bool AddWallet(const std::shared_ptr<CWallet>& wallet);
 bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, std::optional<bool> load_on_start, std::vector<bilingual_str>& warnings);
 bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, std::optional<bool> load_on_start);
+bool HasWallets();
 std::vector<std::shared_ptr<CWallet>> GetWallets();
 std::shared_ptr<CWallet> GetWallet(const std::string& name);
 std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings);
@@ -85,6 +87,8 @@ constexpr CAmount HIGH_APS_FEE{COIN / 10000};
 static const CAmount WALLET_INCREMENTAL_RELAY_FEE = 5000;
 //! Default for -spendzeroconfchange
 static const bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
+//! Default for -staking
+static const bool DEFAULT_ENABLE_STAKING = true;
 //! Default for -walletrejectlongchains
 static const bool DEFAULT_WALLET_REJECT_LONG_CHAINS = false;
 //! -txconfirmtarget default
@@ -243,7 +247,7 @@ private:
     int64_t nNextResend = 0;
     /** Whether this wallet will submit newly created transactions to the node's mempool and
      * prompt rebroadcasts (see ResendWalletTransactions()). */
-    bool fBroadcastTransactions = false;
+    bool fBroadcastTransactions = true;
     // Local time that the tip block was received. Used to schedule wallet rebroadcasts.
     std::atomic<int64_t> m_best_block_time {0};
 
@@ -359,7 +363,11 @@ public:
      */
     bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet,
                     const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-
+    // POS
+    bool SelectCoinsSimple(const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, 
+                    CAmount& nValueRet, unsigned int nSpendTime, int nMinConf) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void AvailableCoinsMinConf(std::vector<COutput>& vCoins, int nConf) const;
+    
     /** Get a name for this wallet for logging/debugging purposes.
      */
     const std::string& GetName() const { return m_name; }
