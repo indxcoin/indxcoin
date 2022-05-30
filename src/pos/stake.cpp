@@ -191,12 +191,6 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     std::set<CInputCoin> setCoins;
     std::vector<CTransactionRef> vwtxPrev;
     CAmount nValueIn = 0;
-    //std::vector<COutput> vAvailableCoins;
-    //CCoinControl temp;
-    //CoinSelectionParams coin_selection_params;
-    //pwallet->AvailableCoins(vAvailableCoins, &temp);
-    //if (!pwallet->SelectCoins(vAvailableCoins, nBalance - nReserveBalance, setCoins, nValueIn, temp, coin_selection_params))
-    //    return false;
     if (!pwallet->SelectCoinsSimple(nBalance - nReserveBalance, setCoins, nValueIn, GetTime(), COINBASE_MATURITY + 20))
        return false;
     if (setCoins.empty())
@@ -326,7 +320,7 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
         }
     }
 
-    //CAmount nDevCredit = 0;
+    
     // Calculate coin age reward
     {
         uint64_t nCoinAge = GetCoinAge(chainstate, (const CTransaction)txNew, consensusParams);
@@ -337,16 +331,12 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
         CAmount nReward = GetProofOfStakeReward(nCoinAge, nFees, /*fInflationAdjustment*/ 0);
 
         // Refuse to create mint that has reward less than fees
-        if(nReward < nFees) {
+        if(nReward != nFees) {
           return false;
         }
 
-        //LogPrintf("CreateCoinStake(1) : nReward=%ld RDD\n", nReward);
-
-        //nDevCredit = 0;
         nCredit += nReward;
 
-        //LogPrintf("CreateCoinStake(2) : nCredit=%ld RDD\n", nCredit);
     }
 
     CAmount nMinFee = 0;
@@ -354,18 +344,16 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
 
     while(true)
     {
-       //LogPrintf("CreateCoinStake(3) : txNew.vout.size() = %d \n", txNew.vout.size() );
+       
 
         // Set output amount
-        //if (txNew.vout.size() == 4)
-       // {
-        //    txNew.vout[1].nValue = (nCredit / 2 / CENT) * CENT;
-        //    txNew.vout[2].nValue = nCredit - txNew.vout[1].nValue;
-        //    txNew.vout[3].nValue = nDevCredit;
-        //}else{
+        if (txNew.vout.size() == 3)
+        {
             txNew.vout[1].nValue = (nCredit / 2 / CENT) * CENT;
             txNew.vout[2].nValue = nCredit - txNew.vout[1].nValue;
-       // }
+        }else{
+            txNew.vout[1].nValue = nCredit;
+        }
         
 
         // Sign

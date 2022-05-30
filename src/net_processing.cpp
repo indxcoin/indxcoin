@@ -3686,7 +3686,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         for (unsigned int n = 0; n < nCount; n++) {
             vRecv >> headers[n];
             ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
-            if (headers[n].nVersion > POW_BLOCK_VERSION && headers[n].nVersion != 536870912 && headers[n].nVersion !=  536870915  ) {
+            if (headers[n].nVersion > POW_BLOCK_VERSION  ) {
                 ReadCompactSize(vRecv); // needed for vchBlockSig.
             }
         }
