@@ -27,6 +27,20 @@
 #include <algorithm>
 #include <utility>
 
+std::thread threadStakeMinter;
+int64_t nLastCoinStakeSearchInterval = 0;
+
+static std::atomic<bool> fEnableStaking(true);
+std::atomic<bool> fStopMinerProc(false);
+
+bool EnableStaking()
+{
+    return fEnableStaking;
+}
+
+//! forward declaration for createnewblock
+CAmount GetBlockValue(int nHeight, const CAmount& nFees);
+
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;

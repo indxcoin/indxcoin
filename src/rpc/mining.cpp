@@ -120,7 +120,7 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
 
     CChainParams chainparams(Params());
 
-    while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus()) && !ShutdownRequested()) {
+      while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(UintToArith256(block.GetHash()), block.nBits, chainparams.GetConsensus()) && !ShutdownRequested()) {
         ++block.nNonce;
         --max_tries;
     }
@@ -242,6 +242,50 @@ static RPCHelpMan generatetodescriptor()
     return generateBlocks(chainman, mempool, coinbase_script, num_blocks, max_tries);
 },
     };
+}
+
+static RPCHelpMan staking()
+{
+    return RPCHelpMan{"staking",
+            "Gets or sets the current staking configuration.\n"
+            "When called without an argument, returns the current status of staking.\n"
+            "When called with an argument, enables or disables staking.\n",
+            {
+                {"generate", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "To enable or disable staking."},
+
+            },
+            RPCResult{
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::BOOL, "staking", "if staking is active or not. false:inactive, true:active"},
+                }
+            },
+            RPCExamples{
+                HelpExampleCli("staking", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
+                + HelpExampleRpc("staking", "[\"all\"], [\"libevent\"]")
+            },
+            [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+
+
+    bool fGenerate = request.params[0].isNull() ? gArgs.GetBoolArg("-staking", false) : request.params[0].get_bool();
+    if (fGenerate) {
+        NodeContext& node = EnsureAnyNodeContext(request.context);
+        gArgs.ForceSetArg("-staking", fGenerate ? "1" : "0");
+
+        StartMintStake(gArgs.GetBoolArg("-staking", true), GetWallets()[0], node.chainman.get(), &node.chainman->ActiveChainstate(), node.connman.get(), node.mempool.get());
+
+        if (!fGenerate) {
+            StopMintStake();
+        }
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("generate", fGenerate);
+    return result;
+},
+    };
+
 }
 
 static RPCHelpMan generate()
@@ -1264,6 +1308,7 @@ static const CRPCCommand commands[] =
     { "generating",          &generatetoaddress,       },
     { "generating",          &generatetodescriptor,    },
     { "generating",          &generateblock,           },
+    { "generating",          &staking,                 },
 
     { "util",                &estimatesmartfee,        },
 

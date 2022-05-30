@@ -197,7 +197,7 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     //pwallet->AvailableCoins(vAvailableCoins, &temp);
     //if (!pwallet->SelectCoins(vAvailableCoins, nBalance - nReserveBalance, setCoins, nValueIn, temp, coin_selection_params))
     //    return false;
-    if (!pwallet->SelectCoinsSimple(nBalance - nReserveBalance, setCoins, nValueIn, GetTime(), Params().GetParam(Params().GetConsensus().nLastPowHeight).nCoinbaseMaturity + 20))
+    if (!pwallet->SelectCoinsSimple(nBalance - nReserveBalance, setCoins, nValueIn, GetTime(), COINBASE_MATURITY + 20))
        return false;
     if (setCoins.empty())
         return false;
