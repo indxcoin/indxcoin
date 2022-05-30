@@ -47,7 +47,7 @@ QString BitcoinUnits::longName(int unit)
     case BTC: return QString("BTC");
     case mBTC: return QString("mBTC");
     case uBTC: return QString::fromUtf8("µBTC (bits)");
-    case SAT: return QString("Satoshi (sat)");
+    case SAT: return QString("BTC (sat)");
     default: return QString("???");
     }
 }

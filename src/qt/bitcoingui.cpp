@@ -36,9 +36,12 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <node/ui_interface.h>
+#include <rpc/server.h>
+#include <univalue.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <warnings.h>
 
 #include <QAction>
 #include <QApplication>
@@ -278,6 +281,13 @@ void BitcoinGUI::createActions()
     historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
     tabGroup->addAction(historyAction);
 
+    mintingAction = new QAction(platformStyle->SingleColorIcon(":/icons/staking"), tr("&Staking"), this);
+    mintingAction->setStatusTip(tr("Show your staking capacity"));
+    mintingAction->setToolTip(mintingAction->statusTip());
+    mintingAction->setCheckable(true);
+    mintingAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+    tabGroup->addAction(mintingAction);
+
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
@@ -293,6 +303,8 @@ void BitcoinGUI::createActions()
     connect(receiveCoinsMenuAction, &QAction::triggered, this, &BitcoinGUI::gotoReceiveCoinsPage);
     connect(historyAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
     connect(historyAction, &QAction::triggered, this, &BitcoinGUI::gotoHistoryPage);
+    connect(mintingAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(mintingAction, &QAction::triggered, this, &BitcoinGUI::gotoMintingPage);
 #endif // ENABLE_WALLET
 
     quitAction = new QAction(tr("E&xit"), this);
@@ -550,6 +562,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
+        toolbar->addAction(mintingAction);
         overviewAction->setChecked(true);
 
 #ifdef ENABLE_WALLET
@@ -755,6 +768,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     receiveCoinsAction->setEnabled(enabled);
     receiveCoinsMenuAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
+    mintingAction->setEnabled(enabled);
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
     changePassphraseAction->setEnabled(enabled);
@@ -886,6 +900,11 @@ void BitcoinGUI::gotoHistoryPage()
 {
     historyAction->setChecked(true);
     if (walletFrame) walletFrame->gotoHistoryPage();
+}
+
+void BitcoinGUI::gotoMintingPage()
+{
+    if (walletFrame) walletFrame->gotoMintingPage();
 }
 
 void BitcoinGUI::gotoReceiveCoinsPage()

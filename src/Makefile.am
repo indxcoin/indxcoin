@@ -199,6 +199,11 @@ BITCOIN_CORE_H = \
   policy/policy.h \
   policy/rbf.h \
   policy/settings.h \
+  pos/modifiercache.h \
+  pos/kernel.h \
+  pos/kernelrecord.h \
+  pos/signer.h \
+  pos/stake.h \
   pow.h \
   protocol.h \
   psbt.h \
