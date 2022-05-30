@@ -124,11 +124,11 @@ bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, uns
     unsigned int nToCheck = 0;
 
     if (minVersion == 3) {
-        nToCheck = 1000;
+        nToCheck = 10000;
     } else if (minVersion == 4) {
-        nToCheck = 1000;
+        nToCheck = 7200;
     } else if (minVersion == 5) {
-        nToCheck = 1000;
+        nToCheck = 10000;
     }
 
     unsigned int nFound = 0;
@@ -141,7 +141,7 @@ bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, uns
     return (nFound >= nRequired);
 }
 
-arith_uint256 GetBlockProof(const CBlockIndex& block)
+arith_uint256 GetBlockTrust(const CBlockIndex& block)
 {
     arith_uint256 bnTarget;
     bool fNegative;
