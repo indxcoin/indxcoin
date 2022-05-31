@@ -1,6 +1,7 @@
 #include <qt/mintingtablemodel.h>
 #include <qt/mintingfilterproxy.h>
 
+#include <pos/kernel.h>
 #include <pos/kernelrecord.h>
 #include <qt/transactiondesc.h>
 #include <qt/transactionrecord.h>
@@ -453,8 +454,8 @@ QString MintingTableModel::lookupAddress(const std::string &address, bool toolti
 
 double MintingTableModel::getDayToMint(KernelRecord *wtx) const
 {
-    const CBlockIndex *p = GetLastBlockIndex(::ChainActive().Tip(), true);
-    double difficulty = p->GetBlockDifficulty();  
+    //const CBlockIndex *pblock = GetLastBlockIndex(::ChainActive().Tip(), true);
+    double difficulty = 1; //GetDifficulty(pblock);  
 
     double prob = wtx->getProbToMintWithinNMinutes(difficulty, mintingInterval);
     prob = prob * 100;
