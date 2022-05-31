@@ -13,7 +13,7 @@
  * for both reddcoind and reddcoin-core, to make it harder for attackers to
  * target servers or GUI users specifically.
  */
-const std::string CLIENT_NAME("Reddcoin");
+const std::string CLIENT_NAME("Indxcoin");
 
 /**
  * Client version number
