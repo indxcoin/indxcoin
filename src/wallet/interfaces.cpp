@@ -362,6 +362,7 @@ public:
         const auto bal = m_wallet->GetBalance();
         WalletBalances result;
         result.balance = bal.m_mine_trusted;
+        result.stake = bal.m_mine_stake;
         result.unconfirmed_balance = bal.m_mine_untrusted_pending;
         result.immature_balance = bal.m_mine_immature;
         result.have_watch_only = haveWatchOnly();
