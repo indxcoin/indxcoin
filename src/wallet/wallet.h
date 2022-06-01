@@ -250,6 +250,10 @@ private:
     bool fBroadcastTransactions = true;
     // Local time that the tip block was received. Used to schedule wallet rebroadcasts.
     std::atomic<int64_t> m_best_block_time {0};
+    /** optional setting to unlock wallet for staking only
+     * serves to disable the trivial sendmoney when OS account compromised
+     * provides no real security */
+    bool fWalletUnlockStakingOnly = false;
 
     /**
      * Used to keep track of spent outpoints, and
@@ -393,6 +397,8 @@ public:
     bool IsCrypted() const;
     bool IsLocked() const override;
     bool Lock();
+    
+    bool IsStakingOnly() const;
 
     /** Interface to assert chain access */
     bool HaveChain() const { return m_chain ? true : false; }
@@ -769,6 +775,11 @@ public:
     bool GetBroadcastTransactions() const { return fBroadcastTransactions; }
     /** Set whether this wallet broadcasts transactions. */
     void SetBroadcastTransactions(bool broadcast) { fBroadcastTransactions = broadcast; }
+
+    /** Inquire whether this wallet unlocked for staking only. */
+    bool GetIsStakingOnly() const { return fWalletUnlockStakingOnly; }
+    /** Set whether this wallet unlocked for staking only. */
+    void SetIsStakingOnly(bool stakingOnly) { fWalletUnlockStakingOnly = stakingOnly; }
 
     /** Return whether transaction can be abandoned */
     bool TransactionCanBeAbandoned(const uint256& hashTx) const;
