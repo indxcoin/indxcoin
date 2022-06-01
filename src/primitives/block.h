@@ -71,7 +71,7 @@ public:
     unsigned int GetStakeEntropyBit() const
     {
         unsigned int nEntropyBit = (GetHash().GetLow64() & 1llu);
-        if (gArgs.GetBoolArg("-printstakemodifier", false))
+        if (gArgs.GetBoolArg("-printstakemodifier", DEFAULT_PRINTSTAKEMODIFIER))
             LogPrintf("GetStakeEntropyBit: hashBlock=%s nEntropyBit=%u\n", GetHash().ToString().c_str(), nEntropyBit);
         return nEntropyBit;
     }

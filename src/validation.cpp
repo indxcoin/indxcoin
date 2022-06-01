@@ -3426,9 +3426,8 @@ bool VerifyHashTarget(CChainState* active_chainstate, CBlockIndex* pindexPrev, c
                 if (gArgs.GetBoolArg("-debug", false) && gArgs.GetBoolArg("-printcoinstake", false)){
                 LogPrintf("WARNING: VerifyHashTarget(): check proof-of-stake failed for block %s\n", hash.ToString());
                 }
-            }
-            //if(fValid)  // UpdateMe  
-            //LogPrintf("%s - hashProof %s / nBits %08x\n", __func__, hashProof.ToString(), block.nBits);
+            } 
+            LogPrint(BCLog::POS, "%s : hashProof %s / nBits %08x\n", __func__, hashProof.ToString(), block.nBits);
             return fValid;
         }
     }
