@@ -279,6 +279,7 @@ static RPCHelpMan staking()
         StartMintStake(gArgs.GetBoolArg("-staking", true), GetWallets()[0], node.chainman.get(), &node.chainman->ActiveChainstate(), node.connman.get(), node.mempool.get());
 
     }else{
+        gArgs.ForceSetArg("-staking", fGenerate ? "1" : "0");
         StopMintStake();
     }
 
