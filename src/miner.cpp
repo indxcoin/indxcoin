@@ -150,7 +150,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vTxFees.push_back(-1); // updated at end
     pblocktemplate->vTxSigOpsCost.push_back(-1); // updated at end
 
-    // reddcoin: if coinstake available add coinstake tx
+    // indxcoin: if coinstake available add coinstake tx
     static int64_t nLastCoinStakeSearchTime = GetAdjustedTime();  // only initialized at startup
 
    
@@ -216,7 +216,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
             nLastCoinStakeSearchTime = nSearchTime;
         }
         if (*pfPoSCancel)
-            return nullptr; // reddcoin: there is no point to continue if we failed to create coinstake
+            return nullptr; // indxcoin: there is no point to continue if we failed to create coinstake
     }
 
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
@@ -557,7 +557,7 @@ static bool ProcessBlockFound(const CBlock* pblock, ChainstateManager* chainman,
 
 void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CChainState* chainstate, CConnman* connman, CTxMemPool* mempool)
 {
-    util::ThreadRename("reddcoin-stake-minter");
+    util::ThreadRename("indxcoin-stake-minter");
     //LogPrintf("PoSMiner(): Start Algo \n" ); // UpdateMe   
 
     unsigned int nExtraNonce = 0;
@@ -672,7 +672,7 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                 }
                 strMintWarning = strMintBlockMessage;
                 uiInterface.NotifyAlertChanged();
-                LogPrintf("Error in ReddcoinMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
+                LogPrintf("Error in IndxcoinMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
                 if (!connman->interruptNet.sleep_for(std::chrono::seconds(10)))
                    return;
 
@@ -681,7 +681,7 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
             pblock = &pblocktemplate->block;
             IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
-            // reddcoin: if proof-of-stake block found then process block
+            // indxcoin: if proof-of-stake block found then process block
             if (pblock->IsProofOfStake())
             {
                 {
@@ -707,12 +707,12 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
     }
     catch (const std::runtime_error &e)
     {
-        LogPrintf("ReddcoinMiner runtime error: %s\n", e.what());
+        LogPrintf("indxcoinMiner runtime error: %s\n", e.what());
         return;
     }
 }
 
-// reddcoin: stake minter thread
+// indxcoin: stake minter thread
 void static ThreadStakeMinter(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CChainState* chainstate, CConnman* connman, CTxMemPool* mempool)
 {
     LogPrintf("ThreadStakeMinter started\n");
@@ -730,7 +730,7 @@ void static ThreadStakeMinter(std::shared_ptr<CWallet> pwallet, ChainstateManage
     LogPrintf("ThreadStakeMinter exiting\n");
 }
 
-// reddcoin: stake minter
+// indxcoin: stake minter
 void StartMintStake(bool fGenerate, std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CChainState* chainstate, CConnman* connman, CTxMemPool* mempool)
 {
     if (!fGenerate) {
@@ -743,7 +743,7 @@ void StartMintStake(bool fGenerate, std::shared_ptr<CWallet> pwallet, Chainstate
     }
 
     if (EnableStaking() && ! threadStakeMinter.joinable()) {
-        // reddcoin: mint proof-of-stake blocks in the background
+        // Mint proof-of-stake blocks in the background
         threadStakeMinter = std::thread(&ThreadStakeMinter, std::move(pwallet), std::move(chainman), std::move(chainstate), std::move(connman), std::move(mempool));
     }
 

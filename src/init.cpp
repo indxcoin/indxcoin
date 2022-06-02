@@ -1812,7 +1812,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 #endif
 
     if (HasWallets() && GetWallets()[0]) {
-        StartMintStake(gArgs.GetBoolArg("-staking", false), GetWallets()[0], node.chainman.get(), &node.chainman->ActiveChainstate(), node.connman.get(), node.mempool.get());
+        StartMintStake(gArgs.GetBoolArg("-staking", true), GetWallets()[0], node.chainman.get(), &node.chainman->ActiveChainstate(), node.connman.get(), node.mempool.get());
     }
 
     return true;

@@ -278,9 +278,8 @@ static RPCHelpMan staking()
 
         StartMintStake(gArgs.GetBoolArg("-staking", true), GetWallets()[0], node.chainman.get(), &node.chainman->ActiveChainstate(), node.connman.get(), node.mempool.get());
 
-        if (!fGenerate) {
-            StopMintStake();
-        }
+    }else{
+        StopMintStake();
     }
 
     UniValue result(UniValue::VOBJ);
