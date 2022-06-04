@@ -152,7 +152,7 @@ static void WalletTxToJSON(interfaces::Chain& chain, const CWalletTx& wtx, UniVa
 {
     int confirms = wtx.GetDepthInMainChain();
     entry.pushKV("confirmations", confirms);
-    if (wtx.IsCoinBase())
+    if (wtx.IsCoinBase()  || wtx.IsCoinStake())
         entry.pushKV("generated", true);
     if (confirms > 0)
     {
@@ -685,7 +685,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
     CAmount amount = 0;
     for (const std::pair<const uint256, CWalletTx>& wtx_pair : wallet.mapWallet) {
         const CWalletTx& wtx = wtx_pair.second;
-        if (wtx.IsCoinBase() || !wallet.chain().checkFinalTx(*wtx.tx) || wtx.GetDepthInMainChain() < min_depth) {
+        if (wtx.IsCoinBase()  || wtx.IsCoinStake() || !wallet.chain().checkFinalTx(*wtx.tx) || wtx.GetDepthInMainChain() < min_depth) {
             continue;
         }
 
@@ -1079,7 +1079,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, bool
     for (const std::pair<const uint256, CWalletTx>& pairWtx : wallet.mapWallet) {
         const CWalletTx& wtx = pairWtx.second;
 
-        if (wtx.IsCoinBase() || !wallet.chain().checkFinalTx(*wtx.tx)) {
+        if (wtx.IsCoinBase() || wtx.IsCoinStake() || !wallet.chain().checkFinalTx(*wtx.tx)) {
             continue;
         }
 
