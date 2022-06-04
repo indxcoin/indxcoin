@@ -3174,6 +3174,10 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-multiple", "more than one coinbase");
         }
     }
+    
+    // Second transaction must be coinstake, the rest must not be
+    if (block.vtx.empty() || !block.vtx[1]->IsCoinStake())
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cs-missing", "second tx is not coinstake");
 
     // Only the second transaction can be the optional coinstake
     for (unsigned int i = 2; i < block.vtx.size(); i++)
