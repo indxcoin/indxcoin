@@ -367,10 +367,6 @@ public:
      */
     bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet,
                     const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    // POS
-    bool SelectCoinsSimple(const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, 
-                    CAmount& nValueRet, unsigned int nSpendTime, int nMinConf) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    void AvailableCoinsMinConf(std::vector<COutput>& vCoins, int nConf) const;
     
     /** Get a name for this wallet for logging/debugging purposes.
      */

@@ -119,110 +119,6 @@ bool GetStakeWeight(const CWallet* pwallet, uint64_t& nAverageWeight, uint64_t &
   return true;
 }
 
-// POS 
-void CWallet::AvailableCoinsMinConf(std::vector<COutput>& vCoins, int nConf) const
-{
-    AssertLockHeld(cs_wallet);
-
-    vCoins.clear();
-
-    {
-        
-        std::set<uint256> trusted_parents;
-        for (const auto& entry : mapWallet)
-        {    
-        const uint256& wtxid = entry.first;
-        const CWalletTx& wtx = entry.second;
-
-
-            if (!chain().checkFinalTx(*wtx.tx)) {
-                continue;
-            }
-
-            if (wtx.IsImmatureCoinBase())
-                continue;
-
-            if ((wtx.IsCoinBase()) && wtx.GetBlocksToMaturity() > 0)
-                continue;
-
-            int nDepth = wtx.GetDepthInMainChain();
-            if(nDepth < nConf)
-                continue;
-
-            bool safeTx = IsTrusted(wtx, trusted_parents);
-
-            if (nDepth == 0 && wtx.mapValue.count("replaces_txid")) {
-            safeTx = false;
-            }
-            if (nDepth == 0 && wtx.mapValue.count("replaced_by_txid")) {
-            safeTx = false;
-            }
-
-
-            for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
-
-                if (IsLockedCoin(entry.first, i))
-                    continue;
-
-                if (IsSpent(wtxid, i))
-                    continue;
-
-            	isminetype mine = IsMine(wtx.tx->vout[i]);
-
-                if (mine == ISMINE_NO) {
-                continue;
-                }
-                std::unique_ptr<SigningProvider> provider = GetSolvingProvider(wtx.tx->vout[i].scriptPubKey);
-            
-
-                bool solvable = provider ? IsSolvable(*provider, wtx.tx->vout[i].scriptPubKey) : false;
-                bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (solvable));
-                    if (!(IsSpent(wtxid, i)) && mine != ISMINE_NO &&
-            	    !IsLockedCoin(wtxid, i) && wtx.tx->vout[i].nValue > 0)  
-                        vCoins.push_back(COutput(&wtx, i, nDepth, spendable, solvable, safeTx));
-            }
-        }
-    }
-}
-
-// Select some coins without random shuffle or best subset approximation
-bool CWallet::SelectCoinsSimple(const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, unsigned int nSpendTime, int nMinConf) const
-{
-    std::vector<COutput> vCoins;
-    AvailableCoinsMinConf(vCoins, nMinConf);
-
-    setCoinsRet.clear();
-    nValueRet = 0;
-
-    for (const COutput& out : vCoins)
-    {
-        if (!out.fSpendable)
-        	continue;
-
-        // Stop if we've chosen enough inputs
-        if (nValueRet >= nTargetValue)
-            break;
-
-        CAmount n = out.tx->tx->vout[out.i].nValue;
-
-        if (n >= nTargetValue)
-        {
-            // If input value is greater or equal to target then simply insert
-            //    it into the current subset and exit
-            setCoinsRet.insert(out.GetInputCoin());
-            nValueRet += out.tx->tx->vout[out.i].nValue;
-            break;
-        }
-        else if (n < nTargetValue + CENT)
-        {
-            setCoinsRet.insert(out.GetInputCoin());
-            nValueRet += out.tx->tx->vout[out.i].nValue;
-        }
-    }
-
-    return true;
-}
-
 
 // create coin stake transaction
 typedef std::vector<unsigned char> valtype;
@@ -259,8 +155,12 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     std::set<CInputCoin> setCoins;
     std::vector<CTransactionRef> vwtxPrev;
     CAmount nValueIn = 0;
-    if (!pwallet->SelectCoinsSimple(nBalance - nReserveBalance, setCoins, nValueIn, GetTime(), COINBASE_MATURITY + 20))
-       return false;
+    std::vector<COutput> vAvailableCoins;
+    CCoinControl temp;
+    CoinSelectionParams coin_selection_params;
+    pwallet->AvailableCoins(vAvailableCoins, &temp);
+    if (!pwallet->SelectCoins(vAvailableCoins, nBalance - nReserveBalance, setCoins, nValueIn, temp, coin_selection_params))
+        return false;
     if (setCoins.empty())
         return false;
     CAmount nCredit = 0;
