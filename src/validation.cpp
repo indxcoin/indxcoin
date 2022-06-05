@@ -3048,7 +3048,8 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
     // competitive advantage.
     pindexNew->nSequenceId = 0;
     BlockMap::iterator mi = m_block_index.insert(std::make_pair(hash, pindexNew)).first;
-    if (pindexNew->IsProofOfStake()) {
+    if (pindexNew->IsProofOfStake()) { //UpdateMe
+        pindexNew->SetProofOfStake();
         setStakeSeen.insert(std::make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
     }
     pindexNew->phashBlock = &((*mi).first);
@@ -3176,12 +3177,12 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     }
     
     // Second transaction must be coinstake, the rest must not be
-    if (block.vtx.empty() || !block.vtx[1]->IsCoinStake())
+    if (block.IsProofOfStake() && (block.vtx.empty() || !block.vtx[1]->IsCoinStake()))
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cs-missing", "second tx is not coinstake");
 
     // Only the second transaction can be the optional coinstake
     for (unsigned int i = 2; i < block.vtx.size(); i++)
-        if (block.vtx[i]->IsCoinStake())
+        if (block.IsProofOfStake() && block.vtx[i]->IsCoinStake())
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cs-missing", "coinstake in wrong position");
 
     // First coinbase output should be empty if proof-of-stake block
@@ -3615,11 +3616,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
         return error("%s: %s", __func__, state.ToString());
     }
 
-    // PoSV: get stake entropy bit
-    uint256 hash = pblock->GetHash();
-    if (!pindex->SetStakeEntropyBit(StakeEntropyBitFromHash(hash))) {
-        return error("%s - couldnt get/set stake entropy bit (height %d)\n", __func__, pindex->nHeight);
-    }
+    uint256 targetProofOfStake = uint256();
 
     // PoSV: compute stake modifier
     uint64_t nStakeModifier = 0;
@@ -3627,7 +3624,29 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
     if (!ComputeNextStakeModifier(this, pindex, nStakeModifier, fGeneratedStakeModifier)) {
         return error("%s - couldnt get next stake modifier (height %d)\n", __func__, pindex->nHeight);
     }
+    
+    // compute nStakeModifierChecksum begin
+    unsigned int nFlagsBackup      = pindex->nFlags;
+    uint64_t nStakeModifierBackup  = pindex->nStakeModifier;
+    uint256 hashProofOfStakeBackup = pindex->hashProofOfStake;
+
+    // PoSV: get stake entropy bit
+    uint256 hash = pblock->GetHash();
+    if (!pindex->SetStakeEntropyBit(StakeEntropyBitFromHash(hash))) {
+        return error("%s - couldnt get/set stake entropy bit (height %d)\n", __func__, pindex->nHeight);
+    }
     pindex->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
+    pindex->hashProofOfStake = targetProofOfStake;
+    unsigned int nStakeModifierChecksum  = GetStakeModifierChecksum(pindex);
+    // undo pindex fields
+    pindex->nFlags           = nFlagsBackup;
+    pindex->nStakeModifier   = nStakeModifierBackup;
+    pindex->hashProofOfStake = hashProofOfStakeBackup;
+    // compute nStakeModifierChecksum end
+
+
+    if (!CheckStakeModifierCheckpoints(pindex->nHeight, nStakeModifierChecksum ))
+        return error("%s: Rejected by stake modifier checkpoint height=%d, modifier=0x%016llx", __func__, pindex->nHeight, nStakeModifier);
 
     // PoSV: calculate proofhash value
     uint256 hashproof = uint256();
@@ -3635,6 +3654,18 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
         return error("%s - error calculating hashproof (height %d)\n", __func__, pindex->nHeight);
     }
     pindex->hashProofOfStake = hashproof;
+    // write everything to index
+    if (block.IsProofOfStake())
+    {
+        pindex->prevoutStake = block.vtx[1]->vin[0].prevout;
+        pindex->nStakeTime = block.vtx[1]->nTime;
+        pindex->hashProofOfStake = hashproof;
+    }
+    if (!pindex->SetStakeEntropyBit(StakeEntropyBitFromHash(hash))) {
+        return error("%s - couldnt get/set stake entropy bit (height %d)\n", __func__, pindex->nHeight);
+    }
+    pindex->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
+    pindex->nStakeModifierChecksum = nStakeModifierChecksum;
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)
@@ -3931,6 +3962,15 @@ bool BlockManager::LoadBlockIndex(
             pindexBestInvalid = pindex;
         if (pindex->pprev)
             pindex->BuildSkip();
+
+        // PoSV: calculate stake modifier checksum
+        pindex->nStakeModifierChecksum = GetStakeModifierChecksum(pindex);
+        if (!CheckStakeModifierCheckpoints(pindex->nHeight, pindex->nStakeModifierChecksum))
+        {
+            LogPrint(BCLog::POS, "%s Failed Checksum at nHeight=%d, nStakeModifierChecksum=0x%016x\n",__func__, pindex->nHeight, pindex->nStakeModifierChecksum);
+            return false;
+        }
+
         if (pindex->IsValid(BLOCK_VALID_TREE) && (pindexBestHeader == nullptr || CBlockIndexWorkComparator()(pindexBestHeader, pindex)))
             pindexBestHeader = pindex;
     }

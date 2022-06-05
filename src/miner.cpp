@@ -519,10 +519,6 @@ static bool ProcessBlockFound(const CBlock* pblock, ChainstateManager* chainman,
     uint256 hashStake = uint256();
     CBlockIndex* pindexPrev = chainstate->m_chain.Tip()->pprev;
 
-    // PoSV: calculate proofhash value
-    //if (!VerifyHashTarget(chainstate, pindexPrev, block, hashProof)) {
-    //    return error("%s - error calculating hashproof (height %d)\n", __func__, pindexPrev->nHeight);
-    //}
 
     if (!pblock->IsProofOfStake()) {
         return error("ProcessStakeFound() : %s is not a proof-of-stake block", hash.GetHex().c_str());
@@ -532,9 +528,6 @@ static bool ProcessBlockFound(const CBlock* pblock, ChainstateManager* chainman,
     if (!CheckProofOfStake(chainstate, pindexPrev, pblock->vtx[1], pblock->nBits, hashStake))
         return error("ProcessBlockFound() : proof-of-stake checking failed");
 
-    //LogPrintf("ProcessBlockFound() : proof-of-stake found  \n");  // UpdateMe  
-    //LogPrintf("%s\n", pblock->ToString());
-    //LogPrintf("minted %s\n", FormatMoney(pblock->vtx[0]->vout[0].nValue));
 
     // Found a solution
     {

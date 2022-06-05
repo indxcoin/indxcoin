@@ -229,6 +229,11 @@ public:
         return (nNonce == 0);
     }
 
+    void SetProofOfStake()
+    {
+        nNonce = 0;
+    }
+
     unsigned int GetStakeEntropyBit() const
     {
         return ((GetBlockHash().GetLow64()) & 1llu);

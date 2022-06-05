@@ -18,6 +18,45 @@
 #include <timedata.h>
 #include <validation.h>
 
+#include <boost/assign/list_of.hpp>
+
+
+typedef std::map<int, uint64_t> MapModifierCheckpoints;
+
+// Hard checkpoints of stake modifiers to ensure they are deterministic
+static std::map<int, uint64_t> mapStakeModifierCheckpoints =
+    boost::assign::map_list_of(0, 0xfd11f4e7)(2201, 0x6ea9bab9)(2250, 0x637ce256)(2500, 0x04f7069b);
+
+// Hard checkpoints of stake modifiers to ensure they are deterministic (testNet)
+static std::map<int, uint64_t> mapStakeModifierCheckpointsTestNet =
+    boost::assign::map_list_of(0, 0x0e00670b);
+
+// Get stake modifier checksum
+unsigned int GetStakeModifierChecksum(const CBlockIndex* pindex)
+{
+    assert(pindex->pprev || pindex->GetBlockHash() == (Params().GetConsensus().hashGenesisBlock));
+    // Hash previous checksum with flags, hashProofOfStake and nStakeModifier
+    CDataStream ss(SER_GETHASH, 0);
+    if (pindex->pprev)
+        ss << pindex->pprev->nStakeModifierChecksum;
+    ss << pindex->nFlags << (pindex->IsProofOfStake() ? pindex->hashProofOfStake : uint256()) << pindex->nStakeModifier;
+    arith_uint256 hashChecksum = UintToArith256(Hash(ss));
+    hashChecksum >>= (256 - 32);
+    LogPrint(BCLog::POS, "GetStakeModifierChecksum : nStakeModifierChecksum=%d, nStakeModifierChecksum=0x%016x\n", hashChecksum.GetLow64(), hashChecksum.GetLow64());
+    return hashChecksum.GetLow64();
+}
+
+// Check stake modifier hard checkpoints
+bool CheckStakeModifierCheckpoints(int nHeight, uint64_t nStakeModifierChecksum)
+{
+    LogPrint(BCLog::POS, "CheckStakeModifierCheckpoints : nHeight=%d, nStakeModifierChecksum=0x%016x\n", nHeight, nStakeModifierChecksum);
+
+    MapModifierCheckpoints& checkpoints = gArgs.GetBoolArg("-testnet", false) ? mapStakeModifierCheckpointsTestNet : mapStakeModifierCheckpoints;
+    if (checkpoints.count(nHeight))
+        return nStakeModifierChecksum == checkpoints[nHeight];
+    return true;
+}
+
 /* PoSV: Coin-aging function
  * =================================================
  * WARNING
