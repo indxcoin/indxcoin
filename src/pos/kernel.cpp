@@ -21,15 +21,25 @@
 #include <boost/assign/list_of.hpp>
 
 
-typedef std::map<int, uint64_t> MapModifierCheckpoints;
+typedef std::map<int, unsigned int> MapModifierCheckpoints;
 
 // Hard checkpoints of stake modifiers to ensure they are deterministic
-static std::map<int, uint64_t> mapStakeModifierCheckpoints =
-    boost::assign::map_list_of(0, 0xfd11f4e7)(2201, 0x6ea9bab9)(2250, 0x637ce256)(2500, 0x04f7069b);
+static std::map<int, unsigned int> mapStakeModifierCheckpoints =
+    boost::assign::map_list_of
+    (0, 0xfd11f4e7u)(2201, 0x6ea9bab9u)
+    (2250, 0x637ce256u)(2500, 0x04f7069bu)
+    (5000, 0xa18f4c13u)(10000, 0xe6cb0db4u)
+    (15000, 0x3f89773du)(18000, 0x9c1c483cu)
+    ;
 
 // Hard checkpoints of stake modifiers to ensure they are deterministic (testNet)
-static std::map<int, uint64_t> mapStakeModifierCheckpointsTestNet =
-    boost::assign::map_list_of(0, 0x0e00670b);
+static std::map<int, unsigned int> mapStakeModifierCheckpointsTestNet =
+    boost::assign::map_list_of
+    (0, 0x0e00670bu)(500, 0x4cb5265fu)
+    (1000, 0xd0869743u)(2000, 0x03c1ba6fu)
+    (4000, 0xd27e54e7u)(8000, 0xf9cb0070u)
+    (13000, 0x8d046f5cu)(13784, 0x0b824c3bu)
+    ;
 
 // Get stake modifier checksum
 unsigned int GetStakeModifierChecksum(const CBlockIndex* pindex)
@@ -42,18 +52,18 @@ unsigned int GetStakeModifierChecksum(const CBlockIndex* pindex)
     ss << pindex->nFlags << (pindex->IsProofOfStake() ? pindex->hashProofOfStake : uint256()) << pindex->nStakeModifier;
     arith_uint256 hashChecksum = UintToArith256(Hash(ss));
     hashChecksum >>= (256 - 32);
-    LogPrint(BCLog::POS, "GetStakeModifierChecksum : nStakeModifierChecksum=%d, nStakeModifierChecksum=0x%016x\n", hashChecksum.GetLow64(), hashChecksum.GetLow64());
+    LogPrint(BCLog::POS, "%s :  nStakeModifierChecksum=0x%016x\n",__func__,  hashChecksum.GetLow64());
     return hashChecksum.GetLow64();
 }
 
 // Check stake modifier hard checkpoints
-bool CheckStakeModifierCheckpoints(int nHeight, uint64_t nStakeModifierChecksum)
+bool CheckStakeModifierCheckpoints(int nHeight, unsigned int nStakeModifierChecksum)
 {
-    LogPrint(BCLog::POS, "CheckStakeModifierCheckpoints : nHeight=%d, nStakeModifierChecksum=0x%016x\n", nHeight, nStakeModifierChecksum);
-
     MapModifierCheckpoints& checkpoints = gArgs.GetBoolArg("-testnet", false) ? mapStakeModifierCheckpointsTestNet : mapStakeModifierCheckpoints;
-    if (checkpoints.count(nHeight))
+    LogPrint(BCLog::POS, "%s : nHeight=%d, nStakeModifierChecksum=0x%08x checkpoints[nHeight]=0x%08x\n",__func__, nHeight, nStakeModifierChecksum, checkpoints.count(nHeight) ? checkpoints[nHeight] : 0);
+    if (checkpoints.count(nHeight)){
         return nStakeModifierChecksum == checkpoints[nHeight];
+    }
     return true;
 }
 
@@ -241,7 +251,21 @@ bool ComputeNextStakeModifier(CChainState* active_chainstate, const CBlockIndex*
 
     // Shuffle before sort
     std::reverse(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
-    std::sort(vSortedByTimestamp.begin(), vSortedByTimestamp.end(), compareCandidates);
+    std::sort(vSortedByTimestamp.begin(), vSortedByTimestamp.end(), [] (const std::pair<int64_t, uint256> &a, const std::pair<int64_t, uint256> &b)
+    {
+        if (a.first != b.first)
+            return a.first < b.first;
+        // Timestamp equals - compare block hashes
+        const uint32_t *pa = a.second.GetDataPtr();
+        const uint32_t *pb = b.second.GetDataPtr();
+        int cnt = 256 / 32;
+        do {
+            --cnt;
+            if (pa[cnt] != pb[cnt])
+                return pa[cnt] < pb[cnt];
+        } while(cnt);
+            return false; // Elements are equal
+    });
 
     // Select 64 blocks from candidate blocks to generate stake modifier
     uint64_t nStakeModifierNew = 0;
@@ -279,10 +303,9 @@ bool ComputeNextStakeModifier(CChainState* active_chainstate, const CBlockIndex*
             strSelectionMap.replace(item.second->nHeight - nHeightFirstCandidate, 1, item.second->IsProofOfStake() ? "S" : "W");
         }
         LogPrint(BCLog::POS, "%s: selection height [%d, %d] map %s\n", __func__, nHeightFirstCandidate, pindexPrev->nHeight, strSelectionMap);
-        LogPrint(BCLog::POS, "%s: new modifier=0x%016x time=%s\n", __func__, nStakeModifierNew, FormatISO8601DateTime(pindexPrev->GetBlockTime()));
     }
     
-
+    LogPrint(BCLog::POS, "%s: new modifier=0x%016x time=%s nHeight=%d\n", __func__, nStakeModifierNew, FormatISO8601DateTime(pindexPrev->GetBlockTime()), pindex->nHeight + 1);
     nStakeModifier = nStakeModifierNew;
     fGeneratedStakeModifier = true;
     return true;
@@ -307,7 +330,7 @@ static bool GetKernelStakeModifier(CChainState* active_chainstate, CBlockIndex* 
     cachedModifier entry { nStakeModifierTime, nStakeModifierHeight };
     if (cacheCheck(entry, nCachedModifier)) {
         nStakeModifier = nCachedModifier;
-        LogPrint(BCLog::POS, "%s: cachedModifier cache hit!\n", __func__);
+        LogPrint(BCLog::POS, "%s: nStakeModifier=0x%016x cache hit!\n", __func__, nStakeModifier);
         return true;
     }
 

@@ -68,8 +68,8 @@ public:
         consensus.BIP16Exception = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
         consensus.BIP34Height = std::numeric_limits<int>::max();
         consensus.BIP34Hash = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
-        consensus.BIP65Height = std::numeric_limits<int>::max();
-        consensus.BIP66Height =std::numeric_limits<int>::max();
+        consensus.BIP65Height = 2951;
+        consensus.BIP66Height = 2951;
         consensus.MinBIP9WarningHeight = std::numeric_limits<int>::max();
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 24 * 60 * 60; // 24 hours
@@ -195,8 +195,8 @@ public:
         consensus.BIP16Exception = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
         consensus.BIP34Height = std::numeric_limits<int>::max();
         consensus.BIP34Hash = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
-        consensus.BIP65Height = std::numeric_limits<int>::max();
-        consensus.BIP66Height =std::numeric_limits<int>::max();
+        consensus.BIP65Height = 2951;
+        consensus.BIP66Height = 2951;
         consensus.MinBIP9WarningHeight = std::numeric_limits<int>::max();
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 24 * 60 * 60; //! 24 hours
@@ -226,8 +226,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
-        consensus.nMinimumChainWork = uint256S("0x0");
-        consensus.defaultAssumeValid = uint256S("0x0"); 
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000005ea506722f8f");
+        consensus.defaultAssumeValid = uint256S("0x417a2f84709e4d34175ac183186738a13cec545c4c6c0aeb4bab095fb7940607"); 
 
         pchMessageStart[0] = 0x1a;
         pchMessageStart[1] = 0xbe;

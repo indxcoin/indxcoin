@@ -61,6 +61,6 @@ double GetPoSVKernelPS(const CBlockIndex* blockindex);
 unsigned int GetStakeModifierChecksum(const CBlockIndex* pindex);
 
 // Check stake modifier hard checkpoints
-bool CheckStakeModifierCheckpoints(int nHeight, uint64_t nStakeModifierChecksum);
+bool CheckStakeModifierCheckpoints(int nHeight, unsigned int nStakeModifierChecksum);
 
 #endif // REDDCOIN_KERNEL_H

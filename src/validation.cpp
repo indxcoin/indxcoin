@@ -1762,6 +1762,9 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     assert(*pindex->phashBlock == block.GetHash());
     int64_t nTimeStart = GetTimeMicros();
 
+    if (pindex->nStakeModifier == 0 && pindex->nStakeModifierChecksum == 0 && !PoSContextualBlockChecks(block, state, pindex, fJustCheck))
+        return error("%s: Failed PoS check %s", __func__, state.ToString());
+
     // Check it again in case a previous version let a bad block in
     // NOTE: We don't currently (re-)invoke ContextualCheckBlock() or
     // ContextualCheckBlockHeader() here. This means that if we add a new
@@ -3436,6 +3439,7 @@ bool VerifyHashTarget(CChainState* active_chainstate, CBlockIndex* pindexPrev, c
             return fValid;
         }
     }
+    hashProof = uint256();
 
     return true;
 }
@@ -3558,8 +3562,59 @@ inline unsigned int StakeEntropyBitFromHash(uint256& hash) {
     return (unsigned int) hash.GetLow64() & 1llu;
 }
 
+// These checks can only be done when all previous block have been added.
+bool CChainState::PoSContextualBlockChecks(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex, bool fJustCheck)
+{
+
+    if (block.IsProofOfStake())
+    {
+        pindex->SetProofOfStake();
+        pindex->prevoutStake = block.vtx[1]->vin[0].prevout;
+        pindex->nStakeTime = block.vtx[1]->nTime;
+    }
+    uint256 hashtarget = uint256();
+
+    // PoSV: get stake entropy bit
+    uint256 hash = block.GetHash();
+    if (!pindex->SetStakeEntropyBit(StakeEntropyBitFromHash(hash))) {
+        return error("%s - couldnt get/set stake entropy bit (height %d)\n", __func__, pindex->nHeight);
+    }
+
+    // PoSV: compute stake modifier
+    uint64_t nStakeModifier = 0;
+    bool fGeneratedStakeModifier = false;
+    if (!ComputeNextStakeModifier(this, pindex, nStakeModifier, fGeneratedStakeModifier)) {
+        return error("%s - couldnt get next stake modifier (height %d)\n", __func__, pindex->nHeight);
+    }
+    pindex->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
+    unsigned int nStakeModifierChecksum  = GetStakeModifierChecksum(pindex);
+
+    // PoSV: calculate proofhash value
+    if (!VerifyHashTarget(this, pindex, block, hash)) {
+            return error("%s - error calculating hashproof (height %d)\n", __func__, pindex->nHeight);
+    }
+    pindex->hashProofOfStake = hashtarget;
+    pindex->nStakeModifierChecksum = nStakeModifierChecksum;
+
+    if (fJustCheck)
+        return true;
+
+
+    // write everything to index
+
+    
+     if (!CheckStakeModifierCheckpoints(pindex->nHeight, pindex->nStakeModifierChecksum ))
+        return error("%s: Rejected by checkpoint height=%d, modifier=0x%016llx checksum=%08x", __func__, pindex->nHeight, nStakeModifier, nStakeModifierChecksum );
+
+    setDirtyBlockIndex.insert(pindex);  // queue a write to disk
+
+    return true;
+
+}
+
+
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
-bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock)
+bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool fCheckPoS)
 {
     const CBlock& block = *pblock;
 
@@ -3574,6 +3629,11 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
     if (!accepted_header)
         return false;
+        
+    // We should only accept blocks that can be connected to a prev block with validated PoS
+    if (fCheckPoS && pindex->pprev && !pindex->pprev->IsValid(BLOCK_VALID_TRANSACTIONS)) {
+        return error("%s: Block(%s) does not connect to any valid known block", __func__, block.GetHash().ToString());
+    }
 
     // Try to process all requested blocks that we don't have, but only
     // process an unrequested block if it's new and has enough work to
@@ -3616,56 +3676,13 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
         return error("%s: %s", __func__, state.ToString());
     }
 
-    uint256 targetProofOfStake = uint256();
-
-    // PoSV: compute stake modifier
-    uint64_t nStakeModifier = 0;
-    bool fGeneratedStakeModifier = false;
-    if (!ComputeNextStakeModifier(this, pindex, nStakeModifier, fGeneratedStakeModifier)) {
-        return error("%s - couldnt get next stake modifier (height %d)\n", __func__, pindex->nHeight);
+    // PoSV: check PoS
+    if (fCheckPoS && !PoSContextualBlockChecks(block, state, pindex, false)) {
+        LogPrint(BCLog::POS, "%s: Failed  on Hash = %s\n",__func__, block.GetHash().ToString());
+        pindex->nStatus |= BLOCK_FAILED_VALID;
+        setDirtyBlockIndex.insert(pindex);
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-pos", "proof of stake is incorrect");
     }
-    
-    // compute nStakeModifierChecksum begin
-    unsigned int nFlagsBackup      = pindex->nFlags;
-    uint64_t nStakeModifierBackup  = pindex->nStakeModifier;
-    uint256 hashProofOfStakeBackup = pindex->hashProofOfStake;
-
-    // PoSV: get stake entropy bit
-    uint256 hash = pblock->GetHash();
-    if (!pindex->SetStakeEntropyBit(StakeEntropyBitFromHash(hash))) {
-        return error("%s - couldnt get/set stake entropy bit (height %d)\n", __func__, pindex->nHeight);
-    }
-    pindex->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
-    pindex->hashProofOfStake = targetProofOfStake;
-    unsigned int nStakeModifierChecksum  = GetStakeModifierChecksum(pindex);
-    // undo pindex fields
-    pindex->nFlags           = nFlagsBackup;
-    pindex->nStakeModifier   = nStakeModifierBackup;
-    pindex->hashProofOfStake = hashProofOfStakeBackup;
-    // compute nStakeModifierChecksum end
-
-
-    if (!CheckStakeModifierCheckpoints(pindex->nHeight, nStakeModifierChecksum ))
-        return error("%s: Rejected by stake modifier checkpoint height=%d, modifier=0x%016llx", __func__, pindex->nHeight, nStakeModifier);
-
-    // PoSV: calculate proofhash value
-    uint256 hashproof = uint256();
-    if (!VerifyHashTarget(this, pindex, block, hashproof)) {
-        return error("%s - error calculating hashproof (height %d)\n", __func__, pindex->nHeight);
-    }
-    pindex->hashProofOfStake = hashproof;
-    // write everything to index
-    if (block.IsProofOfStake())
-    {
-        pindex->prevoutStake = block.vtx[1]->vin[0].prevout;
-        pindex->nStakeTime = block.vtx[1]->nTime;
-        pindex->hashProofOfStake = hashproof;
-    }
-    if (!pindex->SetStakeEntropyBit(StakeEntropyBitFromHash(hash))) {
-        return error("%s - couldnt get/set stake entropy bit (height %d)\n", __func__, pindex->nHeight);
-    }
-    pindex->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
-    pindex->nStakeModifierChecksum = nStakeModifierChecksum;
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)
@@ -3962,17 +3979,16 @@ bool BlockManager::LoadBlockIndex(
             pindexBestInvalid = pindex;
         if (pindex->pprev)
             pindex->BuildSkip();
+        if (pindex->IsValid(BLOCK_VALID_TREE) && (pindexBestHeader == nullptr || CBlockIndexWorkComparator()(pindexBestHeader, pindex)))
+            pindexBestHeader = pindex;
 
         // PoSV: calculate stake modifier checksum
         pindex->nStakeModifierChecksum = GetStakeModifierChecksum(pindex);
-        if (!CheckStakeModifierCheckpoints(pindex->nHeight, pindex->nStakeModifierChecksum))
-        {
-            LogPrint(BCLog::POS, "%s Failed Checksum at nHeight=%d, nStakeModifierChecksum=0x%016x\n",__func__, pindex->nHeight, pindex->nStakeModifierChecksum);
-            return false;
-        }
-
-        if (pindex->IsValid(BLOCK_VALID_TREE) && (pindexBestHeader == nullptr || CBlockIndexWorkComparator()(pindexBestHeader, pindex)))
-            pindexBestHeader = pindex;
+            if (!CheckStakeModifierCheckpoints(pindex->nHeight, pindex->nStakeModifierChecksum))
+            {
+                LogPrint(BCLog::POS, "%s Failed Checksum at nHeight=%d, nStakeModifierChecksum=0x%016x\n",__func__, pindex->nHeight, pindex->nStakeModifierChecksum);
+                return false;
+            }
     }
 
     return true;
@@ -4443,7 +4459,7 @@ void CChainState::LoadExternalBlockFile(FILE* fileIn, FlatFilePos* dbp)
                     CBlockIndex* pindex = m_blockman.LookupBlockIndex(hash);
                     if (!pindex || (pindex->nStatus & BLOCK_HAVE_DATA) == 0) {
                       BlockValidationState state;
-                      if (AcceptBlock(pblock, state, nullptr, true, dbp, nullptr)) {
+                      if (AcceptBlock(pblock, state, nullptr, true, dbp, nullptr, false)) {
                           nLoaded++;
                       }
                       if (state.IsError()) {
@@ -4479,7 +4495,7 @@ void CChainState::LoadExternalBlockFile(FILE* fileIn, FlatFilePos* dbp)
                                     head.ToString());
                             LOCK(cs_main);
                             BlockValidationState dummy;
-                            if (AcceptBlock(pblockrecursive, dummy, nullptr, true, &it->second, nullptr)) {
+                            if (AcceptBlock(pblockrecursive, dummy, nullptr, true, &it->second, nullptr, false)) {
                                 nLoaded++;
                                 queue.push_back(pblockrecursive->GetHash());
                             }
