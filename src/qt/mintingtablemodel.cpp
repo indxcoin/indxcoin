@@ -239,7 +239,7 @@ public:
     QString describe(TransactionRecord *rec)
     {
         {
-            return TransactionDesc::toHTML(walletModel->node(), walletModel->wallet(), rec, BitcoinUnits::BTC);  
+            return TransactionDesc::toHTML(walletModel->node(), walletModel->wallet(), rec, BitcoinUnits::INDX);  
         }
         return QString("");
     }

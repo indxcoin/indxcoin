@@ -102,8 +102,8 @@ static int AppInitRawTx(int argc, char* argv[])
         std::string strUsage = PACKAGE_NAME " indxcoin-tx utility version " + FormatFullVersion() + "\n";
         if (!gArgs.IsArgSet("-version")) {
             strUsage += "\n"
-                "Usage:  indxcoin-tx [options] <hex-tx> [commands]  Update hex-encoded bitcoin transaction\n"
-                "or:     indxcoin-tx [options] -create [commands]   Create hex-encoded bitcoin transaction\n"
+                "Usage:  indxcoin-tx [options] <hex-tx> [commands]  Update hex-encoded indxcoin transaction\n"
+                "or:     indxcoin-tx [options] -create [commands]   Create hex-encoded indxcoin transaction\n"
                 "\n";
             strUsage += gArgs.GetHelpMessage();
         }
