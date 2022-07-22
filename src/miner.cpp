@@ -191,6 +191,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     if (pwallet)  // attempt to find a coinstake
     {  
+        // flush orphaned coinstakes
+        pwallet->AbandonOrphanedCoinstakes();
+        
         *pfPoSCancel = true;
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
         CMutableTransaction txCoinStake;
