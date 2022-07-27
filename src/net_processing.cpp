@@ -480,7 +480,13 @@ private:
     Mutex m_recent_confirmed_transactions_mutex;
     std::unique_ptr<CRollingBloomFilter> m_recent_confirmed_transactions GUARDED_BY(m_recent_confirmed_transactions_mutex);
 
-    std::map<uint256, std::shared_ptr<CBlock>> mapBlocksUnknownParent GUARDED_BY(cs_main);
+
+    /** PoSV: blocks that are waiting to be processed, the key points to previous CBlockIndex entry */
+    struct WaitElement {
+        std::shared_ptr<CBlock> pblock;
+            int64_t time;
+    };
+    std::map<CBlockIndex*, WaitElement> mapBlocksWait;
 
     /** Have we requested this block from a peer */
     bool IsBlockRequested(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -3696,83 +3702,116 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
     if (msg_type == NetMsgType::BLOCK)
     {
-        // Ignore block received while importing
-        if (fImporting || fReindex) {
-            LogPrint(BCLog::NET, "Unexpected block message received from peer %d\n", pfrom.GetId());
-            return;
-        }
 
-        std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
-        vRecv >> *pblock;
 
-        LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom.GetId());
+        std::shared_ptr<CBlock> pblock2 = std::make_shared<CBlock>();
+        vRecv >> *pblock2;
+        int64_t nTimeNow = GetTimeSeconds();
 
-        bool forceProcessing = false;
-        const uint256 hash(pblock->GetHash());
+        LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock2->GetHash().ToString(), pfrom.GetId());
 
-        const auto it = m_chainman.m_blockman.m_block_index.find(pblock->hashPrevBlock);
-        if (it != m_chainman.m_blockman.m_block_index.end() && ((it->second->nStatus & BLOCK_HAVE_DATA) == 0))
         {
-            LogPrint(BCLog::NET, "Received block out of order: %s\n", pblock->GetHash().ToString());
-            if (mapBlocksInFlight.count(pblock->hashPrevBlock))
-            {
-                LOCK(cs_main);
-                //mapBlocksUnknownParent.insert(std::make_pair(pblock->hashPrevBlock, pblock));
-                RemoveBlockRequest(pblock->hashPrevBlock);
-            }
-            mapBlocksUnknownParent.insert(std::make_pair(pblock->hashPrevBlock, pblock));
-        }
-        else
-        {
-            {
-		    LOCK(cs_main);
-		    // Always process the block if we requested it, since we may
-		    // need it even when it's not a candidate for a new best tip.
-		    forceProcessing = IsBlockRequested(hash);
-		    RemoveBlockRequest(hash);
-		    // mapBlockSource is only used for punishing peers and setting
-		    // which peers send us compact blocks, so the race between here and
-		    // cs_main in ProcessNewBlock is fine.
-		    mapBlockSource.emplace(hash, std::make_pair(pfrom.GetId(), true));
+            const uint256 hash2(pblock2->GetHash());
+            LOCK(cs_main);
+            bool fRequested = mapBlocksInFlight.count(hash2);
+
+            BlockMap::iterator miPrev = m_chainman.m_blockman.m_block_index.find(pblock2->hashPrevBlock);
+            if (miPrev == m_chainman.m_blockman.m_block_index.end()) {
+                //return error("previous header not found");
+                LogPrint(BCLog::NET, "previous header not found\n");
+                return;
             }
 
-            bool fNewBlock = false;
-            m_chainman.ProcessNewBlock(m_chainparams, pblock, forceProcessing, &fNewBlock);
+            if (!fRequested) {
 
-            if (fNewBlock)
-            {
-                pfrom.nLastBlockTime = GetTime();
-
-                std::deque<uint256> queue;
-                queue.push_back(hash);
-                while (!queue.empty())
-                {
-                    uint256 head = queue.front();
-                    queue.pop_front();
-                    auto it = mapBlocksUnknownParent.find(head);
-                    if (it != std::end(mapBlocksUnknownParent))
-                    {
-                        std::shared_ptr<CBlock> pblockrecursive = it->second;
-                        auto recursiveHash = pblockrecursive->GetHash();
-                        LogPrint(BCLog::NET, "%s: Processing out of order child %s of %s\n", __func__, recursiveHash.ToString(),
-                                             head.ToString());
-
-                        bool forceProcessing = false;
-                        {
-                            LOCK(cs_main);
-                            mapBlocksUnknownParent.erase(it);
-                            forceProcessing = IsBlockRequested(recursiveHash);
-                        }
-                        m_chainman.ProcessNewBlock(m_chainparams, pblockrecursive, forceProcessing, &fNewBlock);
-                        queue.push_back(recursiveHash);
-                    }
+                if (!miPrev->second->IsValid(BLOCK_VALID_TRANSACTIONS)) {
+                    RemoveBlockRequest(hash2);
+                    //return error("this block does not connect to any valid known blocks");
+                    LogPrint(BCLog::NET, "this block does not connect to any valid known blocks\n");
+                    return;
                 }
             }
-            else {
+            // POS: store in memory until we can connect it to some chain
+            WaitElement we; we.pblock = pblock2; we.time = nTimeNow;
+            mapBlocksWait[miPrev->second] = we;
+        }
+
+        static CBlockIndex* pindexLastAccepted = nullptr;
+        if (pindexLastAccepted == nullptr)
+            pindexLastAccepted = m_chainman.ActiveChain().Tip();
+        bool fContinue = true;
+
+        // POS: accept as many blocks as we possibly can from mapBlocksWait
+        while (fContinue) {
+            fContinue = false;
+            bool fSelected = false;
+            bool forceProcessing = false;
+            CBlockIndex* pindexPrev;
+            std::shared_ptr<CBlock> pblock;
+
+            {
+            LOCK(cs_main);
+            // POS: try to select next block in a constant time
+            std::map<CBlockIndex*, WaitElement>::iterator it = mapBlocksWait.find(pindexLastAccepted);
+            if (it != mapBlocksWait.end() && pindexLastAccepted != nullptr) {
+                pindexPrev = it->first;
+                pblock = it->second.pblock;
+                mapBlocksWait.erase(pindexPrev);
+                fContinue = true;
+                fSelected = true;
+            } else
+            // otherwise: try to scan for it
+            for (auto& pair : mapBlocksWait) {
+                pindexPrev = pair.first;
+                pblock = pair.second.pblock;
+                const uint256 hash(pblock->GetHash());
+                // remove blocks that were not connected in 60 seconds
+                if (nTimeNow > pair.second.time + 60) {
+                    mapBlocksWait.erase(pindexPrev);
+                    fContinue = true;
+                    RemoveBlockRequest(hash);
+                    break;
+                }
+                if (!pindexPrev->IsValid(BLOCK_VALID_TRANSACTIONS)) {
+                    if (pindexPrev->nStatus & BLOCK_FAILED_MASK) {
+                        mapBlocksWait.erase(pindexPrev);  // prev block was rejected
+                        fContinue = true;
+                        RemoveBlockRequest(hash);
+                        break;
+                    }
+                    continue;   // prev block was not (yet) accepted on disk, skip to next one
+                }
+
+                mapBlocksWait.erase(pindexPrev);
+                fContinue = true;
+                fSelected = true;
+                break;
+            }
+            if (!fSelected)
+                continue;
+
+            const uint256 hash(pblock->GetHash());
+
+            // Also always process if we requested the block explicitly, as we may
+            // need it even though it is not a candidate for a new best tip.
+            forceProcessing = IsBlockRequested(hash);
+            RemoveBlockRequest(hash);
+            // mapBlockSource is only used for sending reject messages and DoS scores,
+            // so the race between here and cs_main in ProcessNewBlock is fine.
+            mapBlockSource.emplace(hash, std::make_pair(pfrom.GetId(), true));
+            }   // LOCK(cs_main);
+
+            bool fNewBlock = false;
+            m_chainman.ProcessNewBlock(m_chainparams, pblock, forceProcessing, &fNewBlock, &pindexLastAccepted);
+            if (fNewBlock) {
+                pfrom.nLastBlockTime = GetTime();
+            } else {
                 LOCK(cs_main);
                 mapBlockSource.erase(pblock->GetHash());
             }
+
         }
+
         return;
     }
 

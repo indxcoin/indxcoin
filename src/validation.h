@@ -1017,7 +1017,7 @@ public:
      * @param[out]  new_block A boolean which is set to indicate if the block was first received via this call
      * @returns     If the block was processed, independently of block validity
      */
-    bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock>& block, bool force_processing, bool* new_block) LOCKS_EXCLUDED(cs_main);
+    bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock>& block, bool force_processing, bool* new_block, CBlockIndex** ppindex=nullptr) LOCKS_EXCLUDED(cs_main);
 
     /**
      * Process incoming block headers.
@@ -1075,6 +1075,6 @@ const AssumeutxoData* ExpectedAssumeutxo(const int height, const CChainParams& p
 CAmount GetProofOfWorkReward(unsigned int nBits);
 CAmount GetProofOfStakeReward(int64_t nCoinAge, const CAmount& nFees);
 CAmount GetProofOfStakeReward(int64_t nCoinAge, const CAmount& nFees, double fInflationAdjustment);
-bool VerifyHashTarget(CChainState* active_chainstate, CBlockIndex* pindexPrev, const CBlock& block, uint256& hashProof);
+bool VerifyHashTarget(CChainState* active_chainstate, BlockValidationState& state, CBlockIndex* pindexPrev, const CBlock& block, uint256& hashProof);
 
 #endif // BITCOIN_VALIDATION_H

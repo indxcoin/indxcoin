@@ -12,6 +12,7 @@
 #include <qt/addresstablemodel.h>
 
 #include <wallet/wallet.h>
+#include <wallet/scriptpubkeyman.h>
 #include <validation.h>
 #include <chainparams.h>
 #include <node/ui_interface.h>
@@ -95,7 +96,9 @@ public:
      */
     void updateWallet(const uint256 &hash, int status)
     {
-        LogPrintf("minting updateWallet %s %i\n", hash.ToString(), status);
+        if (HasWallets() && gArgs.GetBoolArg("-debug", false)) {
+        GetWallets()[0]->WalletLogPrintf("minting updateWallet %s %i\n", hash.ToString(), status);
+        }
         {
             // Find transaction in wallet
             auto wtx = walletModel->wallet().getWalletTx(hash);
@@ -130,20 +133,26 @@ public:
                     status = CT_DELETED; /* In model, but want to hide, treat as deleted */
             }
 
-            LogPrintf("   inWallet=%i inModel=%i Index=%i-%i showTransaction=%i derivedStatus=%i\n",
+            if (HasWallets() && gArgs.GetBoolArg("-debug", false)) {
+            GetWallets()[0]->WalletLogPrintf("   inWallet=%i inModel=%i Index=%i-%i showTransaction=%i derivedStatus=%i\n",
                      inWallet, inModel, lowerIndex, upperIndex, showTransaction, status);
+            }
 
             switch(status)
             {
             case CT_NEW:
                 if(inModel)
                 {
-                    LogPrintf("Warning: updateWallet: Got CT_NEW, but transaction is already in model\n");
+                    if (HasWallets() && gArgs.GetBoolArg("-debug", false)) {
+                    GetWallets()[0]->WalletLogPrintf("Warning: updateWallet: Got CT_NEW, but transaction is already in model\n");
+                    }
                     break;
                 }
                 if(!inWallet)
                 {
-                    LogPrintf("Warning: updateWallet: Got CT_NEW, but transaction is not in wallet\n");
+                    if (HasWallets() && gArgs.GetBoolArg("-debug", false)) {
+                    GetWallets()[0]->WalletLogPrintf("Warning: updateWallet: Got CT_NEW, but transaction is not in wallet\n");
+                    }
                     break;
                 }
                 if(showTransaction)

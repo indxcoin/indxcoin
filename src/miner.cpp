@@ -193,7 +193,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     {  
         // flush orphaned coinstakes
         pwallet->AbandonOrphanedCoinstakes();
-        
+
         *pfPoSCancel = true;
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
         CMutableTransaction txCoinStake;
@@ -520,7 +520,6 @@ static bool ProcessBlockFound(const CBlock* pblock, ChainstateManager* chainman,
     //const CBlock& block = pblock;
     uint256 hash = pblock->GetHash();
     uint256 hashStake = uint256();
-    CBlockIndex* pindexPrev = chainstate->m_chain.Tip()->pprev;
 
 
     if (!pblock->IsProofOfStake()) {
@@ -528,7 +527,8 @@ static bool ProcessBlockFound(const CBlock* pblock, ChainstateManager* chainman,
     }
 
     // verify hash target and signature of coinstake tx
-    if (!CheckProofOfStake(chainstate, pindexPrev, pblock->vtx[1], pblock->nBits, hashStake))
+    BlockValidationState state;
+    if (!CheckProofOfStake(chainstate, state, pblock->vtx[1], pblock->nBits, hashStake))
         return error("ProcessBlockFound() : proof-of-stake checking failed");
 
 

@@ -3124,7 +3124,11 @@ void CChainState::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pi
 
 static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
-    return true; // UpdateMe 
+    // Check proof of work matches claimed amount
+    if (block.IsProofOfWork() && !CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-pow", "proof of work failed");
+
+    return true; 
 }
 
 bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW, bool fCheckMerkleRoot)
@@ -3207,6 +3211,10 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
                                  strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), tx_state.GetDebugMessage()));
         }
+        
+        // POS: check transaction timestamp
+        if (block.IsProofOfStake() && block.GetBlockTime() < (int64_t)tx->nTime)
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-tx-time", "block timestamp earlier than transaction timestamp");
     }
     unsigned int nSigOps = 0;
     for (const auto& tx : block.vtx)
@@ -3299,6 +3307,8 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
 
     // Check proof of work
     const Consensus::Params& consensusParams = params.GetConsensus();
+    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-diffbits", "incorrect proof of work");
 
     // Check against checkpoints
     if (fCheckpointsEnabled) {
@@ -3420,7 +3430,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
 }
 
 // Verify hash target and signature of coinstake tx
-bool VerifyHashTarget(CChainState* active_chainstate, CBlockIndex* pindexPrev, const CBlock& block, uint256& hashProof)
+bool VerifyHashTarget(CChainState* active_chainstate, BlockValidationState& state, CBlockIndex* pindexPrev, const CBlock& block, uint256& hashProof)
 {
     AssertLockHeld(cs_main);
 
@@ -3429,7 +3439,7 @@ bool VerifyHashTarget(CChainState* active_chainstate, CBlockIndex* pindexPrev, c
     if (hash != Params().GetConsensus().hashGenesisBlock) {
         if (block.IsProofOfStake()) {
             fValid = true;
-            if (!CheckProofOfStake(active_chainstate, pindexPrev, block.vtx[1], block.nBits, hashProof)) {
+            if (!CheckProofOfStake(active_chainstate, state, block.vtx[1], block.nBits, hashProof)) {
                 fValid = false;
                 if (gArgs.GetBoolArg("-debug", false) && gArgs.GetBoolArg("-printcoinstake", false)){
                 LogPrintf("WARNING: VerifyHashTarget(): check proof-of-stake failed for block %s\n", hash.ToString());
@@ -3565,17 +3575,19 @@ inline unsigned int StakeEntropyBitFromHash(uint256& hash) {
 // These checks can only be done when all previous block have been added.
 bool CChainState::PoSContextualBlockChecks(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex, bool fJustCheck)
 {
+    uint256 hash = block.GetHash();
+    uint256 hashtarget = uint256();
 
     if (block.IsProofOfStake())
     {
-        pindex->SetProofOfStake();
+        if(!pindex->IsProofOfStake())
+            pindex->SetProofOfStake();
+
         pindex->prevoutStake = block.vtx[1]->vin[0].prevout;
         pindex->nStakeTime = block.vtx[1]->nTime;
     }
-    uint256 hashtarget = uint256();
 
     // PoSV: get stake entropy bit
-    uint256 hash = block.GetHash();
     if (!pindex->SetStakeEntropyBit(StakeEntropyBitFromHash(hash))) {
         return error("%s - couldnt get/set stake entropy bit (height %d)\n", __func__, pindex->nHeight);
     }
@@ -3589,8 +3601,14 @@ bool CChainState::PoSContextualBlockChecks(const CBlock& block, BlockValidationS
     pindex->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
     unsigned int nStakeModifierChecksum  = GetStakeModifierChecksum(pindex);
 
+    if (block.IsProofOfStake() && !CheckProofOfStake(this, state, block.vtx[1], block.nBits, hash)) {
+        LogPrintf("WARNING: %s: check proof-of-stake failed for block %s\n", __func__, block.GetHash().ToString());
+        return false; // do not error here as we expect this during initial block download
+    }
+
+
     // PoSV: calculate proofhash value
-    if (!VerifyHashTarget(this, pindex, block, hash)) {
+    if (!VerifyHashTarget(this, state, pindex, block, hash)) {
             return error("%s - error calculating hashproof (height %d)\n", __func__, pindex->nHeight);
     }
     pindex->hashProofOfStake = hashtarget;
@@ -3709,7 +3727,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
     return true;
 }
 
-bool ChainstateManager::ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock>& block, bool force_processing, bool* new_block)
+bool ChainstateManager::ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock>& block, bool force_processing, bool* new_block, CBlockIndex** ppindex)
 {
     AssertLockNotHeld(cs_main);
 
@@ -3733,6 +3751,8 @@ bool ChainstateManager::ProcessNewBlock(const CChainParams& chainparams, const s
             // Store to disk
             ret = ActiveChainstate().AcceptBlock(block, state, &pindex, force_processing, nullptr, new_block);
         }
+        if (ppindex)
+            *ppindex = ret ? pindex : nullptr;
         if (!ret) {
             GetMainSignals().BlockChecked(*block, state);
             return error("%s: AcceptBlock FAILED (%s)", __func__, state.ToString());
