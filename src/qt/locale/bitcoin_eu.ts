@@ -66,8 +66,8 @@
         <translation type="unfinished">Helbideak jasotzen</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Hauek dira zuk dirua jaso dezaketen Bitcoin helbideak. Egiaztatu beti diru-kopurua eta dirua jasoko duen helbidea zuzen egon daitezen, txanponak bidali baino lehen.</translation>
+        <source>These are your Indxcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Hauek dira zuk dirua jaso dezaketen Indxcoin helbideak. Egiaztatu beti diru-kopurua eta dirua jasoko duen helbidea zuzen egon daitezen, txanponak bidali baino lehen.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -353,8 +353,8 @@
         <translation type="unfinished">Proxya &lt;b&gt;gaituta&lt;/b&gt; dago : %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Bidali txanponak Bitcoin helbide batera</translation>
+        <source>Send coins to a Indxcoin address</source>
+        <translation>Bidali txanponak Indxcoin helbide batera</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -385,12 +385,12 @@
         <translation>Zure diru-zorroari dagozkion giltza pribatuak enkriptatu.</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your Indxcoin addresses to prove you own them</source>
         <translation>Sinatu mezuak Bitcoinen helbideekin, jabetza frogatzeko.</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Egiaztatu mesua Bitcoin helbide espezifikoarekin erregistratu direla ziurtatzeko</translation>
+        <source>Verify messages to ensure they were signed with specified Indxcoin addresses</source>
+        <translation>Egiaztatu mesua Indxcoin helbide espezifikoarekin erregistratu direla ziurtatzeko</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -516,7 +516,7 @@
         <translation type="unfinished">%1 bezeroa</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Indxcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />

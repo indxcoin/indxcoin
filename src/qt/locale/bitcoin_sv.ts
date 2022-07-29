@@ -66,7 +66,7 @@
         <translation type="unfinished">Mottagaradresser</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your Indxcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Detta är dina Bitcoin-adresser för att skicka betalningar. Kontrollera alltid belopp och mottagaradress innan du skickar bitcoin.</translation>
     </message>
     <message>
@@ -256,7 +256,7 @@ Försök igen.</translation>
         <translation type="unfinished">Belopp</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a Indxcoin address (e.g. %1)</source>
         <translation type="unfinished">Ange en Bitcoin-adress (t.ex. %1)</translation>
     </message>
     <message>
@@ -386,7 +386,7 @@ Försök igen.</translation>
         <translation type="unfinished">Proxy är &lt;b&gt; aktiverad &lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Indxcoin address</source>
         <translation>Skicka bitcoin till en Bitcoin-adress</translation>
     </message>
     <message>
@@ -418,11 +418,11 @@ Försök igen.</translation>
         <translation>Kryptera de privata nycklar som tillhör din plånbok</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your Indxcoin addresses to prove you own them</source>
         <translation>Signera meddelanden med dina Bitcoin-adresser för att bevisa att du äger dem</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified Indxcoin addresses</source>
         <translation>Verifiera meddelanden för att vara säker på att de signerades med angivna Bitcoin-adresser</translation>
     </message>
     <message>
@@ -525,8 +525,8 @@ Försök igen.</translation>
         <translation type="unfinished">Stäng alla plånböcker</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Visa %1 hjälpmeddelande för att få en lista med möjliga Bitcoin kommandoradsalternativ.</translation>
+        <source>Show the %1 help message to get a list with possible Indxcoin command-line options</source>
+        <translation type="unfinished">Visa %1 hjälpmeddelande för att få en lista med möjliga Indxcoin kommandoradsalternativ.</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
@@ -565,7 +565,7 @@ Försök igen.</translation>
         <translation type="unfinished">%1-klient</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Indxcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -910,7 +910,7 @@ Försök igen.</translation>
         <translation type="unfinished">Redigera avsändaradress</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <source>The entered address "%1" is not a valid Indxcoin address.</source>
         <translation type="unfinished">Den angivna adressen "%1" är inte en giltig Bitcoin-adress.</translation>
     </message>
     <message>
@@ -972,7 +972,7 @@ Försök igen.</translation>
         </translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
+        <source>%1 will download and store a copy of the Indxcoin block chain.</source>
         <translation type="unfinished">%1 kommer att ladda ner och lagra en kopia av Bitcoins blockkedja.</translation>
     </message>
     <message>
@@ -1179,7 +1179,7 @@ Försök igen.</translation>
         <translation type="unfinished">&amp;Spendera obekräftad växel</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <source>Automatically open the Indxcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Öppna automatiskt Bitcoin-klientens port på routern. Detta fungerar endast om din router stödjer UPnP och det är är aktiverat.</translation>
     </message>
     <message>
@@ -1195,7 +1195,7 @@ Försök igen.</translation>
         <translation type="unfinished">Tillåt inkommande anslutningar</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <source>Connect to the Indxcoin network through a SOCKS5 proxy.</source>
         <translation type="unfinished">Anslut till Bitcoin-nätverket genom en SOCKS5-proxy.</translation>
     </message>
     <message>
@@ -1318,7 +1318,7 @@ Försök igen.</translation>
         <translation>Formulär</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Indxcoin network after a connection is established, but this process has not completed yet.</source>
         <translation>Den visade informationen kan vara inaktuell. Plånboken synkroniseras automatiskt med Bitcoin-nätverket efter att anslutningen är upprättad, men denna process har inte slutförts ännu.</translation>
     </message>
     <message>
@@ -1416,7 +1416,7 @@ Försök igen.</translation>
         <translation type="unfinished">'bitcoin://' är inte en accepterad URI. Använd 'bitcoin:' istället.</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <source>URI cannot be parsed! This can be caused by an invalid Indxcoin address or malformed URI parameters.</source>
         <translation type="unfinished">URI kan inte parsas! Detta kan orsakas av en ogiltig Bitcoin-adress eller felaktiga URI-parametrar.</translation>
     </message>
     <message>
@@ -1742,7 +1742,7 @@ Försök igen.</translation>
         <translation type="unfinished">&amp;Meddelande:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Indxcoin network.</source>
         <translation type="unfinished">Ett valfritt meddelande att bifoga betalningsbegäran, vilket visas när begäran öppnas. Obs: Meddelandet kommer inte att sändas med betalningen över Bitcoin-nätverket.</translation>
     </message>
     <message>
@@ -2134,7 +2134,7 @@ Försök igen.</translation>
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
+        <source>Warning: Invalid Indxcoin address</source>
         <translation type="unfinished">Varning: Ogiltig Bitcoin-adress</translation>
     </message>
     <message>
@@ -2173,7 +2173,7 @@ Försök igen.</translation>
         <translation type="unfinished">Välj tidigare använda adresser</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
+        <source>The Indxcoin address to send the payment to</source>
         <translation type="unfinished">Bitcoin-adress att sända betalning till</translation>
     </message>
     <message>
@@ -2217,7 +2217,7 @@ Försök igen.</translation>
         <translation type="unfinished">Ange en etikett för denna adress för att lägga till den i listan med använda adresser</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Indxcoin network.</source>
         <translation type="unfinished">Ett meddelande som bifogades bitcoin: -URIn och som sparas med transaktionen som referens. Obs: Meddelandet sänds inte över Bitcoin-nätverket.</translation>
     </message>
     <message>
@@ -2244,7 +2244,7 @@ Försök igen.</translation>
         <translation type="unfinished">Du kan signera meddelanden/avtal med dina adresser för att bevisa att du kan ta emot bitcoin som skickats till dem. Var försiktig så du inte signerar något oklart eller konstigt, eftersom phishing-angrepp kan försöka få dig att signera över din identitet till dem. Signera endast väldetaljerade meddelanden som du godkänner.</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
+        <source>The Indxcoin address to sign the message with</source>
         <translation type="unfinished">Bitcoin-adress att signera meddelandet med</translation>
     </message>
     <message>
@@ -2268,7 +2268,7 @@ Försök igen.</translation>
         <translation>Kopiera signaturen till systemets Urklipp</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
+        <source>Sign the message to prove you own this Indxcoin address</source>
         <translation>Signera meddelandet för att bevisa att du äger denna Bitcoin-adress</translation>
     </message>
     <message>
@@ -2292,7 +2292,7 @@ Försök igen.</translation>
         <translation type="unfinished">Ange mottagarens adress, meddelande (kopiera radbrytningar, mellanslag, TAB-tecken, osv. exakt) och signatur nedan, för att verifiera meddelandet. Undvik att läsa in mera information i signaturen än vad som stod i själva det signerade meddelandet, för att undvika ett man-in-the-middle-angrepp. Notera att detta endast bevisar att den signerande parten tar emot med adressen, det bevisar inte vem som skickat transaktionen!</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
+        <source>The Indxcoin address the message was signed with</source>
         <translation type="unfinished">Bitcoin-adress som meddelandet signerades med</translation>
     </message>
     <message>
@@ -2300,7 +2300,7 @@ Försök igen.</translation>
         <translation type="unfinished">Signerat meddelande som ska verifieras</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <source>Verify the message to ensure it was signed with the specified Indxcoin address</source>
         <translation>Verifiera meddelandet för att vara säker på att det signerades med angiven Bitcoin-adress</translation>
     </message>
     <message>

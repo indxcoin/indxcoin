@@ -66,13 +66,13 @@
         <translation type="unfinished">Direcciones de recepción</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Estas son tus direcciones Bitcoin para enviar pagos. Comprueba siempre la cantidad y la dirección de recibo antes de transferir monedas.</translation>
+        <source>These are your Indxcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Estas son tus direcciones Indxcoin para enviar pagos. Comprueba siempre la cantidad y la dirección de recibo antes de transferir monedas.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your Indxcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">Estas son tus direcciones Bitcoin para la recepción de pagos. Usa el botón 'Crear una nueva dirección para recepción' en la pestaña Recibir para crear nuevas direcciones.
+        <translation type="unfinished">Estas son tus direcciones Indxcoin para la recepción de pagos. Usa el botón 'Crear una nueva dirección para recepción' en la pestaña Recibir para crear nuevas direcciones.
 Firmar solo es posible con direcciones del tipo Legacy.</translation>
     </message>
     <message>
@@ -378,7 +378,7 @@ Firmar solo es posible con direcciones del tipo Legacy.</translation>
         <translation type="unfinished">Proxy está &lt;b&gt;habilitado&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Indxcoin address</source>
         <translation>Enviar monedas a una dirección Bitcoin</translation>
     </message>
     <message>
@@ -477,12 +477,12 @@ Firmar solo es posible con direcciones del tipo Legacy.</translation>
         <translation>Información</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Cargar una transacción de Bitcoin parcialmente firmada</translation>
+        <source>Load Partially Signed Indxcoin Transaction</source>
+        <translation type="unfinished">Cargar una transacción de Indxcoin parcialmente firmada</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Cargar una transacción de Bitcoin parcialmente firmada desde el Portapapeles</translation>
+        <source>Load Partially Signed Indxcoin Transaction from clipboard</source>
+        <translation type="unfinished">Cargar una transacción de Indxcoin parcialmente firmada desde el Portapapeles</translation>
     </message>
     <message>
         <source>Close wallet</source>
@@ -513,7 +513,7 @@ Firmar solo es posible con direcciones del tipo Legacy.</translation>
         <translation type="unfinished">Minimizar</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Indxcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -692,8 +692,8 @@ Firmar solo es posible con direcciones del tipo Legacy.</translation>
         <translation type="unfinished">Activar el pruning reduce significativamente el espacio de disco necesario para guardar las transacciones. Todos los bloques son completamente validados de cualquier manera. Revertir esta opción requiere que descarques de nuevo toda la cadena de bloques.</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">Abre el puerto del cliente de Bitcoin en el router automáticamente. Esto solo funciona cuando el router soporta NAT-PMP y está activo. El puerto externo podría ser elegido al azar.</translation>
+        <source>Automatically open the Indxcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">Abre el puerto del cliente de Indxcoin en el router automáticamente. Esto solo funciona cuando el router soporta NAT-PMP y está activo. El puerto externo podría ser elegido al azar.</translation>
     </message>
     <message>
         <source>Map port using NA&amp;T-PMP</source>
@@ -708,8 +708,8 @@ Firmar solo es posible con direcciones del tipo Legacy.</translation>
         <translation type="unfinished">Mostrar la bandeja del sistema.</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
-        <translation type="unfinished">Conéctese a la red de Bitcoin a través de un proxy SOCKS5 separado para los servicios Tor ocultos.</translation>
+        <source>Connect to the Indxcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation type="unfinished">Conéctese a la red de Indxcoin a través de un proxy SOCKS5 separado para los servicios Tor ocultos.</translation>
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>

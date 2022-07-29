@@ -62,8 +62,8 @@
         <translation type="unfinished">Recibindo enderezos</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Estas son as túas direccións Bitcoin para enviar pagos. Revisa sempre a cantidade e a dirección receptora antes de enviar moedas.</translation>
+        <source>These are your Indxcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Estas son as túas direccións Indxcoin para enviar pagos. Revisa sempre a cantidade e a dirección receptora antes de enviar moedas.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -280,7 +280,7 @@
         <translation type="unfinished">Moedeiro:</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Indxcoin address</source>
         <translation>Enviar moedas a unha dirección Bitcoin</translation>
     </message>
     <message>
@@ -312,12 +312,12 @@
         <translation>Encriptar as claves privadas que pertencen ao teu moedeiro</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Asina mensaxes cos teus enderezos Bitcoin para probar que che pertencen</translation>
+        <source>Sign messages with your Indxcoin addresses to prove you own them</source>
+        <translation>Asina mensaxes cos teus enderezos Indxcoin para probar que che pertencen</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verifica mensaxes para asegurar que foron asinados con enderezos Bitcoin específicos.</translation>
+        <source>Verify messages to ensure they were signed with specified Indxcoin addresses</source>
+        <translation>Verifica mensaxes para asegurar que foron asinados con enderezos Indxcoin específicos.</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -423,7 +423,7 @@
         <translation type="unfinished">%1 cliente</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Indxcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -594,8 +594,8 @@
         <translation type="unfinished">Modificar dirección para enviar</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">A dirección introducida '%1' non é unha dirección Bitcoin válida.</translation>
+        <source>The entered address "%1" is not a valid Indxcoin address.</source>
+        <translation type="unfinished">A dirección introducida '%1' non é unha dirección Indxcoin válida.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -713,8 +713,8 @@
         <translation type="unfinished">Experto</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Abrir automáticamente o porto do cliente Bitcoin no router. Esto so funciona se o teu router soporta UPnP e está habilitado.</translation>
+        <source>Automatically open the Indxcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Abrir automáticamente o porto do cliente Indxcoin no router. Esto so funciona se o teu router soporta UPnP e está habilitado.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -804,8 +804,8 @@
         <translation>Formulario</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>A información amosada por estar desactualizada. O teu moedeiro sincronízase automáticamente coa rede Bitcoin despois de que se estableza unha conexión, mais este proceso non está todavía rematado.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Indxcoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>A información amosada por estar desactualizada. O teu moedeiro sincronízase automáticamente coa rede Indxcoin despois de que se estableza unha conexión, mais este proceso non está todavía rematado.</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
@@ -1150,8 +1150,8 @@
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished">Atención:  Enderezo Bitcoin non válido</translation>
+        <source>Warning: Invalid Indxcoin address</source>
+        <translation type="unfinished">Atención:  Enderezo Indxcoin non válido</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -1232,7 +1232,7 @@
         <translation>Copiar a sinatura actual ao portapapeis do sistema</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
+        <source>Sign the message to prove you own this Indxcoin address</source>
         <translation>Asina a mensaxe para probar que posúes este enderezo Bitcoin</translation>
     </message>
     <message>
@@ -1252,8 +1252,8 @@
         <translation>&amp;Verificar Mensaxe</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Verificar a mensaxe para asegurar que foi asinada coa dirección Bitcoin especificada</translation>
+        <source>Verify the message to ensure it was signed with the specified Indxcoin address</source>
+        <translation>Verificar a mensaxe para asegurar que foi asinada coa dirección Indxcoin especificada</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

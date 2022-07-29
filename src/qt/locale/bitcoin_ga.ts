@@ -66,13 +66,13 @@
         <translation type="unfinished">Seoltaí glacadh</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Seo iad do sheoltaí Bitcoin chun íocaíochtaí a sheoladh. Seiceáil i gcónaí an méid agus an seoladh glactha sula seoltar boinn.</translation>
+        <source>These are your Indxcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Seo iad do sheoltaí Indxcoin chun íocaíochtaí a sheoladh. Seiceáil i gcónaí an méid agus an seoladh glactha sula seoltar boinn.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your Indxcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">Seo iad do sheoltaí Bitcoin chun glacadh le híocaíochtaí. Úsáid an cnaipe ‘Cruthaigh seoladh glactha nua’ sa cluaisín glactha chun seoltaí nua a chruthú.
+        <translation type="unfinished">Seo iad do sheoltaí Indxcoin chun glacadh le híocaíochtaí. Úsáid an cnaipe ‘Cruthaigh seoladh glactha nua’ sa cluaisín glactha chun seoltaí nua a chruthú.
 Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
     </message>
     <message>
@@ -272,8 +272,8 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Suim</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation type="unfinished">Iontráil seoladh Bitcoin (m.sh.%1)</translation>
+        <source>Enter a Indxcoin address (e.g. %1)</source>
+        <translation type="unfinished">Iontráil seoladh Indxcoin (m.sh.%1)</translation>
     </message>
     <message>
         <source>Inbound</source>
@@ -412,7 +412,7 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Seachfhreastalaí &lt;b&gt;cumasaithe&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Indxcoin address</source>
         <translation>Seol boinn chuig seoladh Bitcoin</translation>
     </message>
     <message>
@@ -444,11 +444,11 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation>Criptigh na heochracha príobháideacha a bhaineann le do sparán</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Sínigh teachtaireachtaí le do sheoltaí Bitcoin chun a chruthú gur leat iad</translation>
+        <source>Sign messages with your Indxcoin addresses to prove you own them</source>
+        <translation>Sínigh teachtaireachtaí le do sheoltaí Indxcoin chun a chruthú gur leat iad</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified Indxcoin addresses</source>
         <translation>Teachtaireachtaí a fhíorú lena chinntiú go raibh siad sínithe le seoltaí sainithe Bitcoin</translation>
     </message>
     <message>
@@ -520,12 +520,12 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation>Suas chun dáta</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Lódáil Idirbheart Bitcoin Sínithe go Páirteach</translation>
+        <source>Load Partially Signed Indxcoin Transaction</source>
+        <translation type="unfinished">Lódáil Idirbheart Indxcoin Sínithe go Páirteach</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Lódáil Idirbheart Bitcoin Sínithe go Páirteach ón gearrthaisce</translation>
+        <source>Load Partially Signed Indxcoin Transaction from clipboard</source>
+        <translation type="unfinished">Lódáil Idirbheart Indxcoin Sínithe go Páirteach ón gearrthaisce</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -564,8 +564,8 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Dún gach sparán</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Taispeáin an %1 teachtaireacht chabhrach chun liosta a fháil de roghanna Bitcoin líne na n-orduithe féideartha</translation>
+        <source>Show the %1 help message to get a list with possible Indxcoin command-line options</source>
+        <translation type="unfinished">Taispeáin an %1 teachtaireacht chabhrach chun liosta a fháil de roghanna Indxcoin líne na n-orduithe féideartha</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
@@ -604,7 +604,7 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">%1 cliaint</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Indxcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -1029,7 +1029,7 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         </translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
+        <source>%1 will download and store a copy of the Indxcoin block chain.</source>
         <translation type="unfinished">Íoslódáileafar %1 and stórálfaidh cóip de bhlocshlabhra Bitcoin.</translation>
     </message>
     <message>
@@ -1248,8 +1248,8 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Caith &amp;sóinseáil neamhdheimhnithe</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Oscail port cliant Bitcoin go huathoibríoch ar an ródaire. Ní oibríonn sé seo ach nuair a thacaíonn do ródaire le UPnP agus nuair a chumasaítear é.</translation>
+        <source>Automatically open the Indxcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Oscail port cliant Indxcoin go huathoibríoch ar an ródaire. Ní oibríonn sé seo ach nuair a thacaíonn do ródaire le UPnP agus nuair a chumasaítear é.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1264,8 +1264,8 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Ceadai&amp;gh naisc isteach</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">Ceangail leis an líonra Bitcoin trí sheachfhreastalaí SOCKS5.</translation>
+        <source>Connect to the Indxcoin network through a SOCKS5 proxy.</source>
+        <translation type="unfinished">Ceangail leis an líonra Indxcoin trí sheachfhreastalaí SOCKS5.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1324,8 +1324,8 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Gnéithe rialúchán bonn a thaispeáint nó nach.</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
-        <translation type="unfinished">Ceangail le líonra Bitcoin trí seachfhreastalaí SOCKS5 ar leith do sheirbhísí Tor oinniún.</translation>
+        <source>Connect to the Indxcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation type="unfinished">Ceangail le líonra Indxcoin trí seachfhreastalaí SOCKS5 ar leith do sheirbhísí Tor oinniún.</translation>
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
@@ -1399,8 +1399,8 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation>Foirm</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Féadfaidh an fhaisnéis a thaispeántar a bheith as dáta. Déanann do sparán sioncrónú go huathoibríoch leis an líonra Bitcoin tar éis nasc a bhunú, ach níl an próiseas seo críochnaithe fós.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Indxcoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>Féadfaidh an fhaisnéis a thaispeántar a bheith as dáta. Déanann do sparán sioncrónú go huathoibríoch leis an líonra Indxcoin tar éis nasc a bhunú, ach níl an próiseas seo críochnaithe fós.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1605,8 +1605,8 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Ní URI bailí é 'bitcoin://'. Úsáid 'bitcoin:' ina ionad.</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished">Ní féidir URI a pharsáil! Is féidir le seoladh neamhbhailí Bitcoin nó paraiméadair URI drochfhoirmithe a bheith mar an chúis.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid Indxcoin address or malformed URI parameters.</source>
+        <translation type="unfinished">Ní féidir URI a pharsáil! Is féidir le seoladh neamhbhailí Indxcoin nó paraiméadair URI drochfhoirmithe a bheith mar an chúis.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1967,7 +1967,7 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">&amp;Teachtaireacht</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Indxcoin network.</source>
         <translation type="unfinished">Teachtaireacht roghnach le ceangal leis an iarratas íocaíocht, a thaispeánfar nuair a osclaítear an iarraidh. Nóta: Ní sheolfar an teachtaireacht leis an íocaíocht thar líonra Bitcoin.</translation>
     </message>
     <message>
@@ -2284,8 +2284,8 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Cruthaigh Gan Sín</translation>
     </message>
     <message>
-        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation type="unfinished">Cruthaíonn Idirbheart Bitcoin Sínithe go Páirteach (IBSP) le húsáid le e.g. sparán as líne %1, nó sparán crua-earraí atá comhoiriúnach le IBSP.</translation>
+        <source>Creates a Partially Signed Indxcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation type="unfinished">Cruthaíonn Idirbheart Indxcoin Sínithe go Páirteach (IBSP) le húsáid le e.g. sparán as líne %1, nó sparán crua-earraí atá comhoiriúnach le IBSP.</translation>
     </message>
     <message>
         <source> from wallet '%1'</source>
@@ -2328,8 +2328,8 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Féadfaidh tú an táille a mhéadú níos déanaí (comhartha chuig Athchuir-Le-Táille, BIP-125).</translation>
     </message>
     <message>
-        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation type="unfinished">Le do thoil, déan athbhreithniú ar do thogra idirbhirt. Tabharfaidh sé seo Idirbheart Bitcoin Sínithe go Páirteach (IBSP) ar féidir leat a shábháil nó a chóipeáil agus a shíniú ansin le m.sh. sparán as líne %1, nó sparán crua-earraí atá comhoiriúnach le IBSP.</translation>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Indxcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation type="unfinished">Le do thoil, déan athbhreithniú ar do thogra idirbhirt. Tabharfaidh sé seo Idirbheart Indxcoin Sínithe go Páirteach (IBSP) ar féidir leat a shábháil nó a chóipeáil agus a shíniú ansin le m.sh. sparán as líne %1, nó sparán crua-earraí atá comhoiriúnach le IBSP.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -2400,7 +2400,7 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
+        <source>Warning: Invalid Indxcoin address</source>
         <translation type="unfinished">Rabhadh: Seoladh neamhbhailí Bitcoin</translation>
     </message>
     <message>
@@ -2439,8 +2439,8 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Roghnaigh seoladh a úsáideadh roimhe seo</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation type="unfinished">Seoladh Bitcoin chun an íocaíocht a sheoladh chuig</translation>
+        <source>The Indxcoin address to send the payment to</source>
+        <translation type="unfinished">Seoladh Indxcoin chun an íocaíocht a sheoladh chuig</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -2483,7 +2483,7 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Iontráil lipéad don seoladh seo chun é a chur le liosta na seoltaí úsáidte</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Indxcoin network.</source>
         <translation type="unfinished">Teachtaireacht a bhí ceangailte leis an bitcoin: URI a stórálfar leis an idirbheart le haghaidh do thagairt. Nóta: Ní sheolfar an teachtaireacht seo thar líonra Bitcoin.</translation>
     </message>
     <message>
@@ -2510,8 +2510,8 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Féadfaidh tú teachtaireachtaí / comhaontuithe a shíniú le do sheoltaí chun a chruthú gur féidir leat bitcoins a sheoltear chucu a fháil. Bí cúramach gan aon rud doiléir nó randamach a shíniú, mar d’fhéadfadh ionsaithe fioscaireachta iarracht ar d’aitheantas a shíniú chucu. Ná sínigh ach ráitis lán-mhionsonraithe a aontaíonn tú leo.</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
-        <translation type="unfinished">An seoladh Bitcoin chun an teachtaireacht a shíniú le</translation>
+        <source>The Indxcoin address to sign the message with</source>
+        <translation type="unfinished">An seoladh Indxcoin chun an teachtaireacht a shíniú le</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2534,8 +2534,8 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation>Cóipeáil an síniú reatha chuig gearrthaisce an chórais</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Sínigh an teachtaireacht chun a chruthú gur leat an seoladh Bitcoin seo</translation>
+        <source>Sign the message to prove you own this Indxcoin address</source>
+        <translation>Sínigh an teachtaireacht chun a chruthú gur leat an seoladh Indxcoin seo</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2558,8 +2558,8 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Cuir isteach seoladh an ghlacadóra, teachtaireacht  (déan cinnte go gcóipeálann tú bristeacha líne, spásanna, táib, srl. go díreach) agus sínigh thíos chun an teachtaireacht a fhíorú. Bí cúramach gan níos mó a léamh isteach sa síniú ná mar atá sa teachtaireacht sínithe féin, ionas nach dtarlóidh ionsaí socadáin duit. Tabhair faoi deara nach gcruthóidh sé seo ach go bhfaigheann an páirtí sínithe leis an seoladh, ní féidir leis seolta aon idirbhirt a chruthú!</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation type="unfinished">An seoladh Bitcoin a síníodh an teachtaireacht leis</translation>
+        <source>The Indxcoin address the message was signed with</source>
+        <translation type="unfinished">An seoladh Indxcoin a síníodh an teachtaireacht leis</translation>
     </message>
     <message>
         <source>The signed message to verify</source>
@@ -2570,8 +2570,8 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">An síniú a tugadh nuair a síníodh an teachtaireacht</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Fíoraigh an teachtaireacht lena chinntiú go raibh sí sínithe leis an seoladh Bitcoin sainithe </translation>
+        <source>Verify the message to ensure it was signed with the specified Indxcoin address</source>
+        <translation>Fíoraigh an teachtaireacht lena chinntiú go raibh sí sínithe leis an seoladh Indxcoin sainithe </translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

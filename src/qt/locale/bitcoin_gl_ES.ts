@@ -66,8 +66,8 @@
         <translation type="unfinished">Enderezos de recepción</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Estes son os teus enderezos de Bitcoin para enviar pagamentos. Asegurate sempre de comprobar a cantidade e maila dirección antes de enviar moedas.</translation>
+        <source>These are your Indxcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Estes son os teus enderezos de Indxcoin para enviar pagamentos. Asegurate sempre de comprobar a cantidade e maila dirección antes de enviar moedas.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -345,7 +345,7 @@
         <translation type="unfinished">Proxy &lt;b&gt;activado&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Indxcoin address</source>
         <translation>Envía moedas a un enderezo de Bitcoin</translation>
     </message>
     <message>
@@ -377,12 +377,12 @@
         <translation>Encripta as claves privadas que pertencen á túa carteira</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Asina mensaxes cos teus enderezos de Bitcoin para probar que che pertencen</translation>
+        <source>Sign messages with your Indxcoin addresses to prove you own them</source>
+        <translation>Asina mensaxes cos teus enderezos de Indxcoin para probar que che pertencen</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verifica mensaxes para asegurar que foron asinados cos enderezos de Bitcoin especificados</translation>
+        <source>Verify messages to ensure they were signed with specified Indxcoin addresses</source>
+        <translation>Verifica mensaxes para asegurar que foron asinados cos enderezos de Indxcoin especificados</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -480,8 +480,8 @@
         <translation type="unfinished">Pechar carteira</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Mostra a %1 mensaxe de axuda para obter unha lista cas posibles opcións de línea de comando de Bitcoin </translation>
+        <source>Show the %1 help message to get a list with possible Indxcoin command-line options</source>
+        <translation type="unfinished">Mostra a %1 mensaxe de axuda para obter unha lista cas posibles opcións de línea de comando de Indxcoin </translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -508,7 +508,7 @@
         <translation type="unfinished">%1 cliente</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Indxcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -806,8 +806,8 @@
         <translation type="unfinished">Editar enderezo de envío</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">O enderezo introducido "%1" non é un enderezo de Bitcoin válido.</translation>
+        <source>The entered address "%1" is not a valid Indxcoin address.</source>
+        <translation type="unfinished">O enderezo introducido "%1" non é un enderezo de Indxcoin válido.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>

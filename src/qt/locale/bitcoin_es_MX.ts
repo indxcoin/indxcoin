@@ -66,8 +66,8 @@
         <translation type="unfinished">Direcciones de recibo</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Estas son tus direcciones de Bitcoin para enviar pagos. Siempre revisa el monto y la dirección de envío antes de enviar monedas.</translation>
+        <source>These are your Indxcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Estas son tus direcciones de Indxcoin para enviar pagos. Siempre revisa el monto y la dirección de envío antes de enviar monedas.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -385,7 +385,7 @@
         <translation type="unfinished">El proxy está &lt;b&gt;habilitado&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Indxcoin address</source>
         <translation>Enviar monedas a una dirección Bitcoin</translation>
     </message>
     <message>
@@ -433,16 +433,16 @@
         <translation type="unfinished">&amp;Cambiar contraseña...</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Firme mensajes con sus direcciones de Bitcoin para demostrar que los posee</translation>
+        <source>Sign messages with your Indxcoin addresses to prove you own them</source>
+        <translation>Firme mensajes con sus direcciones de Indxcoin para demostrar que los posee</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
         <translation type="unfinished">&amp;Verificar mensaje...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verifique los mensajes para asegurarse de que se firmaron con direcciones de Bitcoin especificadas.</translation>
+        <source>Verify messages to ensure they were signed with specified Indxcoin addresses</source>
+        <translation>Verifique los mensajes para asegurarse de que se firmaron con direcciones de Indxcoin especificadas.</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -558,8 +558,8 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
         <translation type="unfinished">Cerrar todas las carteras</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Mostrar mensaje de ayuda %1  para obtener una lista con posibles líneas de comando de Bitcoin </translation>
+        <source>Show the %1 help message to get a list with possible Indxcoin command-line options</source>
+        <translation type="unfinished">Mostrar mensaje de ayuda %1  para obtener una lista con posibles líneas de comando de Indxcoin </translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -582,11 +582,11 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
         <translation type="unfinished">Ventana Principal</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Indxcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform>%n conexiones activas con la red Bitcoin</numerusform>
-            <numerusform>%n conexiones activas con la red Bitcoin </numerusform>
+            <numerusform>%n conexiones activas con la red Indxcoin </numerusform>
         </translation>
     </message>
     <message>
@@ -1292,7 +1292,7 @@ Para obtener más información, escriba %6.
         <translation type="unfinished">Mensaje:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Indxcoin network.</source>
         <translation type="unfinished">Mensaje opcional para agregar a la solicitud de pago, el cual será mostrado cuando la solicitud este abierta. Nota: El mensaje no se manda con el pago a travéz de la red de Bitcoin.</translation>
     </message>
     <message>
@@ -1536,8 +1536,8 @@ Para obtener más información, escriba %6.
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished">Advertencia: Dirección de Bitcoin invalida</translation>
+        <source>Warning: Invalid Indxcoin address</source>
+        <translation type="unfinished">Advertencia: Dirección de Indxcoin invalida</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -1571,8 +1571,8 @@ Para obtener más información, escriba %6.
         <translation type="unfinished">Elegir la dirección utilizada anteriormente</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation type="unfinished">La dirección de Bitcoin para enviar el pago a</translation>
+        <source>The Indxcoin address to send the payment to</source>
+        <translation type="unfinished">La dirección de Indxcoin para enviar el pago a</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
