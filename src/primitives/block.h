@@ -9,8 +9,8 @@
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <uint256.h>
-#include <util/system.h>
-#include <util/strencodings.h>
+//#include <util/system.h>
+//#include <util/strencodings.h>
 
 class CWallet;
 typedef std::vector<unsigned char> valtype;
@@ -71,8 +71,8 @@ public:
     unsigned int GetStakeEntropyBit() const
     {
         unsigned int nEntropyBit = (GetHash().GetLow64() & 1llu);
-        if (gArgs.GetBoolArg("-printstakemodifier", false))
-            LogPrintf("GetStakeEntropyBit: hashBlock=%s nEntropyBit=%u\n", GetHash().ToString().c_str(), nEntropyBit);
+        //if (gArgs.GetBoolArg("-printstakemodifier", false))
+        //    LogPrintf("GetStakeEntropyBit: hashBlock=%s nEntropyBit=%u\n", GetHash().ToString().c_str(), nEntropyBit);
         return nEntropyBit;
     }
 };
