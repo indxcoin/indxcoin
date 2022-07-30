@@ -120,7 +120,7 @@
         <translation type="unfinished">Confirma cifrationem cassidilis</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR INDXCOINS&lt;/b&gt;!</source>
         <translation type="unfinished">Monitio: Si cassidile tuum cifras et tesseram amittis, tu &lt;b&gt;AMITTES OMNES TUOS NUMMOS BITOS&lt;/b&gt;!</translation>
     </message>
     <message>
@@ -268,7 +268,7 @@
     </message>
     <message>
         <source>Send coins to a Indxcoin address</source>
-        <translation>Mitte nummos ad inscriptionem Bitcoin</translation>
+        <translation>Mitte nummos ad inscriptionem Indxcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -304,7 +304,7 @@
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Indxcoin addresses</source>
-        <translation>Verifica nuntios ut certus sis eos signatos esse cum specificatis inscriptionibus Bitcoin</translation>
+        <translation>Verifica nuntios ut certus sis eos signatos esse cum specificatis inscriptionibus Indxcoin</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -613,7 +613,7 @@
 <context>
     <name>PaymentServer</name>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <source>Cannot start indxcoin: click-to-pay handler</source>
         <translation type="unfinished">Indxcoin incipere non potest: cliccare-ad-pensandum handler</translation>
     </message>
     <message>
@@ -923,7 +923,7 @@
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Indxcoin address</source>
-        <translation>Verifica nuntium ut cures signatum esse cum specifica inscriptione Bitcoin</translation>
+        <translation>Verifica nuntium ut cures signatum esse cum specifica inscriptione Indxcoin</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
