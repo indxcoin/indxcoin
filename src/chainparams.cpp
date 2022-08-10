@@ -112,7 +112,7 @@ public:
         pchMessageStart[2] = 0xd7;
         pchMessageStart[3] = 0xb6;
         nDefaultPort = 3180;
-        nPruneAfterHeight = 100000;
+        nPruneAfterHeight = std::numeric_limits<uint64_t>::max();
         m_assumed_blockchain_size = 1;
         m_assumed_chain_state_size = 0;
 
@@ -234,7 +234,7 @@ public:
         pchMessageStart[2] = 0xb6;
         pchMessageStart[3] = 0xc5;
         nDefaultPort = 4180;
-        nPruneAfterHeight = 1000;
+        nPruneAfterHeight = std::numeric_limits<uint64_t>::max();
         m_assumed_blockchain_size = 1;
         m_assumed_chain_state_size = 0;
 
@@ -385,7 +385,7 @@ public:
         memcpy(pchMessageStart, hash.begin(), 4);
 
         nDefaultPort = 6180;
-        nPruneAfterHeight = 1000;
+        nPruneAfterHeight = std::numeric_limits<uint64_t>::max();
 
         genesis = CreateGenesisBlock(1653544800, 1653544800, 2109928, 0x1e0ffff0, 1, 33 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -462,7 +462,7 @@ public:
         pchMessageStart[2] = 0xb6;
         pchMessageStart[3] = 0xdb;
         nDefaultPort = 6180;
-        nPruneAfterHeight = args.GetBoolArg("-fastprune", false) ? 100 : 1000;
+        nPruneAfterHeight = std::numeric_limits<uint64_t>::max();
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
 

@@ -319,10 +319,6 @@ void BitcoinApplication::parameterSetup()
     InitParameterInteraction(gArgs);
 }
 
-void BitcoinApplication::InitPruneSetting(int64_t prune_MiB)
-{
-    optionsModel->SetPruneTargetGB(PruneMiBtoGB(prune_MiB), true);
-}
 
 void BitcoinApplication::requestInitialize()
 {
@@ -614,10 +610,6 @@ int GuiMain(int argc, char* argv[])
     // Load GUI settings from QSettings
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
 
-    if (did_show_intro) {
-        // Store intro dialog settings other than datadir (network specific)
-        app.InitPruneSetting(prune_MiB);
-    }
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());
