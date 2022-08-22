@@ -137,10 +137,10 @@ public:
         // This is fine at runtime as we'll fall back to using them as an addrfetch if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        vSeeds.emplace_back("seeder1.indxcoin.org");
-        vSeeds.emplace_back("seeder2.indxcoin.org"); 
-        vSeeds.emplace_back("seeder3.indxcoin.org"); 
-        vSeeds.emplace_back("seeder4.indxcoin.org");  
+        vSeeds.emplace_back("seeder1.indxcoin.network");
+        vSeeds.emplace_back("seeder2.indxcoin.network"); 
+        vSeeds.emplace_back("seeder3.indxcoin.network"); 
+        vSeeds.emplace_back("seeder4.indxcoin.network");  
 
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,137);  //  prefix = x, hexid = "89" 
