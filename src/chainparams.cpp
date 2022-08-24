@@ -99,8 +99,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
-        consensus.nMinimumChainWork = uint256S("0x0");
-        consensus.defaultAssumeValid = uint256S("0x0"); 
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000053166f904e9a6d");
+        consensus.defaultAssumeValid = uint256S("0xae3c392d9fdf4683a506ced7e4520617bd42f7833f1166480d6ffd4fe5a7b770"); 
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
