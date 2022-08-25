@@ -43,8 +43,8 @@ pkg install autoconf automake boost-libs git gmake libevent libtool pkgconf
 
 ```
 
-### 2. Clone Bitcoin Repo
-Now that `git` and all the required dependencies are installed, let's clone the Bitcoin Core repository to a directory. All build scripts and commands will run from this directory.
+### 2. Clone INDXcoin Repo
+Now that `git` and all the required dependencies are installed, let's clone the INDXcoin Core repository to a directory. All build scripts and commands will run from this directory.
 ``` bash
 git clone https://github.com/indxcoin/indxcoin.git
 ```
@@ -72,7 +72,7 @@ pkg install sqlite3
 #### GUI Dependencies
 ###### Qt5
 
-Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install `qt5`. Skip if you don't intend to use the GUI.
+INDXcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install `qt5`. Skip if you don't intend to use the GUI.
 ```bash
 pkg install qt5
 ```
@@ -93,11 +93,11 @@ pkg install python3
 ```
 ---
 
-## Building Bitcoin Core
+## Building INDXcoin Core
 
 ### 1. Configuration
 
-There are many ways to configure Bitcoin Core, here are a few common examples:
+There are many ways to configure INDXcoin Core, here are a few common examples:
 ##### Wallet (BDB + SQlite) Support, No GUI:
 This explicitly enables legacy wallet support and disables the GUI. If `sqlite3` is installed, then descriptor wallet support will be built.
 ```bash
