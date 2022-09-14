@@ -13,7 +13,6 @@
 #include <qt/paymentserver.h>
 #include <qt/transactionrecord.h>
 
-#include "chainparams.h"
 #include <consensus/consensus.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
@@ -111,10 +110,6 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     if (wtx.is_coinbase)
     {
         strHTML += "<b>" + tr("Source") + ":</b> " + tr("Generated") + "<br>";
-    }
-    else if (wtx.is_coinstake)
-    {
-        strHTML += "<b>" + tr("Source") + ":</b> " + tr("Staked") + "<br>";
     }
     else if (wtx.value_map.count("from") && !wtx.value_map["from"].empty())
     {
@@ -291,7 +286,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     strHTML += "<b>" + tr("Transaction virtual size") + ":</b> " + QString::number(GetVirtualTransactionSize(*wtx.tx)) + " bytes<br>";
     strHTML += "<b>" + tr("Output index") + ":</b> " + QString::number(rec->getOutputIndex()) + "<br>";
 
-    // Message from normal indxcoin:URI (indxcoin:123...?message=example)
+    // Message from normal bitcoin:URI (bitcoin:123...?message=example)
     for (const std::pair<std::string, std::string>& r : orderForm) {
         if (r.first == "Message")
             strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(r.second, true) + "<br>";
@@ -313,11 +308,11 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
         }
     }
 
-    quint32 numBlocksToMaturity = COINBASE_MATURITY +  1;  
     if (wtx.is_coinbase)
-       strHTML += "<br>" + tr("Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to \"not accepted\" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.").arg(QString::number(numBlocksToMaturity)) + "<br>";
-    if (wtx.is_coinstake)
-        strHTML += "<br>" + tr("Staked coins must wait %1 blocks before they can return to balance and be spent.  When you generated this proof-of-stake block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, its state will change to \"not accepted\" and it won't be a valid stake.  This may occasionally happen if another node generates a proof-of-stake block within a few seconds of yours.").arg(QString::number(numBlocksToMaturity)) + "<br>";
+    {
+        quint32 numBlocksToMaturity = COINBASE_MATURITY +  1;
+        strHTML += "<br>" + tr("Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to \"not accepted\" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.").arg(QString::number(numBlocksToMaturity)) + "<br>";
+    }
 
     //
     // Debug view

@@ -2,10 +2,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-bin_PROGRAMS += qt/indxcoin-qt
+bin_PROGRAMS += qt/bitcoin-qt
 
 if BUILD_BITCOIN_GUI
-  bin_PROGRAMS += indxcoin-gui
+  bin_PROGRAMS += bitcoin-gui
 endif
 
 EXTRA_LIBRARIES += qt/libbitcoinqt.a
@@ -86,10 +86,7 @@ QT_MOC_CPP = \
   qt/moc_walletcontroller.cpp \
   qt/moc_walletframe.cpp \
   qt/moc_walletmodel.cpp \
-  qt/moc_walletview.cpp \
-  qt/moc_mintingfilterproxy.cpp \
-  qt/moc_mintingtablemodel.cpp \
-  qt/moc_mintingview.cpp
+  qt/moc_walletview.cpp
 
 BITCOIN_MM = \
   qt/macdockiconhandler.mm \
@@ -167,10 +164,7 @@ BITCOIN_QT_H = \
   qt/walletmodel.h \
   qt/walletmodeltransaction.h \
   qt/walletview.h \
-  qt/winshutdownmonitor.h \
-  qt/mintingfilterproxy.h \
-  qt/mintingtablemodel.h \
-  qt/mintingview.h
+  qt/winshutdownmonitor.h
 
 RES_FONTS = \
   qt/res/fonts/RobotoMono-Bold.ttf
@@ -280,10 +274,7 @@ BITCOIN_QT_WALLET_CPP = \
   qt/walletframe.cpp \
   qt/walletmodel.cpp \
   qt/walletmodeltransaction.cpp \
-  qt/walletview.cpp \
-  qt/mintingfilterproxy.cpp \
-  qt/mintingtablemodel.cpp \
-  qt/mintingview.cpp
+  qt/walletview.cpp
 
 BITCOIN_QT_CPP = $(BITCOIN_QT_BASE_CPP)
 if TARGET_WINDOWS
@@ -318,44 +309,43 @@ QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:
 # Most files will depend on the forms and moc files as includes. Generate them
 # before anything else.
 $(QT_MOC): $(QT_FORMS_H)
-$(qt_libbitcoinqt_a_OBJECTS) $(qt_indxcoin_qt_OBJECTS) $(indxcoin_gui_OBJECTS) : | $(QT_MOC)
+$(qt_libbitcoinqt_a_OBJECTS) $(qt_bitcoin_qt_OBJECTS) $(bitcoin_gui_OBJECTS) : | $(QT_MOC)
 
 # bitcoin-qt and bitcoin-gui binaries #
-indxcoin_qt_cppflags = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
+bitcoin_qt_cppflags = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QR_CFLAGS)
-indxcoin_qt_cxxflags = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+bitcoin_qt_cxxflags = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
-indxcoin_qt_sources = qt/main.cpp
+bitcoin_qt_sources = qt/main.cpp
 if TARGET_WINDOWS
-  indxcoin_qt_sources += $(BITCOIN_RC)
+  bitcoin_qt_sources += $(BITCOIN_RC)
 endif
-indxcoin_qt_ldadd = qt/libbitcoinqt.a $(LIBBITCOIN_SERVER)
+bitcoin_qt_ldadd = qt/libbitcoinqt.a $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
-indxcoin_qt_ldadd += $(LIBBITCOIN_UTIL) $(LIBBITCOIN_WALLET)
+bitcoin_qt_ldadd += $(LIBBITCOIN_UTIL) $(LIBBITCOIN_WALLET)
 endif
 if ENABLE_ZMQ
-indxcoin_qt_ldadd += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
+bitcoin_qt_ldadd += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
 endif
-indxcoin_qt_ldadd += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
+bitcoin_qt_ldadd += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(LIBSECP256K1) \
-  $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(SQLITE_LIBS) \
-   $(SSL_LIBS) $(CRYPTO_LIBS) 
-indxcoin_qt_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
-indxcoin_qt_libtoolflags = $(AM_LIBTOOLFLAGS) --tag CXX
+  $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(SQLITE_LIBS)
+bitcoin_qt_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+bitcoin_qt_libtoolflags = $(AM_LIBTOOLFLAGS) --tag CXX
 
-qt_indxcoin_qt_CPPFLAGS = $(indxcoin_qt_cppflags)
-qt_indxcoin_qt_CXXFLAGS = $(indxcoin_qt_cxxflags)
-qt_indxcoin_qt_SOURCES = $(indxcoin_qt_sources)
-qt_indxcoin_qt_LDADD = $(indxcoin_qt_ldadd)
-qt_indxcoin_qt_LDFLAGS = $(indxcoin_qt_ldflags)
-qt_indxcoin_qt_LIBTOOLFLAGS = $(indxcoin_qt_libtoolflags)
+qt_bitcoin_qt_CPPFLAGS = $(bitcoin_qt_cppflags)
+qt_bitcoin_qt_CXXFLAGS = $(bitcoin_qt_cxxflags)
+qt_bitcoin_qt_SOURCES = $(bitcoin_qt_sources)
+qt_bitcoin_qt_LDADD = $(bitcoin_qt_ldadd)
+qt_bitcoin_qt_LDFLAGS = $(bitcoin_qt_ldflags)
+qt_bitcoin_qt_LIBTOOLFLAGS = $(bitcoin_qt_libtoolflags)
 
-indxcoin_gui_CPPFLAGS = $(indxcoin_qt_cppflags)
-indxcoin_gui_CXXFLAGS = $(indxcoin_qt_cxxflags)
-indxcoin_gui_SOURCES = $(indxcoin_qt_sources)
-indxcoin_gui_LDADD = $(indxcoin_qt_ldadd)
-indxcoin_gui_LDFLAGS = $(indxcoin_qt_ldflags)
-indxcoin_gui_LIBTOOLFLAGS = $(indxcoin_qt_libtoolflags)
+bitcoin_gui_CPPFLAGS = $(bitcoin_qt_cppflags)
+bitcoin_gui_CXXFLAGS = $(bitcoin_qt_cxxflags)
+bitcoin_gui_SOURCES = $(bitcoin_qt_sources)
+bitcoin_gui_LDADD = $(bitcoin_qt_ldadd)
+bitcoin_gui_LDFLAGS = $(bitcoin_qt_ldflags)
+bitcoin_gui_LIBTOOLFLAGS = $(bitcoin_qt_libtoolflags)
 
 #locale/foo.ts -> locale/foo.qm
 QT_QM=$(QT_TS:.ts=.qm)
@@ -386,8 +376,8 @@ CLEAN_QT = $(nodist_qt_libbitcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda 
 
 CLEANFILES += $(CLEAN_QT)
 
-indxcoin_qt_clean: FORCE
-	rm -f $(CLEAN_QT) $(qt_libbitcoinqt_a_OBJECTS) $(qt_indxcoin_qt_OBJECTS) qt/bitcoin-qt$(EXEEXT) $(LIBBITCOINQT)
+bitcoin_qt_clean: FORCE
+	rm -f $(CLEAN_QT) $(qt_libbitcoinqt_a_OBJECTS) $(qt_bitcoin_qt_OBJECTS) qt/bitcoin-qt$(EXEEXT) $(LIBBITCOINQT)
 
 bitcoin_qt : qt/bitcoin-qt$(EXEEXT)
 
@@ -396,7 +386,7 @@ QT_BASE_VERSION = $(lastword $(shell $(MOC) --version))
 QT_BASE_PATH = $(shell find ../depends/sources/ -maxdepth 1 -type f -regex ".*qtbase.*$(QT_BASE_VERSION)\.tar.xz")
 QT_BASE_TLD = $(shell tar tf $(QT_BASE_PATH) --exclude='*/*')
 
-indxcoin_qt_apk: FORCE
+bitcoin_qt_apk: FORCE
 	mkdir -p $(APK_LIB_DIR)
 	cp $(dir $(CC))../sysroot/usr/lib/$(host_alias)/libc++_shared.so $(APK_LIB_DIR)
 	tar xf $(QT_BASE_PATH) -C qt/android/src/ $(QT_BASE_TLD)src/android/jar/src --strip-components=5

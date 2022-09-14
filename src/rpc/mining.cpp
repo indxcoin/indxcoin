@@ -17,8 +17,6 @@
 #include <net.h>
 #include <node/context.h>
 #include <policy/fees.h>
-#include <pos/kernel.h>
-#include <pos/stake.h>
 #include <pow.h>
 #include <rpc/blockchain.h>
 #include <rpc/mining.h>
@@ -39,7 +37,6 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <warnings.h>
-#include <wallet/rpcwallet.h>
 
 #include <memory>
 #include <stdint.h>
@@ -123,7 +120,7 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
 
     CChainParams chainparams(Params());
 
-      while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(UintToArith256(block.GetHash()), block.nBits, chainparams.GetConsensus()) && !ShutdownRequested()) {
+    while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus()) && !ShutdownRequested()) {
         ++block.nNonce;
         --max_tries;
     }
@@ -216,7 +213,7 @@ static RPCHelpMan generatetodescriptor()
         "\nMine blocks immediately to a specified descriptor (before the RPC call returns)\n",
         {
             {"num_blocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
-            {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor to send the newly generated indxcoin to."},
+            {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor to send the newly generated bitcoin to."},
             {"maxtries", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_MAX_TRIES}, "How many iterations to try."},
         },
         RPCResult{
@@ -247,50 +244,6 @@ static RPCHelpMan generatetodescriptor()
     };
 }
 
-static RPCHelpMan staking()
-{
-    return RPCHelpMan{"staking",
-            "Gets or sets the current staking configuration.\n"
-            "When called without an argument, returns the current status of staking.\n"
-            "When called with an argument, enables or disables staking.\n",
-            {
-                {"generate", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "To enable or disable staking."},
-
-            },
-            RPCResult{
-                RPCResult::Type::OBJ, "", "",
-                {
-                    {RPCResult::Type::BOOL, "staking", "if staking is active or not. false:inactive, true:active"},
-                }
-            },
-            RPCExamples{
-                HelpExampleCli("staking", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
-                + HelpExampleRpc("staking", "[\"all\"], [\"libevent\"]")
-            },
-            [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-
-
-    bool fGenerate = request.params[0].isNull() ? gArgs.GetBoolArg("-staking", false) : request.params[0].get_bool();
-    if (fGenerate) {
-        NodeContext& node = EnsureAnyNodeContext(request.context);
-        gArgs.ForceSetArg("-staking", fGenerate ? "1" : "0");
-
-        StartMintStake(gArgs.GetBoolArg("-staking", true), GetWallets()[0], node.chainman.get(), &node.chainman->ActiveChainstate(), node.connman.get(), node.mempool.get());
-
-    }else{
-        gArgs.ForceSetArg("-staking", fGenerate ? "1" : "0");
-        StopMintStake();
-    }
-
-    UniValue result(UniValue::VOBJ);
-    result.pushKV("generate", fGenerate);
-    return result;
-},
-    };
-
-}
-
 static RPCHelpMan generate()
 {
     return RPCHelpMan{"generate", "has been replaced by the -generate cli option. Refer to -help for more information.", {}, {}, RPCExamples{""}, [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
@@ -304,7 +257,7 @@ static RPCHelpMan generatetoaddress()
                 "\nMine blocks immediately to a specified address (before the RPC call returns)\n",
                 {
                     {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated indxcoin to."},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated bitcoin to."},
                     {"maxtries", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_MAX_TRIES}, "How many iterations to try."},
                 },
                 RPCResult{
@@ -315,7 +268,7 @@ static RPCHelpMan generatetoaddress()
                 RPCExamples{
             "\nGenerate 11 blocks to myaddress\n"
             + HelpExampleCli("generatetoaddress", "11 \"myaddress\"")
-            + "If you are using the " PACKAGE_NAME " wallet, you can get a new address to send the newly generated indxcoin to with:\n"
+            + "If you are using the " PACKAGE_NAME " wallet, you can get a new address to send the newly generated bitcoin to with:\n"
             + HelpExampleCli("getnewaddress", "")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
@@ -344,7 +297,7 @@ static RPCHelpMan generateblock()
     return RPCHelpMan{"generateblock",
         "\nMine a block with a set of ordered transactions immediately to a specified address or descriptor (before the RPC call returns)\n",
         {
-            {"output", RPCArg::Type::STR, RPCArg::Optional::NO, "The address or descriptor to send the newly generated indxcoin to."},
+            {"output", RPCArg::Type::STR, RPCArg::Optional::NO, "The address or descriptor to send the newly generated bitcoin to."},
             {"transactions", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings which are either txids or raw transactions.\n"
                 "Txids must reference transactions currently in the mempool.\n"
                 "All transactions must be valid and in valid order, otherwise the block will be rejected.",
@@ -487,84 +440,6 @@ static RPCHelpMan getmininginfo()
     obj.pushKV("networkhashps",    getnetworkhashps().HandleRequest(request));
     obj.pushKV("pooledtx",         (uint64_t)mempool.size());
     obj.pushKV("chain",            Params().NetworkIDString());
-    obj.pushKV("warnings",         GetWarnings(false).original);
-    return obj;
-},
-    };
-}
-
-static RPCHelpMan getstakinginfo()
-{
-    return RPCHelpMan{"getstakinginfo",
-                "\nReturns a json object containing staking-related information.",
-                {},
-                RPCResult{
-                    RPCResult::Type::OBJ, "", "",
-                    {
-                        {RPCResult::Type::BOOL, "enabled", "If staking enabled or not"},
-                        {RPCResult::Type::BOOL, "staking", "If currently staking"},
-                        {RPCResult::Type::STR,  "chain", "current network name (main, test, signet, regtest)"},
-                        {RPCResult::Type::NUM,  "blocks", "The current block"},
-                        {RPCResult::Type::NUM,  "currentblockweight", /* optional */ true, "The block weight of the last assembled block (only present if a block was ever assembled)"},
-                        {RPCResult::Type::NUM,  "currentblocktx", /* optional */ true, "The number of block transactions of the last assembled block (only present if a block was ever assembled)"},
-                        {RPCResult::Type::NUM,  "difficulty", "The current difficulty"},
-                        {RPCResult::Type::NUM,  "networkhashps", "The network hashes per second"},
-                        {RPCResult::Type::NUM,  "pooledtx", "The size of the mempool"},
-                        {RPCResult::Type::NUM,  "search-interval", "last search interval"},
-                        {RPCResult::Type::NUM,  "averageweight", "the average staking weight"},
-                        {RPCResult::Type::NUM,  "totalweight", "the total staking weight"},
-                        {RPCResult::Type::NUM,  "netstakeweight", "the network staking weight"},
-                        {RPCResult::Type::NUM,  "expectedtime", "approximate time till next stake"},
-                        {RPCResult::Type::STR,  "warnings", "any network and blockchain warnings"},
-                    }},
-                RPCExamples{
-                    HelpExampleCli("getstakinginfo", "")
-            + HelpExampleRpc("getstakinginfo", "")
-                },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-
-    CChainParams chainparams(Params());
-    const Consensus::Params params = Params().GetConsensus();
-
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
-
-    uint64_t nAverageWeight = 0, nTotalWeight = 0;
-
-    GetStakeWeight(pwallet.get(), nAverageWeight, nTotalWeight, chainparams.GetConsensus());
-
-    NodeContext& node = EnsureAnyNodeContext(request.context);
-    const CTxMemPool& mempool = EnsureMemPool(node);
-    ChainstateManager& chainman = EnsureChainman(node);
-    LOCK(cs_main);
-    const CChain& active_chain = chainman.ActiveChain();
-
-    uint64_t nNetworkWeight = GetPoSVKernelPS(active_chain.Tip());
-
-    bool staking = nLastCoinStakeSearchInterval && nAverageWeight;
-    uint64_t nExpectedTime = 0;
-    if (nTotalWeight) nExpectedTime = params.nPowTargetSpacing * nNetworkWeight / nTotalWeight;
-
-    UniValue obj(UniValue::VOBJ);
-    obj.pushKV("enabled",          gArgs.GetBoolArg("-staking", true));
-    obj.pushKV("staking",          staking);
-    obj.pushKV("chain",            Params().NetworkIDString());
-    obj.pushKV("blocks",           active_chain.Height());
-    if (BlockAssembler::m_last_block_weight) obj.pushKV("currentblockweight", *BlockAssembler::m_last_block_weight);
-    if (BlockAssembler::m_last_block_num_txs) obj.pushKV("currentblocktx", *BlockAssembler::m_last_block_num_txs);
-    obj.pushKV("difficulty",       (double)GetDifficulty(active_chain.Tip()));
-    obj.pushKV("networkhashps",    getnetworkhashps().HandleRequest(request));
-    obj.pushKV("pooledtx",         (uint64_t)mempool.size());
-    obj.pushKV("search-interval",  (int)nLastCoinStakeSearchInterval);
-    obj.pushKV("averageweight",    (uint64_t)nAverageWeight);
-    obj.pushKV("totalweight",      (uint64_t)nTotalWeight);
-    obj.pushKV("netstakeweight",   (uint64_t)nNetworkWeight);
-    obj.pushKV("expectedtime",     (uint64_t)nExpectedTime);
     obj.pushKV("warnings",         GetWarnings(false).original);
     return obj;
 },
@@ -863,9 +738,8 @@ static RPCHelpMan getblocktemplate()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the signet rule set (call with {\"rules\": [\"segwit\", \"signet\"]})");
     }
 
-    const struct VBDeploymentInfo& segwit_info = VersionBitsDeploymentInfo[Consensus::DEPLOYMENT_SEGWIT];
     // GBT must be called with 'segwit' set in the rules
-    if (setClientRules.count(segwit_info.name) != 1) {
+    if (setClientRules.count("segwit") != 1) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the segwit rule set (call with {\"rules\": [\"segwit\"]})");
     }
 
@@ -1380,7 +1254,6 @@ static const CRPCCommand commands[] =
   //  ---------------------  -----------------------
     { "mining",              &getnetworkhashps,        },
     { "mining",              &getmininginfo,           },
-    { "mining",              &getstakinginfo,          },
     { "mining",              &prioritisetransaction,   },
     { "mining",              &getblocktemplate,        },
     { "mining",              &submitblock,             },
@@ -1390,7 +1263,6 @@ static const CRPCCommand commands[] =
     { "generating",          &generatetoaddress,       },
     { "generating",          &generatetodescriptor,    },
     { "generating",          &generateblock,           },
-    { "generating",          &staking,                 },
 
     { "util",                &estimatesmartfee,        },
 

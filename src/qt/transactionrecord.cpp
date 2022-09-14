@@ -35,20 +35,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     uint256 hash = wtx.tx->GetHash();
     std::map<std::string, std::string> mapValue = wtx.value_map;
 
-    if (wtx.is_coinstake) // Coinstake transaction
-    {
-        TransactionRecord sub(hash, nTime, TransactionRecord::Stake, "", -nDebit, wtx.tx->GetValueOut());
-        CTxDestination address;
-        const CTxOut& txout = wtx.tx->vout[1];
-        isminetype mine = wtx.txout_is_mine[1];
-
-        if(ExtractDestination(txout.scriptPubKey, address) && wtx.txout_address_is_mine[1])
-            sub.address = EncodeDestination(address);
-
-        sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
-        parts.append(sub);
-    }
-    else if (nNet > 0 || wtx.is_coinbase)
+    if (nNet > 0 || wtx.is_coinbase)
     {
         //
         // Credit
@@ -181,7 +168,7 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, cons
     // Sort order, unrecorded transactions sort to the top
     status.sortKey = strprintf("%010d-%01d-%010u-%03d",
         wtx.block_height,
-        wtx.is_coinbase || wtx.is_coinstake ? 1 : 0,
+        wtx.is_coinbase ? 1 : 0,
         wtx.time_received,
         idx);
     status.countsForBalance = wtx.is_trusted && !(wtx.blocks_to_maturity > 0);
@@ -201,7 +188,7 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, cons
         }
     }
     // For generated transactions, determine maturity
-    else if(type == TransactionRecord::Generated || type == TransactionRecord::Stake)
+    else if(type == TransactionRecord::Generated)
     {
         if (wtx.blocks_to_maturity > 0)
         {

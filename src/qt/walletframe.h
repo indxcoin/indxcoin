@@ -48,7 +48,6 @@ public:
 
 Q_SIGNALS:
     void createWalletButtonClicked();
-    void walletLockStatusChanged(int unit);
 
 private:
     QStackedWidget *walletStack;
@@ -68,8 +67,6 @@ public:
 public Q_SLOTS:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
-    /** Switch to minting page */
-    void gotoMintingPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
     /** Switch to receive coins page */
@@ -93,7 +90,6 @@ public Q_SLOTS:
     void changePassphrase();
     /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet();
-    void lockWallet();
 
     /** Show used sending addresses */
     void usedSendingAddresses();

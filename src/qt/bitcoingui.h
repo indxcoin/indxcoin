@@ -28,7 +28,6 @@
 #include <memory>
 
 class ClientModel;
-class LockWalletStatusBarControl;
 class NetworkStyle;
 class Notificator;
 class OptionsModel;
@@ -42,8 +41,6 @@ class WalletModel;
 class HelpMessageDialog;
 class ModalOverlay;
 enum class SynchronizationState;
-
-class MintingView;
 
 namespace interfaces {
 class Handler;
@@ -125,8 +122,7 @@ private:
     WalletFrame* walletFrame = nullptr;
 
     UnitDisplayStatusBarControl* unitDisplayControl = nullptr;
-    LockWalletStatusBarControl* lockWalletControl = nullptr;
-    GUIUtil::ClickableLabel* labelWalletEncryptionIcon = nullptr;
+    GUIUtil::ThemedLabel* labelWalletEncryptionIcon = nullptr;
     GUIUtil::ThemedLabel* labelWalletHDStatusIcon = nullptr;
     GUIUtil::ClickableLabel* labelProxyIcon = nullptr;
     GUIUtil::ClickableLabel* connectionsControl = nullptr;
@@ -139,7 +135,6 @@ private:
     QToolBar* appToolBar = nullptr;
     QAction* overviewAction = nullptr;
     QAction* historyAction = nullptr;
-    QAction* mintingAction = nullptr;
     QAction* quitAction = nullptr;
     QAction* sendCoinsAction = nullptr;
     QAction* sendCoinsMenuAction = nullptr;
@@ -157,8 +152,6 @@ private:
     QAction* encryptWalletAction = nullptr;
     QAction* backupWalletAction = nullptr;
     QAction* changePassphraseAction = nullptr;
-    QAction* unlockWalletAction = nullptr;
-    QAction* lockWalletAction = nullptr;
     QAction* aboutQtAction = nullptr;
     QAction* openRPCConsoleAction = nullptr;
     QAction* openAction = nullptr;
@@ -178,13 +171,11 @@ private:
     QSystemTrayIcon* trayIcon = nullptr;
     const std::unique_ptr<QMenu> trayIconMenu;
     Notificator* notificator = nullptr;
-    MintingView* mintingView = nullptr;
     RPCConsole* rpcConsole = nullptr;
     HelpMessageDialog* helpMessageDialog = nullptr;
     ModalOverlay* modalOverlay = nullptr;
 
     QMenu* m_network_context_menu = new QMenu(this);
-    QMenu* m_lock_context_menu = new QMenu(this);
 
 #ifdef Q_OS_MAC
     CAppNapInhibitor* m_app_nap_inhibitor = nullptr;
@@ -285,8 +276,6 @@ public Q_SLOTS:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
-    /** Switch to minting page */
-    void gotoMintingPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
@@ -363,46 +352,6 @@ private Q_SLOTS:
     /** When Display Units are changed on OptionsModel it will refresh the display text of the control on the status bar */
     void updateDisplayUnit(int newUnits);
     /** Tells underlying optionsModel to update its current display unit. */
-    void onMenuSelection(QAction* action);
-};
-
-class LockWalletStatusBarControl : public QLabel
-{
-  Q_OBJECT
-
-public:
-    explicit LockWalletStatusBarControl(const PlatformStyle *platformStyle);
-    /** Lets the control know about the Wallet Frame Model (and its signals) */
-    void setWalletFrame(WalletFrame *walletFrame);
-    void setThemedPixmap(const QString& image_filename, int width, int height);
-    void setLockState(bool lock_active);
-
-protected:
-    /** So that it responds to left-button clicks */
-    void mousePressEvent(QMouseEvent *event) override;
-    void changeEvent(QEvent* e) override;
-
-private:
-    // OptionsModel *optionsModel;
-    WalletFrame *walletFrame;
-    QMenu* menu;
-    QAction* unlockWalletAction = nullptr;
-    QAction* lockWalletAction = nullptr;
-    const PlatformStyle* m_platform_style;
-    QString m_image_filename;
-    int m_pixmap_width;
-    int m_pixmap_height;
-    void updateThemedPixmap();
-
-    /** Shows context menu with Lock wallet options by the mouse coordinates */
-    void onLockWalletClicked(const QPoint& point);
-    /** Creates context menu, its actions, and wires up all the relevant signals for mouse events. */
-    void createContextMenu();
-
-private Q_SLOTS:
-    /** When wallet lock status is changed on walletFrame it will refresh the display text of the control on the status bar */
-    void updateLockWallet(int newUnits);
-    /** Tells underlying walletFrame to update its current status. */
     void onMenuSelection(QAction* action);
 };
 

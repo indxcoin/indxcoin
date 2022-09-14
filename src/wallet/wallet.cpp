@@ -132,12 +132,6 @@ bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, std::optional<bool> lo
     return RemoveWallet(wallet, load_on_start, warnings);
 }
 
-bool HasWallets()
-{
-    LOCK(cs_wallets);
-    return !vpwallets.empty();
-}
-
 std::vector<std::shared_ptr<CWallet>> GetWallets()
 {
     LOCK(cs_wallets);
@@ -1366,10 +1360,9 @@ CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) co
 bool CWallet::IsHDEnabled() const
 {
     // All Active ScriptPubKeyMans must be HD for this to be true
-    bool result = false;
+    bool result = true;
     for (const auto& spk_man : GetActiveScriptPubKeyMans()) {
-        if (!spk_man->IsHDEnabled()) return false;
-        result = true;
+        result &= spk_man->IsHDEnabled();
     }
     return result;
 }
@@ -1702,7 +1695,7 @@ void CWallet::ReacceptWalletTransactions()
 
         int nDepth = wtx.GetDepthInMainChain();
 
-        if (!wtx.IsCoinBase()  && !wtx.IsCoinStake() && (nDepth == 0 && !wtx.isAbandoned())) {
+        if (!wtx.IsCoinBase() && (nDepth == 0 && !wtx.isAbandoned())) {
             mapSorted.insert(std::make_pair(wtx.nOrderPos, &wtx));
         }
     }
@@ -1712,21 +1705,6 @@ void CWallet::ReacceptWalletTransactions()
         CWalletTx& wtx = *(item.second);
         std::string unused_err_string;
         wtx.SubmitMemoryPoolAndRelay(unused_err_string, false);
-    }
-}
-
-void CWallet::AbandonOrphanedCoinstakes()
-{
-    for (std::pair<const uint256, CWalletTx>& item : mapWallet) {
-        const uint256& wtxid = item.first;
-        CWalletTx& wtx = item.second;
-        assert(wtx.GetHash() == wtxid);
-        if (wtx.GetDepthInMainChain() == 0 && !wtx.isAbandoned() && wtx.IsCoinStake()) {
-            LogPrint(BCLog::STAKE, "Abandoning coinstake wtx %s\n", wtx.GetHash().ToString());
-            if (!AbandonTransaction(wtxid)) {
-                LogPrint(BCLog::STAKE, "Failed to abandon coinstake tx %s\n", wtx.GetHash().ToString());
-            }
-        }
     }
 }
 
@@ -1842,7 +1820,7 @@ bool CWallet::SignTransaction(CMutableTransaction& tx) const
             return false;
         }
         const CWalletTx& wtx = mi->second;
-        coins[input.prevout] = Coin(wtx.tx->vout[input.prevout.n], wtx.m_confirm.block_height, wtx.IsCoinBase(), wtx.IsCoinStake(), wtx.nTimeSmart);
+        coins[input.prevout] = Coin(wtx.tx->vout[input.prevout.n], wtx.m_confirm.block_height, wtx.IsCoinBase());
     }
     std::map<int, std::string> input_errors;
     return SignTransaction(tx, coins, SIGHASH_DEFAULT, input_errors);
@@ -2924,11 +2902,10 @@ int CWalletTx::GetDepthInMainChain() const
 
 int CWalletTx::GetBlocksToMaturity() const
 {
-    if (!(IsCoinBase() || IsCoinStake()))
+    if (!IsCoinBase())
         return 0;
     int chain_depth = GetDepthInMainChain();
-    if (!IsCoinStake())
-        assert(chain_depth >= 0); // coinbase tx should not be conflicted
+    assert(chain_depth >= 0); // coinbase tx should not be conflicted
     return std::max(0, (COINBASE_MATURITY+1) - chain_depth);
 }
 
@@ -2950,11 +2927,6 @@ bool CWallet::IsLocked() const
     }
     LOCK(cs_wallet);
     return vMasterKey.empty();
-}
-
-bool CWallet::IsStakingOnly() const
-{
-    return GetIsStakingOnly();
 }
 
 bool CWallet::Lock()
@@ -3214,8 +3186,7 @@ void CWallet::LoadActiveScriptPubKeyMan(uint256 id, OutputType type, bool intern
     auto spk_man = m_spk_managers.at(id).get();
     spk_mans[type] = spk_man;
 
-    const auto it = spk_mans_other.find(type);
-    if (it != spk_mans_other.end() && it->second == spk_man) {
+    if (spk_mans_other[type] == spk_man) {
         spk_mans_other.erase(type);
     }
 

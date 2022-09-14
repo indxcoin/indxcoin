@@ -94,7 +94,7 @@ static constexpr std::chrono::microseconds GETDATA_TX_INTERVAL{std::chrono::seco
 /** Limit to avoid sending big packets. Not used in processing incoming GETDATA for compatibility */
 static const unsigned int MAX_GETDATA_SZ = 1000;
 /** Number of blocks that can be requested at any given time from a single peer. */
-static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 64;
+static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16;
 /** Time during which a peer must stall block download progress before being disconnected. */
 static constexpr auto BLOCK_STALLING_TIMEOUT = 2s;
 /** Number of headers sent in one getheaders result. We rely on the assumption that if a peer sends
@@ -479,14 +479,6 @@ private:
      */
     Mutex m_recent_confirmed_transactions_mutex;
     std::unique_ptr<CRollingBloomFilter> m_recent_confirmed_transactions GUARDED_BY(m_recent_confirmed_transactions_mutex);
-
-
-    /** PoSV: blocks that are waiting to be processed, the key points to previous CBlockIndex entry */
-    struct WaitElement {
-        std::shared_ptr<CBlock> pblock;
-            int64_t time;
-    };
-    std::map<CBlockIndex*, WaitElement> mapBlocksWait;
 
     /** Have we requested this block from a peer */
     bool IsBlockRequested(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -1777,20 +1769,19 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     std::shared_ptr<const CBlock> pblock;
     if (a_recent_block && a_recent_block->GetHash() == pindex->GetBlockHash()) {
         pblock = a_recent_block;
-    }  else if (inv.IsMsgWitnessBlk()) {   
+    } else if (inv.IsMsgWitnessBlk()) {
         // Fast-path: in this case it is possible to serve the block directly from disk,
         // as the network format matches the format on disk
-         std::vector<uint8_t> block_data;
-         if (!ReadRawBlockFromDisk(block_data, pindex, m_chainparams.MessageStart())) {
-             assert(!"cannot load block from disk");
-         }
-         m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, MakeSpan(block_data)));
+        std::vector<uint8_t> block_data;
+        if (!ReadRawBlockFromDisk(block_data, pindex, m_chainparams.MessageStart())) {
+            assert(!"cannot load block from disk");
+        }
+        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, MakeSpan(block_data)));
         // Don't set pblock as we've sent the block
-         } 
-    else {
+    } else {
         // Send block from disk
         std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
-        if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus())) { 
+        if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus())) {
             assert(!"cannot load block from disk");
         }
         pblock = pblockRead;
@@ -1852,7 +1843,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             // and we want it right after the last block so they don't
             // wait for other stuff first.
             std::vector<CInv> vInv;
-            vInv.push_back(CInv(MSG_BLOCK, GetLastBlockIndex(m_chainman.ActiveChain().Tip(), false)->GetBlockHash()));
+            vInv.push_back(CInv(MSG_BLOCK, m_chainman.ActiveChain().Tip()->GetBlockHash()));
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::INV, vInv));
             peer.m_continuation_block.SetNull();
         }
@@ -3567,7 +3558,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 LOCK(cs_main);
                 mapBlockSource.emplace(pblock->GetHash(), std::make_pair(pfrom.GetId(), false));
             }
-            bool fNewBlock = false;
             // Setting force_processing to true means that we bypass some of
             // our anti-DoS protections in AcceptBlock, which filters
             // unrequested blocks that might be trying to waste our resources
@@ -3577,14 +3567,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // we have a chain with at least nMinimumChainWork), and we ignore
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
-            //ProcessBlock(pfrom, pblock, /*force_processing=*/true);
-            m_chainman.ProcessNewBlock(m_chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
-            if (fNewBlock) {
-                pfrom.nLastBlockTime = GetTime();
-            } else {
-                LOCK(cs_main);
-                mapBlockSource.erase(pblock->GetHash());
-            }
+            ProcessBlock(pfrom, pblock, /*force_processing=*/true);
             LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
             if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS)) {
                 // Clear download state for this block, which is in
@@ -3692,9 +3675,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         for (unsigned int n = 0; n < nCount; n++) {
             vRecv >> headers[n];
             ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
-            if (headers[n].nVersion > POW_BLOCK_VERSION  ) {
-                ReadCompactSize(vRecv); // needed for vchBlockSig.
-            }
         }
 
         return ProcessHeadersMessage(pfrom, *peer, headers, /*via_compact_block=*/false);
@@ -3702,116 +3682,31 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
     if (msg_type == NetMsgType::BLOCK)
     {
-
-
-        std::shared_ptr<CBlock> pblock2 = std::make_shared<CBlock>();
-        vRecv >> *pblock2;
-        int64_t nTimeNow = GetTimeSeconds();
-
-        LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock2->GetHash().ToString(), pfrom.GetId());
-
-        {
-            const uint256 hash2(pblock2->GetHash());
-            LOCK(cs_main);
-            bool fRequested = mapBlocksInFlight.count(hash2);
-
-            BlockMap::iterator miPrev = m_chainman.m_blockman.m_block_index.find(pblock2->hashPrevBlock);
-            if (miPrev == m_chainman.m_blockman.m_block_index.end()) {
-                //return error("previous header not found");
-                LogPrint(BCLog::NET, "previous header not found\n");
-                return;
-            }
-
-            if (!fRequested) {
-
-                if (!miPrev->second->IsValid(BLOCK_VALID_TRANSACTIONS)) {
-                    RemoveBlockRequest(hash2);
-                    //return error("this block does not connect to any valid known blocks");
-                    LogPrint(BCLog::NET, "this block does not connect to any valid known blocks\n");
-                    return;
-                }
-            }
-            // POS: store in memory until we can connect it to some chain
-            WaitElement we; we.pblock = pblock2; we.time = nTimeNow;
-            mapBlocksWait[miPrev->second] = we;
+        // Ignore block received while importing
+        if (fImporting || fReindex) {
+            LogPrint(BCLog::NET, "Unexpected block message received from peer %d\n", pfrom.GetId());
+            return;
         }
 
-        static CBlockIndex* pindexLastAccepted = nullptr;
-        if (pindexLastAccepted == nullptr)
-            pindexLastAccepted = m_chainman.ActiveChain().Tip();
-        bool fContinue = true;
+        std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
+        vRecv >> *pblock;
 
-        // POS: accept as many blocks as we possibly can from mapBlocksWait
-        while (fContinue) {
-            fContinue = false;
-            bool fSelected = false;
-            bool forceProcessing = false;
-            CBlockIndex* pindexPrev;
-            std::shared_ptr<CBlock> pblock;
+        LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom.GetId());
 
-            {
+        bool forceProcessing = false;
+        const uint256 hash(pblock->GetHash());
+        {
             LOCK(cs_main);
-            // POS: try to select next block in a constant time
-            std::map<CBlockIndex*, WaitElement>::iterator it = mapBlocksWait.find(pindexLastAccepted);
-            if (it != mapBlocksWait.end() && pindexLastAccepted != nullptr) {
-                pindexPrev = it->first;
-                pblock = it->second.pblock;
-                mapBlocksWait.erase(pindexPrev);
-                fContinue = true;
-                fSelected = true;
-            } else
-            // otherwise: try to scan for it
-            for (auto& pair : mapBlocksWait) {
-                pindexPrev = pair.first;
-                pblock = pair.second.pblock;
-                const uint256 hash(pblock->GetHash());
-                // remove blocks that were not connected in 60 seconds
-                if (nTimeNow > pair.second.time + 60) {
-                    mapBlocksWait.erase(pindexPrev);
-                    fContinue = true;
-                    RemoveBlockRequest(hash);
-                    break;
-                }
-                if (!pindexPrev->IsValid(BLOCK_VALID_TRANSACTIONS)) {
-                    if (pindexPrev->nStatus & BLOCK_FAILED_MASK) {
-                        mapBlocksWait.erase(pindexPrev);  // prev block was rejected
-                        fContinue = true;
-                        RemoveBlockRequest(hash);
-                        break;
-                    }
-                    continue;   // prev block was not (yet) accepted on disk, skip to next one
-                }
-
-                mapBlocksWait.erase(pindexPrev);
-                fContinue = true;
-                fSelected = true;
-                break;
-            }
-            if (!fSelected)
-                continue;
-
-            const uint256 hash(pblock->GetHash());
-
-            // Also always process if we requested the block explicitly, as we may
-            // need it even though it is not a candidate for a new best tip.
+            // Always process the block if we requested it, since we may
+            // need it even when it's not a candidate for a new best tip.
             forceProcessing = IsBlockRequested(hash);
             RemoveBlockRequest(hash);
-            // mapBlockSource is only used for sending reject messages and DoS scores,
-            // so the race between here and cs_main in ProcessNewBlock is fine.
+            // mapBlockSource is only used for punishing peers and setting
+            // which peers send us compact blocks, so the race between here and
+            // cs_main in ProcessNewBlock is fine.
             mapBlockSource.emplace(hash, std::make_pair(pfrom.GetId(), true));
-            }   // LOCK(cs_main);
-
-            bool fNewBlock = false;
-            m_chainman.ProcessNewBlock(m_chainparams, pblock, forceProcessing, &fNewBlock, &pindexLastAccepted);
-            if (fNewBlock) {
-                pfrom.nLastBlockTime = GetTime();
-            } else {
-                LOCK(cs_main);
-                mapBlockSource.erase(pblock->GetHash());
-            }
-
         }
-
+        ProcessBlock(pfrom, pblock, forceProcessing);
         return;
     }
 
@@ -4678,10 +4573,10 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     bool fGotBlockFromCache = false;
                     {
                         LOCK(cs_most_recent_block);
-                        if (most_recent_block_hash == pBestIndex->GetBlockHash()) { 
-                            if (state.fWantsCmpctWitness || !fWitnessesPresentInMostRecentCompactBlock){
+                        if (most_recent_block_hash == pBestIndex->GetBlockHash()) {
+                            if (state.fWantsCmpctWitness || !fWitnessesPresentInMostRecentCompactBlock)
                                 m_connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, *most_recent_compact_block));
-                            }else {
+                            else {
                                 CBlockHeaderAndShortTxIDs cmpctblock(*most_recent_block, state.fWantsCmpctWitness);
                                 m_connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, cmpctblock));
                             }

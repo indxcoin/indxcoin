@@ -169,8 +169,8 @@ case "$HOST" in
                 arm-linux-gnueabihf)   echo /lib/ld-linux-armhf.so.3 ;;
                 aarch64-linux-gnu)     echo /lib/ld-linux-aarch64.so.1 ;;
                 riscv64-linux-gnu)     echo /lib/ld-linux-riscv64-lp64d.so.1 ;;
-                powerpc64-linux-gnu)   echo /lib64/ld64.so.1;;
-                powerpc64le-linux-gnu) echo /lib64/ld64.so.2;;
+                powerpc64-linux-gnu)   echo /lib/ld64.so.1;;
+                powerpc64le-linux-gnu) echo /lib/ld64.so.2;;
                 *)                     exit 1 ;;
             esac
         )
@@ -237,10 +237,9 @@ mkdir -p "$OUTDIR"
 ###########################
 
 # CONFIGFLAGS
-CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary --disable-tests"
+CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
 case "$HOST" in
     *linux*) CONFIGFLAGS+=" --disable-threadlocal" ;;
-    *mingw*) CONFIGFLAGS+=" --with-libs=no" ;;
 esac
 
 # CFLAGS
@@ -323,7 +322,7 @@ mkdir -p "$DISTSRC"
     # installed. This directory will also later serve as the input for our
     # binary tarballs.
     INSTALLPATH="${PWD}/installed/${DISTNAME}"
-    mkdir -p "${INSTALLPATH}"/lib
+    mkdir -p "${INSTALLPATH}"
     # Install built Bitcoin Core to $INSTALLPATH
     case "$HOST" in
         *darwin*)
@@ -360,7 +359,7 @@ mkdir -p "$DISTSRC"
 
         case "$HOST" in
             *mingw*)
-                # mv --target-directory="$DISTNAME"/lib/ "$DISTNAME"/bin/*.dll
+                mv --target-directory="$DISTNAME"/lib/ "$DISTNAME"/bin/*.dll
                 ;;
         esac
 

@@ -147,7 +147,7 @@
         <translation type="unfinished">Ammaruk aningaasivik</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Indxcoin network.</source>
+        <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -157,7 +157,7 @@
     <message>
         <source>Amount: %1
 </source>
-        <translation type="unfinished">Indxcoin amerlassusaa: %1
+        <translation type="unfinished">Bitcoin amerlassusaa: %1
 </translation>
     </message>
     </context>

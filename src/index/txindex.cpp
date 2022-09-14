@@ -255,8 +255,3 @@ bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRe
     block_hash = header.GetHash();
     return true;
 }
-
-bool TxIndex::FindTxPosition(const uint256& txid, CDiskTxPos& pos) const
-{
-    return m_db->ReadTxPos(txid, pos);
-}

@@ -26,7 +26,6 @@
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
-#include <pos/kernel.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
@@ -110,6 +109,29 @@ CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context)
     return EnsureFeeEstimator(EnsureAnyNodeContext(context));
 }
 
+/* Calculate the difficulty for a given block index.
+ */
+double GetDifficulty(const CBlockIndex* blockindex)
+{
+    CHECK_NONFATAL(blockindex);
+
+    int nShift = (blockindex->nBits >> 24) & 0xff;
+    double dDiff =
+        (double)0x0000ffff / (double)(blockindex->nBits & 0x00ffffff);
+
+    while (nShift < 29)
+    {
+        dDiff *= 256.0;
+        nShift++;
+    }
+    while (nShift > 29)
+    {
+        dDiff /= 256.0;
+        nShift--;
+    }
+
+    return dDiff;
+}
 
 static int ComputeNextBlockAndDepth(const CBlockIndex* tip, const CBlockIndex* blockindex, const CBlockIndex*& next)
 {
@@ -181,12 +203,6 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
 {
     UniValue result = blockheaderToJSON(tip, blockindex);
 
-    result.pushKV("type", blockindex->nNonce == 0 ? "PoS" : "PoW");
-    result.pushKV("hashproof", blockindex->hashProofOfStake.GetHex());
-    result.pushKV("entropybit", (int)blockindex->GetStakeEntropyBit());
-    result.pushKV("modifier", strprintf("%016llx", blockindex->nStakeModifier));
-    result.pushKV("modifierchecksum", strprintf("%08x", blockindex->nStakeModifierChecksum));
-    result.pushKV("blocksignature", HexStr(block.vchBlockSig));
     result.pushKV("strippedsize", (int)::GetSerializeSize(block, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS));
     result.pushKV("size", (int)::GetSerializeSize(block, PROTOCOL_VERSION));
     result.pushKV("weight", (int)::GetBlockWeight(block));
@@ -1236,9 +1252,9 @@ static RPCHelpMan gettxout()
                     {RPCResult::Type::STR_HEX, "hex", ""},
                     {RPCResult::Type::NUM, "reqSigs", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Number of required signatures"},
                     {RPCResult::Type::STR, "type", "The type, eg pubkeyhash"},
-                    {RPCResult::Type::STR, "address", /* optional */ true, "indxcoin address (only if a well-defined address exists)"},
-                    {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of indxcoin addresses",
-                        {{RPCResult::Type::STR, "address", "indxcoin address"}}},
+                    {RPCResult::Type::STR, "address", /* optional */ true, "bitcoin address (only if a well-defined address exists)"},
+                    {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of bitcoin addresses",
+                        {{RPCResult::Type::STR, "address", "bitcoin address"}}},
                 }},
                 {RPCResult::Type::BOOL, "coinbase", "Coinbase or not"},
             }},
@@ -1478,7 +1494,7 @@ RPCHelpMan getblockchaininfo()
         obj.pushKV("pruneheight",        block->nHeight);
 
         // if 0, execution bypasses the whole if block.
-        bool automatic_pruning = false;
+        bool automatic_pruning = (gArgs.GetArg("-prune", 0) != 1);
         obj.pushKV("automatic_pruning",  automatic_pruning);
         if (automatic_pruning) {
             obj.pushKV("prune_target_size",  nPruneTarget);
@@ -2566,7 +2582,7 @@ UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFil
         // use below this block.
         //
         // See discussion here:
-        //   https://github.com/indxcoin/indxcoin/pull/15606#discussion_r274479369
+        //   https://github.com/bitcoin/bitcoin/pull/15606#discussion_r274479369
         //
         LOCK(::cs_main);
 
