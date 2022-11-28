@@ -66,8 +66,8 @@ public:
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.BIP16Exception = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
-        consensus.BIP34Height = std::numeric_limits<int>::max();
-        consensus.BIP34Hash = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
+        consensus.BIP34Height = 263655;
+        consensus.BIP34Hash = uint256S("0xc4f45f1bc775acb986000b6f902be1b827121ca66d2b6d5d9134f21d59e1f96c");
         consensus.BIP65Height = 2951;
         consensus.BIP66Height = 2951;
         consensus.MinBIP9WarningHeight = std::numeric_limits<int>::max();
@@ -144,7 +144,7 @@ public:
 
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,137);  //  prefix = x, hexid = "89" 
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,139);  //  prefix = x or y, hexid = "88"
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,139);  //  prefix = x or y, hexid = "8B"
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,223);  //  WIF hexid = "DF"
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xC2, 0x1F};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAC, 0xD4};
@@ -196,8 +196,8 @@ public:
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.BIP16Exception = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
-        consensus.BIP34Height = std::numeric_limits<int>::max();
-        consensus.BIP34Hash = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
+        consensus.BIP34Height = 242835;  
+        consensus.BIP34Hash = uint256S("0x42730bb7510f3791dbd0610682cc614b0bab238c3189a08a1b2344b3b3d56af1");
         consensus.BIP65Height = 2951;
         consensus.BIP66Height = 2951;
         consensus.MinBIP9WarningHeight = std::numeric_limits<int>::max();
