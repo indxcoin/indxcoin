@@ -210,19 +210,19 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
 TestChain100Setup::TestChain100Setup()
 {
-    SetMockTime(1598887952);
+    SetMockTime(1653238500);  // add tem minutes to regtest genesis
     constexpr std::array<unsigned char, 32> vchKey = {
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}};
     coinbaseKey.Set(vchKey.begin(), vchKey.end(), true);
 
     // Generate a 100-block chain:
-    this->mineBlocks(COINBASE_MATURITY);
+    this->mineBlocks(100);
 
     {
         LOCK(::cs_main);
         assert(
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
-            "571d80a9967ae599cec0448b0b0ba1cfb606f584d8069bd7166b86854ba7a191");
+            "bd8d72980e6e501580530448e908da6baa73f8985e33e10560c17a01fb300eda");
     }
 }
 
@@ -249,7 +249,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
     }
     RegenerateCommitments(block, *Assert(m_node.chainman));
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
+    while (!CheckProofOfWork(block.GetPoWHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     Assert(m_node.chainman)->ProcessNewBlock(chainparams, shared_pblock, true, nullptr);

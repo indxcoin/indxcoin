@@ -47,8 +47,6 @@ bool EnableStaking()
     return fEnableStaking;
 }
 
-//! forward declaration for createnewblock
-CAmount GetBlockValue(int nHeight, const CAmount& nFees);
 
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
@@ -126,6 +124,7 @@ void BlockAssembler::resetBlock()
 
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, bool* pfPoSCancel)
 {
+    const Consensus::Params params = Params().GetConsensus();
     int64_t nTimeStart = GetTimeMicros();
 
     resetBlock();
@@ -143,7 +142,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     nHeight = pindexPrev->nHeight + 1;
 
     // Set block version
+    if (pindexPrev->nHeight >= params.nLastPowHeight)
     pblock->nVersion = CBlockHeader::CURRENT_VERSION;
+    else
+    pblock->nVersion = 2;
 
     // Add dummy coinbase tx as first transaction
     pblock->vtx.emplace_back();

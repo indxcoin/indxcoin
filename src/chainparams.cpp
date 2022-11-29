@@ -397,13 +397,13 @@ public:
 
         vFixedSeeds.clear();
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
-        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,140);  //  prefix = y, hexid = "8C" 
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,141);  //  prefix = y or z, hexid = "8D"
+        base58Prefixes[SECRET_KEY]     = std::vector<unsigned char>(1,138);  // WIF hexid = "12"
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x67, 0xBF};
+        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x63, 0x95};
 
-        bech32_hrp = "ti";
+        bech32_hrp = "indxt";
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
@@ -424,14 +424,14 @@ public:
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 150;
         consensus.BIP16Exception = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
-        consensus.BIP34Height = std::numeric_limits<int>::max();
-        consensus.BIP34Hash = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
-        consensus.BIP65Height = std::numeric_limits<int>::max();
-        consensus.BIP66Height =std::numeric_limits<int>::max();
-        consensus.MinBIP9WarningHeight = std::numeric_limits<int>::max();
-        consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-        consensus.nPowTargetSpacing = 10 * 60;
+        consensus.BIP34Height = 2295; // activate after POS
+        consensus.BIP34Hash = uint256();
+        consensus.BIP65Height = 2295;  // activate after POS
+        consensus.BIP66Height = 2295;  // activate after POS
+        consensus.MinBIP9WarningHeight = 0;
+        consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nPowTargetTimespan = 24 * 60 * 60; // 24 hours
+        consensus.nPowTargetSpacing =  60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
@@ -444,12 +444,13 @@ public:
 
         // Deployment of BIP68, BIP112, and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].min_activation_height = 1; // Not active on genesis 
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
@@ -471,10 +472,10 @@ public:
 
 
         /* pos specific */
-        consensus.posLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); //! << 20
+        consensus.posLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); //! << 28
         consensus.posReset = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); //! << 32
-        consensus.nStakeMinAge = 8 * 60 * 60; // 
-        consensus.nStakeMaxAge = 45 * 24 *  60 * 60; // 
+        consensus.nStakeMinAge = 8 * 60 * 60; // 8 * 60 * 60
+        consensus.nStakeMaxAge = 45 * 24 *  60 * 60; // 45 * 24 *  60 * 60
         consensus.nModifierInterval = 13 * 60;
         consensus.nLastPowHeight = 2200; // 
 
@@ -487,6 +488,7 @@ public:
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
+        vSeeds.emplace_back("dummySeed.invalid.");
 
         fDefaultConsistencyChecks = true;
         fRequireStandard = true;
@@ -501,8 +503,12 @@ public:
 
         m_assumeutxo_data = MapAssumeutxo{
             {
-                0,
-                {AssumeutxoHash{uint256S("0x15948d19a8afe4f73f5f0e9adc29279861a3b8741540e9743bb1aef4f4c90078")}, 110},
+                110,
+                {AssumeutxoHash{uint256S("0x1ebbf5850204c0bdb15bf030f47c7fe91d45c44c712697e4509ba67adb01c618")}, 110},
+            },
+            {
+                200,
+                {AssumeutxoHash{uint256S("0x51c8d11d8b5c1de51543c579736e786aa2736206d1e11e627568029ce092cf62")}, 200},
             },
         };
 
