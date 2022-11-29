@@ -10,6 +10,7 @@
 #include <consensus/validation.h>
 #include <pos/kernel.h>
 #include <validation.h>
+#include <timedata.h>
 
 // TODO remove the following dependencies
 #include <chain.h>
@@ -167,7 +168,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, uint64_t nMoneySupply)
+bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
@@ -198,6 +199,10 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn)) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputvalues-outofrange");
         }
+    }
+
+    if (tx.nVersion > 1 && (int64_t)tx.nTime > GetAdjustedTime()){
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-tx-transaction-timestamp-in-future");
     }
 
     if (!tx.IsCoinStake())
