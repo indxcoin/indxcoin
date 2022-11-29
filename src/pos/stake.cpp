@@ -102,7 +102,7 @@ bool GetStakeWeight(const CWallet* pwallet, uint64_t& nAverageWeight, uint64_t &
 	  unsigned int nTimeTx = tx.nTime ? tx.nTime : header.GetBlockTime();
 
 	  int64_t nTimeWeight = GetCoinAgeWeight((int64_t)nTimeTx, (int64_t)GetTime(), consensusParams);
-	  arith_uint512 bnCoinDayWeight = arith_uint512(pcoin.txout.nValue) * nTimeWeight / COIN / (24 * 60 * 60);
+	  arith_uint256 bnCoinDayWeight = arith_uint256(pcoin.txout.nValue) * nTimeWeight / COIN / (24 * 60 * 60);
 
 	  // Weight is greater than zero
 	  if (nTimeWeight > 0)
