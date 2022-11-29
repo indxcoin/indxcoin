@@ -4,7 +4,29 @@
 
 This guide describes how to build indxcoind, command-line utilities, and GUI on macOS
 
-**Note:** The following is for Intel Macs only!
+# macOS M1 / ARM64 Quick Install Guide
+##### These steps are required to properly build the binaries on the latest macOS hardware
+
+### 1. Install all normal dependencies in build_osx.md
+
+### 2. Download and install patched version of OpenSSL 1.0.2U using brew
+curl -Lo openssl@1.0.rb https://raw.githubusercontent.com/rbenv/homebrew-tap/e472b7861b49cc082d1db0f66f265368da107589/Formula/openssl%401.0.rb\
+brew install ./openssl@1.0.rb
+
+### 3. Make sure to run all your exports (Not a bad idea to store these in .zshrc)
+export PATH="/opt/homebrew/opt/openssl@1.0/bin:$PATH"
+export LDFLAGS="-L/opt/homebrew/opt/openssl@1.0/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.0/include"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/openssl@1.0/lib/pkgconfig"
+
+### 4. Patch Auxval in configure.ac line #1205 if needed
+getauxval(AT_HWCAP); ->  getauxvall(AT_HWCAP);
+
+### 5. Configure and make
+./configure
+make -j8
+
+**Note:** The following below is for Intel Macs only!
 
 ## Dependencies
 
