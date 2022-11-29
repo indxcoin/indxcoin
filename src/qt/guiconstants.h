@@ -42,12 +42,12 @@ static const int TOOLTIP_WRAP_THRESHOLD = 80;
 /* Number of frames in spinner animation */
 #define SPINNER_FRAMES 36
 
-#define QAPP_ORG_NAME "Bitcoin"
-#define QAPP_ORG_DOMAIN "bitcoin.org"
-#define QAPP_APP_NAME_DEFAULT "Bitcoin-Qt"
-#define QAPP_APP_NAME_TESTNET "Bitcoin-Qt-testnet"
-#define QAPP_APP_NAME_SIGNET "Bitcoin-Qt-signet"
-#define QAPP_APP_NAME_REGTEST "Bitcoin-Qt-regtest"
+#define QAPP_ORG_NAME "Indxcoin"
+#define QAPP_ORG_DOMAIN "indxcoin.com"
+#define QAPP_APP_NAME_DEFAULT "Indxcoin-Qt"
+#define QAPP_APP_NAME_TESTNET "Indxcoin-Qt-testnet"
+#define QAPP_APP_NAME_SIGNET "Indxcoin-Qt-signet"
+#define QAPP_APP_NAME_REGTEST "Indxcoin-Qt-regtest"
 
 /* Colors for minting tab for each coin age group */
 #define COLOR_MINT_YOUNG QColor(255, 224, 226)
