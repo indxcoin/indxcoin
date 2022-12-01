@@ -4573,6 +4573,14 @@ bool CChainState::PoSContextualBlockChecks(const CBlock& block, BlockValidationS
     uint256 hash = block.GetHash();
     uint256 hashtarget = uint256();
 
+
+    // If this is a reorg, check that it is not too deep 
+    int nMaxReorgDepth = Params().GetConsensus().MaxReorganizationDepth; 
+    if (this->m_chain.Height() - pindex->nHeight >= nMaxReorgDepth)
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "older-than-maxreorg", "forked chain older than max reorganization depth");
+
+
+
     if (block.IsProofOfStake())
     {
         if(!pindex->IsProofOfStake())

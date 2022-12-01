@@ -113,6 +113,7 @@ struct Params {
     int64_t nStakeMaxAge;
     int64_t nModifierInterval;
     int nLastPowHeight;
+    int MaxReorganizationDepth;
 
     /**
      * If true, witness commitments contain a payload equal to a Bitcoin Script solution

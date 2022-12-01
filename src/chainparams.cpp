@@ -124,6 +124,7 @@ public:
         consensus.nStakeMaxAge = 45 * 24 *  60 * 60; // 
         consensus.nModifierInterval = 13 * 60;
         consensus.nLastPowHeight = 2200; // 
+        consensus.MaxReorganizationDepth = 200; // (<  (minstakeinterval / blockinterval) / 2)
 
 
         
@@ -249,6 +250,7 @@ public:
         consensus.nStakeMaxAge = 45 * 24 *  60 * 60; // 
         consensus.nModifierInterval = 13 * 60;
         consensus.nLastPowHeight = 2200; // 
+        consensus.MaxReorganizationDepth = 200; // (<  (minstakeinterval / blockinterval) / 2)
 
         genesis = CreateGenesisBlock(1653544800, 1653544800, 2109928, 0x1e0ffff0, 1, 33 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -478,6 +480,7 @@ public:
         consensus.nStakeMaxAge = 45 * 24 *  60 * 60; // 45 * 24 *  60 * 60
         consensus.nModifierInterval = 13 * 60;
         consensus.nLastPowHeight = 2200; // 
+        consensus.MaxReorganizationDepth = 200; // (<  (minstakeinterval / blockinterval) / 2)
 
         UpdateActivationParametersFromArgs(args);
 
