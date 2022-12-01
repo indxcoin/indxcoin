@@ -1568,6 +1568,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if(m_active_chainstate.m_chain.Tip()->nHeight >= args.m_chainparams.GetConsensus().nLastPowHeight && tx.nVersion <= POW_TX_VERSION)
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "tx with pre-PoS version");
 
+    if (tx.nVersion > 1 && (int64_t)tx.nTime > GetAdjustedTime()){
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-tx-transaction-timestamp-in-future");
+    }
+
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     std::string reason;
     if (fRequireStandard && !IsStandardTx(tx, reason))

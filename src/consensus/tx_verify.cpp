@@ -201,9 +201,6 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         }
     }
 
-    if (tx.nVersion > 1 && (int64_t)tx.nTime > GetAdjustedTime()){
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-tx-transaction-timestamp-in-future");
-    }
 
     if (!tx.IsCoinStake())
     {
