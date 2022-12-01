@@ -1360,6 +1360,9 @@ public:
              SerializeOutput(s, nOutput);
         // Serialize nLockTime
         ::Serialize(s, txTo.nLockTime);
+        if (txTo.nVersion > 2) {
+        ::Serialize(s, txTo.nTime);
+        }
     }
 };
 
@@ -1631,6 +1634,9 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
         ss << hashOutputs;
         // Locktime
         ss << txTo.nLockTime;
+        if (txTo.nVersion > 2) {
+        ss << txTo.nTime;
+        }
         // Sighash type
         ss << nHashType;
 
