@@ -40,7 +40,6 @@
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
-#include <pos/modifiercache.h>
 #include <pos/kernel.h>
 #include <protocol.h>
 #include <rpc/blockchain.h>
@@ -1799,7 +1798,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL);
 
-    cacheInit();
 
 #if HAVE_SYSTEM
     StartupNotify(args);

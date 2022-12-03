@@ -11,7 +11,6 @@
 #include <index/disktxpos.h>
 #include <index/txindex.h>
 #include <node/blockstorage.h>
-#include <pos/modifiercache.h>
 #include <random.h>
 #include <script/interpreter.h>
 #include <streams.h>
@@ -317,20 +316,12 @@ static bool GetKernelStakeModifier(CChainState* active_chainstate, uint256 hashB
     nStakeModifierTime = pindexFrom->GetBlockTime();
     int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
 
-    // Check the cache first
-    uint64_t nCachedModifier;
-    cachedModifier entry { nStakeModifierTime, nStakeModifierHeight };
-    if (cacheCheck(entry, nCachedModifier)) {
-        nStakeModifier = nCachedModifier;
-        LogPrint(BCLog::POS, "%s: nStakeModifier=0x%016x cache hit!\n", __func__, nStakeModifier);
-        return true;
-    }
 
     const CBlockIndex* pindex = pindexFrom;
 
     // loop to find the stake modifier later by a selection interval
     while (nStakeModifierTime < pindexFrom->GetBlockTime() + nStakeModifierSelectionInterval) {
-        if (!active_chainstate->m_chain.Next(pindex)) {
+        if (!active_chainstate->m_chain.Next(pindex)) { // reached best block; may happen if node is behind on block chain
             if (fPrintProofOfStake || (pindex->GetBlockTime() + params.nStakeMinAge - nStakeModifierSelectionInterval > GetAdjustedTime()))
                 return error("GetKernelStakeModifier() : reached best block at height %d from block at height %d",
                     pindex->nHeight, pindexFrom->nHeight);
@@ -344,7 +335,6 @@ static bool GetKernelStakeModifier(CChainState* active_chainstate, uint256 hashB
         }
     }
     nStakeModifier = pindex->nStakeModifier;
-    cacheAdd(entry, nStakeModifier);
     return true;
 }
 
