@@ -19,6 +19,18 @@
 
 #include <boost/assign/list_of.hpp>
 
+// Protocol switch time of v0.1 kernel protocol
+unsigned int nProtocolV01SwitchTime     = std::numeric_limits<unsigned int>::max();
+unsigned int nProtocolV01TestSwitchTime = std::numeric_limits<unsigned int>::max();
+unsigned int nProtocolV01RegTestSwitchTime = 1447700000; 
+
+
+// Whether the given transaction is subject to new v0.1 protocol
+bool IsProtocolV01(unsigned int nTimeTx)
+{
+    return ( nTimeTx >= (Params().NetworkIDString() == CBaseChainParams::REGTEST ? nProtocolV01RegTestSwitchTime : Params().NetworkIDString() != CBaseChainParams::MAIN ? nProtocolV01TestSwitchTime : nProtocolV01SwitchTime));
+}
+
 
 typedef std::map<int, unsigned int> MapModifierCheckpoints;
 
@@ -481,7 +493,7 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
     }
 
     // Calculate stakehash
-    if (!CheckStakeKernelHash(active_chainstate, nBits, header, txin.prevout.n, txPrev, txin.prevout, tx->nTime, hashProofOfStake)) {
+    if (!CheckStakeKernelHash(active_chainstate, nBits, header, IsProtocolV01(tx->nTime) ? postx.nTxOffset : txin.prevout.n, txPrev, txin.prevout, tx->nTime, hashProofOfStake)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-pos-kernel", "check kernel failed on coinstake");
     }
 
