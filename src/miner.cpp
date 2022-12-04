@@ -519,20 +519,12 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
 
 static bool ProcessBlockFound(const CBlock* pblock, ChainstateManager* chainman, CChainState* chainstate, const CChainParams& chainparams)
 {
-    //const CBlock& block = pblock;
     uint256 hash = pblock->GetHash();
-    uint256 hashStake = uint256();
 
 
     if (!pblock->IsProofOfStake()) {
         return error("ProcessStakeFound() : %s is not a proof-of-stake block", hash.GetHex().c_str());
     }
-
-    // verify hash target and signature of coinstake tx
-    BlockValidationState state;
-    if (!CheckProofOfStake(chainstate, state, pblock->vtx[1], pblock->nBits, hashStake))
-        return error("ProcessBlockFound() : proof-of-stake checking failed");
-
 
     // Found a solution
     {

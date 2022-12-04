@@ -447,7 +447,7 @@ bool CheckStakeKernelHash(CChainState* active_chainstate, unsigned int nBits, co
 }
 
 // Check kernel hash target and coinstake signature
-bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& state,  const CTransactionRef& tx, unsigned int nBits, uint256& hashProofOfStake)
+bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& state, CBlockIndex* pindexPrev,  const CTransactionRef& tx, unsigned int nBits, uint256& hashProofOfStake, unsigned int nTimeTx)
 {
     if (!tx->IsCoinStake())
         return error("CheckProofOfStake() : called on non-coinstake %s", tx->GetHash().ToString().c_str());
@@ -464,6 +464,20 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
     if (!g_txindex->FindTxPosition(txin.prevout.hash, postx)) {
         return error("CheckProofOfStake() : tx index not found");
     }
+
+    Coin coinIn; 
+    if(!active_chainstate->CoinsTip().GetCoin(txin.prevout, coinIn)){
+        return error("CheckProofOfStake() : Stake prevout does not exist %s", txin.prevout.hash.ToString());
+    }
+
+    if(pindexPrev->nHeight + 1 - coinIn.nHeight < COINBASE_MATURITY){
+        return error("CheckProofOfStake() : Stake prevout is not mature, expecting %i and only matured to %i", COINBASE_MATURITY, pindexPrev->nHeight + 1 - coinIn.nHeight);
+    }
+    CBlockIndex* blockFrom = pindexPrev->GetAncestor(coinIn.nHeight);
+    if(!blockFrom) {
+        return error("CheckProofOfStake() : Block at height %i for prevout can not be loaded", coinIn.nHeight);
+    }
+
 
     // Read txPrev and header of its block
     CBlockHeader header;
@@ -484,16 +498,15 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
         // Verify signature
     {
         int nIn = 0;
-        const CTxOut& prevOut = txPrev->vout[tx->vin[nIn].prevout.n];
-        TransactionSignatureChecker checker(&(*tx), nIn, prevOut.nValue, PrecomputedTransactionData(*tx), MissingDataBehavior::FAIL);
+        TransactionSignatureChecker checker(&(*tx), nIn, coinIn.out.nValue, PrecomputedTransactionData(*tx), MissingDataBehavior::FAIL);
 
-        if (!VerifyScript(tx->vin[nIn].scriptSig, prevOut.scriptPubKey, &(tx->vin[nIn].scriptWitness), SCRIPT_VERIFY_P2SH, checker, nullptr))
+        if (!VerifyScript(tx->vin[nIn].scriptSig, coinIn.out.scriptPubKey, &(tx->vin[nIn].scriptWitness), SCRIPT_VERIFY_P2SH, checker, nullptr))
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "invalid-pos-script", "VerifyScript failed on coinstake");
 
     }
 
     // Calculate stakehash
-    if (!CheckStakeKernelHash(active_chainstate, nBits, header, IsProtocolV01(tx->nTime) ? postx.nTxOffset : txin.prevout.n, txPrev, txin.prevout, tx->nTime, hashProofOfStake)) {
+    if (!CheckStakeKernelHash(active_chainstate, nBits, header, IsProtocolV01(nTimeTx) ? postx.nTxOffset : txin.prevout.n, txPrev, txin.prevout, tx->nTime, hashProofOfStake)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-pos-kernel", "check kernel failed on coinstake");
     }
 

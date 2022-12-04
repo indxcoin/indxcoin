@@ -35,7 +35,7 @@ bool ComputeNextStakeModifier(CChainState* active_chainstate, const CBlockIndex*
 bool CheckStakeKernelHash(CChainState* active_chainstate, unsigned int nBits, const CBlockHeader& blockFrom, unsigned int nTxPrevOffset, const CTransactionRef& txPrev, const COutPoint& prevout, unsigned int nTimeTx, uint256& hashProofOfStake, bool fPrintProofOfStake = false);
 
 // Check kernel hash target and coinstake signature
-bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& state, const CTransactionRef& tx, unsigned int nBits, uint256& hashProofOfStake);
+bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& state, CBlockIndex* pindexPrev, const CTransactionRef& tx, unsigned int nBits, uint256& hashProofOfStake, unsigned int nTimeTx);
 
 // Check whether the coinstake timestamp meets protocol
 bool CheckCoinStakeTimestamp(int64_t nTimeBlock, int64_t nTimeTx);

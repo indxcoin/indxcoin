@@ -4047,7 +4047,6 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
     pindexNew->nSequenceId = 0;
     BlockMap::iterator mi = m_block_index.insert(std::make_pair(hash, pindexNew)).first;
     if (pindexNew->IsProofOfStake()) { //UpdateMe
-        pindexNew->SetProofOfStake();
         setStakeSeen.insert(std::make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
     }
     pindexNew->phashBlock = &((*mi).first);
@@ -4434,7 +4433,7 @@ bool VerifyHashTarget(CChainState* active_chainstate, BlockValidationState& stat
     if (hash != Params().GetConsensus().hashGenesisBlock) {
         if (block.IsProofOfStake()) {
             fValid = true;
-            if (!CheckProofOfStake(active_chainstate, state, block.vtx[1], block.nBits, hashProof)) {
+            if (!CheckProofOfStake(active_chainstate, state, pindexPrev, block.vtx[1], block.nBits, hashProof, block.nTime)) {
                 fValid = false;
                 if (gArgs.GetBoolArg("-debug", false) && gArgs.GetBoolArg("-printcoinstake", false)){
                 LogPrintf("WARNING: VerifyHashTarget(): check proof-of-stake failed for block %s\n", hash.ToString());
@@ -4444,7 +4443,7 @@ bool VerifyHashTarget(CChainState* active_chainstate, BlockValidationState& stat
             return fValid;
         }
     }
-    hashProof = uint256();
+    
 
     return true;
 }
@@ -4586,8 +4585,6 @@ bool CChainState::PoSContextualBlockChecks(const CBlock& block, BlockValidationS
         if(!pindex->IsProofOfStake())
             pindex->SetProofOfStake();
 
-        pindex->prevoutStake = block.vtx[1]->vin[0].prevout;
-        pindex->nStakeTime = block.vtx[1]->nTime;
     }
 
     // PoSV: get stake entropy bit
@@ -4604,28 +4601,35 @@ bool CChainState::PoSContextualBlockChecks(const CBlock& block, BlockValidationS
     pindex->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
     unsigned int nStakeModifierChecksum  = GetStakeModifierChecksum(pindex);
 
-    if (block.IsProofOfStake() && !CheckProofOfStake(this, state, block.vtx[1], block.nBits, hash)) {
-        LogPrintf("WARNING: %s: check proof-of-stake failed for block %s\n", __func__, block.GetHash().ToString());
-        return false; // do not error here as we expect this during initial block download
-    }
-
-
     // PoSV: calculate proofhash value
-    if (!VerifyHashTarget(this, state, pindex, block, hash)) {
+    uint256 hashProofOfStake = uint256();
+    if (!VerifyHashTarget(this, state, pindex->pprev, block, hashProofOfStake)) {
             return error("%s - error calculating hashproof (height %d)\n", __func__, pindex->nHeight);
     }
     pindex->hashProofOfStake = hashtarget;
     pindex->nStakeModifierChecksum = nStakeModifierChecksum;
+
+    if (!CheckStakeModifierCheckpoints(pindex->nHeight, pindex->nStakeModifierChecksum ))
+        return error("%s: Rejected by checkpoint height=%d, modifier=0x%016llx checksum=%08x", __func__, pindex->nHeight, nStakeModifier, nStakeModifierChecksum );
 
     if (fJustCheck)
         return true;
 
 
     // write everything to index
+    if (block.IsProofOfStake())
+    {
+        if(!pindex->IsProofOfStake())
+            pindex->SetProofOfStake();
+
+        pindex->prevoutStake = block.vtx[1]->vin[0].prevout;
+        pindex->nStakeTime = block.vtx[1]->nTime;
+        if(IsProtocolV01(block.nTime))
+            pindex->hashProofOfStake = hashProofOfStake;
+    }
 
     
-     if (!CheckStakeModifierCheckpoints(pindex->nHeight, pindex->nStakeModifierChecksum ))
-        return error("%s: Rejected by checkpoint height=%d, modifier=0x%016llx checksum=%08x", __func__, pindex->nHeight, nStakeModifier, nStakeModifierChecksum );
+
 
     setDirtyBlockIndex.insert(pindex);  // queue a write to disk
 
