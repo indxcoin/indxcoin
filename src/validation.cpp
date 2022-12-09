@@ -4581,11 +4581,9 @@ bool CChainState::PoSContextualBlockChecks(const CBlock& block, BlockValidationS
 
 
     if (block.IsProofOfStake())
-    {
         if(!pindex->IsProofOfStake())
             pindex->SetProofOfStake();
-
-    }
+        
 
     // PoSV: get stake entropy bit
     if (!pindex->SetStakeEntropyBit(StakeEntropyBitFromHash(hash))) {
