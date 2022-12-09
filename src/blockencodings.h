@@ -113,7 +113,13 @@ public:
 
     SERIALIZE_METHODS(CBlockHeaderAndShortTxIDs, obj)
     {
-        READWRITE(obj.header, obj.nonce, obj.vchBlockSig, Using<VectorFormatter<CustomUintFormatter<SHORTTXIDS_LENGTH>>>(obj.shorttxids), obj.prefilledtxn);
+        READWRITE(obj.header);
+        if (obj.header.IsProofOfStake()) {
+            READWRITE(obj.nonce, obj.vchBlockSig, Using<VectorFormatter<CustomUintFormatter<SHORTTXIDS_LENGTH>>>(obj.shorttxids), obj.prefilledtxn);
+        } else {
+            READWRITE(obj.nonce, Using<VectorFormatter<CustomUintFormatter<SHORTTXIDS_LENGTH>>>(obj.shorttxids), obj.prefilledtxn);
+        }
+
         if (ser_action.ForRead()) {
             if (obj.BlockTxCount() > std::numeric_limits<uint16_t>::max()) {
                 throw std::ios_base::failure("indexes overflowed 16 bits");
