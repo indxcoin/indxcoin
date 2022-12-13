@@ -235,6 +235,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         pblock->nTime      = pblock->vtx[1]->nTime; //same as coinstake timestamp
     else
         UpdateTime(pblock, Params().GetConsensus(), pindexPrev);
+    if (pindexPrev->nHeight >= params.nLastPowHeight)
+        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
+
     pblock->nNonce         = 0;
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
