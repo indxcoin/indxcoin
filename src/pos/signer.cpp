@@ -33,9 +33,12 @@ bool SignBlock(CBlock& block, const CWallet& keystore)
 
 bool CheckBlockSignature(const CBlock& block)
 {
-    if (block.GetHash() == Params().GetConsensus().hashGenesisBlock) {
+    if (!block.IsProofOfStake())
         return block.vchBlockSig.empty();
-    }
+    if (block.vchBlockSig.empty())
+        return false;
+    if (block.vtx[1]->vin.size() < 1)
+        return false;
 
     std::vector<valtype> vSolutions;
     const CTxOut& txout = block.IsProofOfStake() ? block.vtx[1]->vout[1] : block.vtx[0]->vout[0];
@@ -47,9 +50,5 @@ bool CheckBlockSignature(const CBlock& block)
     const valtype& vchPubKey = vSolutions[0];
 
     CPubKey key(vchPubKey);
-    if (block.vchBlockSig.empty()) {
-        return false;
-    }
-
     return key.Verify(block.GetHash(), block.vchBlockSig);
 }
