@@ -1628,9 +1628,8 @@ bool PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationStat
 bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
 {
     AssertLockHeld(cs_main);
-    if (m_chainman.ActiveChain().Contains(pindex) && (m_chainman.ActiveChain().Height() - pindex->nHeight < m_chainparams.GetConsensus().MaxReorganizationDepth)) return true;
+    if (m_chainman.ActiveChain().Contains(pindex) ) return true;
     return pindex->IsValid(BLOCK_VALID_SCRIPTS) && (pindexBestHeader != nullptr) &&
-    (m_chainman.ActiveChain().Height() - pindex->nHeight < m_chainparams.GetConsensus().MaxReorganizationDepth) &&
            (pindexBestHeader->GetBlockTime() - pindex->GetBlockTime() < STALE_RELAY_AGE_LIMIT) &&
            (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, m_chainparams.GetConsensus()) < STALE_RELAY_AGE_LIMIT);
 }
@@ -3970,6 +3969,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         for (unsigned int n = 0; n < nCount; n++) {
             vRecv >> headers[n];
             ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
+            if (headers[n].nVersion > POW_BLOCK_VERSION  ) {
+                ReadCompactSize(vRecv); // needed for vchBlockSig.
+            }
         }
 
         return ProcessHeadersMessage(pfrom, *peer, headers, /*via_compact_block=*/false);
