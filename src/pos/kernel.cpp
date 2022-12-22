@@ -588,7 +588,7 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
                 LogPrint(BCLog::POS, "%s : Stake prevout does not meet minimum age requirements %s\n",__func__, txin.prevout.hash.ToString());
                 return state.Invalid(BlockValidationResult::DOS_100, "invalid-prevout-age", "Stake prevout does not meet minimum age requirements \n" );
             }
-            if (kernelPubKey != coinsIN.out.scriptPubKey ) {
+            if (IsProtocolV01(nTimeTx) && kernelPubKey != coinsIN.out.scriptPubKey ) {
                 LogPrint(BCLog::POS, "%s: mixed-prevout-scripts %d\n", __func__, k);
                 LogPrint(BCLog::POS, "%s : coinsIN.out.scriptPubKey=%s  kernelPubKey=%s \n",__func__, HexStr(coinsIN.out.scriptPubKey), HexStr(kernelPubKey));
                return state.Invalid(BlockValidationResult::DOS_100, "mixed-prevout-scripts", "mixed-prevout-scripts \n");
