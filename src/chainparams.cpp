@@ -121,6 +121,8 @@ public:
         consensus.posLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); //! << 20
         consensus.posReset = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); //! << 32
         consensus.nStakeMinAge = 8 * 60 * 60; // 
+        consensus.nStakeMinAgeV01 =  72 * 60 * 60; // 
+        consensus.nStakeMinAmount = 10000 * COIN;
         consensus.nStakeMaxAge = 45 * 24 *  60 * 60; // 
         consensus.nModifierInterval = 13 * 60;
         consensus.nLastPowHeight = 2200; // 
@@ -246,7 +248,9 @@ public:
         /* pos specific */
         consensus.posLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); //! << 20
         consensus.posReset = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); //! << 32
-        consensus.nStakeMinAge = 8 * 60 * 60; // 
+        consensus.nStakeMinAge = 8 * 60 * 60; //
+        consensus.nStakeMinAgeV01 =  72 * 60 * 60; // 
+        consensus.nStakeMinAmount = 10000 * COIN; 
         consensus.nStakeMaxAge = 45 * 24 *  60 * 60; // 
         consensus.nModifierInterval = 13 * 60;
         consensus.nLastPowHeight = 2200; // 
@@ -477,6 +481,8 @@ public:
         consensus.posLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); //! << 28
         consensus.posReset = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); //! << 32
         consensus.nStakeMinAge = 8 * 60 * 60; // 8 * 60 * 60
+        consensus.nStakeMinAgeV01 =  72 * 60 * 60; // 
+        consensus.nStakeMinAmount = 10000 * COIN;
         consensus.nStakeMaxAge = 45 * 24 *  60 * 60; // 45 * 24 *  60 * 60
         consensus.nModifierInterval = 13 * 60;
         consensus.nLastPowHeight = 2200; // 

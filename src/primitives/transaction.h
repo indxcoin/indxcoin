@@ -187,6 +187,7 @@ struct CMutableTransaction;
  * - std::vector<CTxIn> vin
  * - std::vector<CTxOut> vout
  * - uint32_t nLockTime
+ * - uint32_t nTime
  *
  * Extended transaction serialization format:
  * - int32_t nVersion
@@ -197,6 +198,7 @@ struct CMutableTransaction;
  * - if (flags & 1):
  *   - CTxWitness wit;
  * - uint32_t nLockTime
+ * - uint32_t nTime
  */
 template<typename Stream, typename TxType>
 inline void UnserializeTransaction(TxType& tx, Stream& s) {
@@ -282,7 +284,7 @@ class CTransaction
 {
 public:
     // Default transaction version.
-    static const int32_t CURRENT_VERSION=2;
+    static const int32_t CURRENT_VERSION=3;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not

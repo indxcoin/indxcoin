@@ -1583,6 +1583,11 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-tx-transaction-timestamp-in-future");
     }
 
+    // enforce transaction version 3
+    if (m_active_chainstate.m_chain.Tip()->nHeight >= args.m_chainparams.GetConsensus().nLastPowHeight && (IsProtocolV01(tx.nTime) ? 3 : 1) > tx.nVersion){
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-tx-mp-transaction-version");
+    }
+
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     std::string reason;
     if (fRequireStandard && !IsStandardTx(tx, reason))
@@ -4240,6 +4245,11 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         // POS: check transaction timestamp
         if (block.IsProofOfStake() && block.GetBlockTime() < (int64_t)tx->nTime)
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-tx-time", "block timestamp earlier than transaction timestamp");
+
+        // enforce transaction version 3
+        if (block.IsProofOfStake() && (IsProtocolV01(block.nTime) ? 3 : 1) > tx->nVersion){
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-tx-transaction-version");
+        }
     }
     unsigned int nSigOps = 0;
     for (const auto& tx : block.vtx)

@@ -8,6 +8,7 @@
 
 #include <uint256.h>
 #include <limits>
+#include <amount.h>
 #include <script/script.h>
 
 class CScript;
@@ -110,6 +111,8 @@ struct Params {
     uint256 posLimit;
     uint256 posReset;
     int64_t nStakeMinAge;
+    int64_t nStakeMinAgeV01;
+    CAmount nStakeMinAmount;
     int64_t nStakeMaxAge;
     int64_t nModifierInterval;
     int nLastPowHeight;

@@ -421,7 +421,7 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
         }
         break;
       case Qt::BackgroundColorRole:
-        int minAge = params.nStakeMinAge / 60 / 60 / 24;
+        int minAge = (IsProtocolV01(GetAdjustedTime()) ? params.nStakeMinAgeV01 : params.nStakeMinAge) / 60 / 60 / 24;
         int maxAge = params.nStakeMaxAge / 60 / 60 / 24;
         if(rec->getAge() < minAge)
         {
