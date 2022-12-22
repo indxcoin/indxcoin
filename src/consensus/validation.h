@@ -11,6 +11,10 @@
 #include <consensus/consensus.h>
 #include <primitives/transaction.h>
 #include <primitives/block.h>
+#include <consensus/params.h>
+
+class PeerManager;
+class ChainstateManager;
 
 /** Index marker for when no witness commitment is present in a coinbase transaction. */
 static constexpr int NO_WITNESS_COMMITMENT{-1};
@@ -78,6 +82,13 @@ enum class BlockValidationResult {
     BLOCK_INVALID_PREV,      //!< A block this one builds on is invalid
     BLOCK_TIME_FUTURE,       //!< block timestamp was > 2 hours in the future (or our clock is bad)
     BLOCK_CHECKPOINT,        //!< the block failed to meet one of our checkpoints
+
+    // POS Block DOS conditions
+    DOS_100,
+    DOS_50,
+    DOS_20,
+    DOS_5,
+    DOS_1,
 };
 
 
@@ -134,6 +145,17 @@ public:
 
         return m_reject_reason;
     }
+
+    PeerManager *m_peerman{nullptr};
+    ChainstateManager *m_chainman{nullptr};
+    int nodeId = -1;
+    int nFlags = 0;
+    const Consensus::Params *m_consensus_params = nullptr;
+    bool m_preserve_state = false; // Don't clear error during ActivateBestChain (debug)
+
+    // TxValidationState
+    bool m_punish_for_duplicates = false;
+
 };
 
 class TxValidationState : public ValidationState<TxValidationResult> {};

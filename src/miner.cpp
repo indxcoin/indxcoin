@@ -678,8 +678,12 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                         LogPrint(BCLog::STAKE, "PoSMiner(): failed to sign PoS block");
                         continue;
                     }
+                    if (!particl::CheckStakeUnique(*pblock, false)) { // 
+                            LogPrint(BCLog::STAKE, "%s: Stake already used for new block %s \n", __func__, pblock->GetHash().ToString());
+                            continue;
+                    }
                 }
-                LogPrint(BCLog::STAKE, "PoSMiner() : unverified proof-of-stake block found %s\n", pblock->GetHash().ToString());
+                LogPrint(BCLog::STAKE, "%s: unverified proof-of-stake block found %s \n",__func__, pblock->GetHash().ToString());
                 ProcessBlockFound(pblock, chainman, chainstate, Params());
                 reservedest.KeepDestination();
                 // Rest for ~3 minutes after successful block to preserve close quick

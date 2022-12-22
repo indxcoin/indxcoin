@@ -940,7 +940,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
     }
 
     //// debug print
-    WalletLogPrintf("AddToWallet %s  %s%s\n", hash.ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
+    //WalletLogPrintf("AddToWallet %s  %s%s\n", hash.ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
 
     // Write to disk
     if (fInsertedNew || fUpdated)
@@ -1739,6 +1739,9 @@ bool CWalletTx::SubmitMemoryPoolAndRelay(std::string& err_string, bool relay)
     // Don't try to submit coinbase transactions. These would fail anyway but would
     // cause log spam.
     if (IsCoinBase()) return false;
+    // Don't try to submit coinstake transactions. These would fail anyway but would
+    // cause log spam.
+    if (IsCoinStake()) return false;
     // Don't try to submit conflicted or confirmed transactions.
     if (GetDepthInMainChain() != 0) return false;
 

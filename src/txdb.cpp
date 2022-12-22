@@ -5,6 +5,7 @@
 
 #include <txdb.h>
 
+#include <chain.h>
 #include <node/ui_interface.h>
 #include <pow.h>
 #include <random.h>

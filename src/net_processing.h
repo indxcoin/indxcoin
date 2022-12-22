@@ -13,6 +13,7 @@ class CAddrMan;
 class CChainParams;
 class CTxMemPool;
 class ChainstateManager;
+class CBlockIndex;
 
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
@@ -24,6 +25,7 @@ static const bool DEFAULT_PEERBLOCKFILTERS = false;
 static const int DISCOURAGEMENT_THRESHOLD{100};
 
 struct CNodeStateStats {
+    int m_misbehavior_score = 0;
     int nSyncHeight = -1;
     int nCommonHeight = -1;
     int m_starting_height = -1;
@@ -31,6 +33,9 @@ struct CNodeStateStats {
     std::vector<int> vHeightInFlight;
     uint64_t m_addr_processed = 0;
     uint64_t m_addr_rate_limited = 0;
+
+    int nDuplicateCount = 0;
+    int nLooseHeadersCount = 0;
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface
@@ -72,6 +77,16 @@ public:
     /** Process a single message from a peer. Public for fuzz testing */
     virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
                                 const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) = 0;
+
+
+    /** POS DOS */
+    virtual void IncPersistentMisbehaviour(NodeId node_id, int howmuch) EXCLUSIVE_LOCKS_REQUIRED(cs_main) = 0;
+    virtual bool IncPersistentDiscouraged(NodeId node_id) EXCLUSIVE_LOCKS_REQUIRED(cs_main) = 0;
+    virtual void MisbehavingByAddr(CNetAddr addr, int misbehavior_cfwd, int howmuch, const std::string& message="") = 0;
 };
+
+
+int GetNumDOSStates() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+void ClearDOSStates() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOIN_NET_PROCESSING_H

@@ -510,7 +510,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
                     break; // This error is logged in OpenBlockFile
                 }
                 LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
-                chainman.ActiveChainstate().LoadExternalBlockFile(file, &pos);
+                chainman.ActiveChainstate().LoadExternalBlockFile(file, &pos, &chainman);
                 if (ShutdownRequested()) {
                     LogPrintf("Shutdown requested. Exit %s\n", __func__);
                     return;
@@ -529,7 +529,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
             FILE* file = fsbridge::fopen(path, "rb");
             if (file) {
                 LogPrintf("Importing blocks file %s...\n", path.string());
-                chainman.ActiveChainstate().LoadExternalBlockFile(file);
+                chainman.ActiveChainstate().LoadExternalBlockFile(file, nullptr, &chainman);
                 if (ShutdownRequested()) {
                     LogPrintf("Shutdown requested. Exit %s\n", __func__);
                     return;
@@ -546,10 +546,12 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
         // the relevant pointers before the ABC call.
         for (CChainState* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
             BlockValidationState state;
+            state.m_chainman = &chainman;
             if (!chainstate->ActivateBestChain(state, nullptr)) {
                 LogPrintf("Failed to connect best block (%s)\n", state.ToString());
-                StartShutdown();
-                return;
+                // Particl - Don't exit.  May be missing PoS info for valid blocks.
+                //StartShutdown();
+                //return;
             }
         }
 

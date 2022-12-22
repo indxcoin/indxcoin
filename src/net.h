@@ -87,6 +87,9 @@ static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
 typedef int64_t NodeId;
 
+
+extern RecursiveMutex cs_main;
+
 struct AddedNodeInfo
 {
     std::string strAddedNode;
@@ -735,6 +738,8 @@ public:
     */
     virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_sendProcessing) = 0;
 
+    /** POS DOS */
+    virtual void DecMisbehaving(NodeId nodeid, int howmuch) = 0;
 
 protected:
     /**

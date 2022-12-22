@@ -209,6 +209,10 @@ public:
         BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
         BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
         BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
+        BLOCK_FAILED_DUPLICATE_STAKE    = (1 << 3),
+        BLOCK_DELAYED                   = (1 << 4),
+        BLOCK_ACCEPTED                  = (1 << 5),
+        BLOCK_STAKE_KERNEL_SPENT        = (1 << 6),
     };
 
     int64_t nMint{0};

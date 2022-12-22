@@ -371,4 +371,19 @@ public:
     }
 };
 
+
+// Utility class for indicating to compiler thread analysis that a mutex is
+// locked (when it couldn't be determined otherwise).
+struct SCOPED_LOCKABLE LockAssertion
+{
+    template <typename MutexType>
+    explicit LockAssertion(const char* name, const char* file, int line, MutexType* cs) EXCLUSIVE_LOCK_FUNCTION(cs)
+    {
+        AssertLockHeldInternal(name, file, line, cs);
+    }
+    ~LockAssertion() UNLOCK_FUNCTION() {}
+};
+#define LOCK_ASSERTION(cs)   LockAssertion PASTE2(lockassertion, __COUNTER__)(#cs, __FILE__, __LINE__, &cs)
+
+
 #endif // BITCOIN_SYNC_H

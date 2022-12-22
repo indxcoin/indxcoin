@@ -63,15 +63,26 @@ static std::map<int, unsigned int> mapStakeModifierCheckpointsRegTestNet =
 unsigned int GetStakeModifierChecksum(const CBlockIndex* pindex)
 {
     assert(pindex->pprev || pindex->GetBlockHash() == (Params().GetConsensus().hashGenesisBlock));
-    // Hash previous checksum with flags, hashProofOfStake and nStakeModifier
+    // exclude transient state flags
+    unsigned int nFlags{0}; nFlags |= pindex->nFlags;
+    nFlags &= ~CBlockIndex::BLOCK_ACCEPTED;
+    nFlags &= ~CBlockIndex::BLOCK_FAILED_DUPLICATE_STAKE;
+
+    // Hash previous checksum with hashProofOfStake and nStakeModifier
     CDataStream ss(SER_GETHASH, 0);
     if (pindex->pprev)
         ss << pindex->pprev->nStakeModifierChecksum;
-    ss << pindex->nFlags << (pindex->IsProofOfStake() ? pindex->hashProofOfStake : uint256()) << pindex->nStakeModifier;
+    ss << nFlags << (pindex->IsProofOfStake() ? pindex->hashProofOfStake : uint256()) << pindex->nStakeModifier;
+    
     arith_uint256 hashChecksum = UintToArith256(Hash(ss));
     hashChecksum >>= (256 - 32);
-    LogPrint(BCLog::POS, "%s : Height=%d Flags=%d IsProofOfStake=%s hashProofOfStake=%s StakeModifierChecksum=0x%08x, StakeModifier=0x%016x \n",
-    __func__, pindex->nHeight, pindex->nFlags, (pindex->IsProofOfStake() ? "true" : "false"), 
+    LogPrint(BCLog::POS, "%s : Height=%d Flags=%s%s%s%s%s IsProofOfStake=%s hashProofOfStake=%s StakeModifierChecksum=0x%08x, StakeModifier=0x%016x \n",
+    __func__, pindex->nHeight, nFlags & CBlockIndex::BLOCK_PROOF_OF_STAKE ? "POS, ": " ,",
+    nFlags & CBlockIndex::BLOCK_STAKE_ENTROPY ? "ENTROPY, ": " ,",
+    nFlags & CBlockIndex::BLOCK_STAKE_MODIFIER ? "MODIFIER, ": " ,",
+    nFlags & CBlockIndex::BLOCK_FAILED_DUPLICATE_STAKE ? "DUPLICATE, ": " ,",
+    nFlags & CBlockIndex::BLOCK_ACCEPTED ? "ACCEPTED, ": " ,",
+    (pindex->IsProofOfStake() ? "true" : "false"), 
     pindex->hashProofOfStake.ToString(), hashChecksum.GetLow64(), pindex->nStakeModifier);
     return hashChecksum.GetLow64();
 }
