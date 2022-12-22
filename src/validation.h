@@ -28,6 +28,7 @@
 #include <util/check.h>
 #include <util/hasher.h>
 #include <util/translation.h>
+#include <net_processing.h>
 
 #include <atomic>
 #include <map>
@@ -84,6 +85,9 @@ static constexpr bool DEFAULT_COINSTATSINDEX{false};
 static const char* const DEFAULT_BLOCKFILTERINDEX = "0";
 /** Default for -persistmempool */
 static const bool DEFAULT_PERSIST_MEMPOOL = true;
+
+typedef int64_t NodeId;
+
 /** Default for -stopatheight */
 static const int DEFAULT_STOPATHEIGHT = 0;
 /** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of ::ChainActive().Tip() will not be pruned. */
@@ -99,6 +103,8 @@ static const unsigned int DEFAULT_CHECKLEVEL = 3;
 // one 128MB block file + added 15% undo data = 147MB greater for a total of 545MB
 // Setting the target to >= 550 MiB will make it likely we can respect the target.
 static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 550 * 1024 * 1024;
+
+static constexpr bool DEFAULT_AUTOMATIC_BANS = true;
 
 /** Current sync state passed to tip changed callbacks. */
 enum class SynchronizationState {
@@ -481,7 +487,8 @@ public:
         const CBlockHeader& block,
         BlockValidationState& state,
         const CChainParams& chainparams,
-        CBlockIndex** ppindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+        CBlockIndex** ppindex,
+        bool fRequested=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     CBlockIndex* LookupBlockIndex(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -684,7 +691,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Import blocks from an external file */
-    void LoadExternalBlockFile(FILE* fileIn, FlatFilePos* dbp = nullptr);
+    void LoadExternalBlockFile(FILE* fileIn, FlatFilePos* dbp = nullptr, ChainstateManager *chainman = nullptr);
 
     /**
      * Update the on-disk chain state.
@@ -926,6 +933,7 @@ public:
     //! A single BlockManager instance is shared across each constructed
     //! chainstate to avoid duplicating block metadata.
     BlockManager m_blockman GUARDED_BY(::cs_main);
+    PeerManager *m_peerman{nullptr};
 
     //! The total number of bytes available for us to use across all in-memory
     //! coins caches. This will be split somehow across chainstates.
@@ -966,6 +974,7 @@ public:
     [[nodiscard]] bool ActivateSnapshot(
         CAutoFile& coins_file, const SnapshotMetadata& metadata, bool in_memory);
 
+    bool HaveActiveChainstate() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return m_active_chainstate; };
     //! The most-work chain.
     CChainState& ActiveChainstate() const;
     CChain& ActiveChain() const { return ActiveChainstate().m_chain; }
@@ -1018,7 +1027,7 @@ public:
      * @param[out]  new_block A boolean which is set to indicate if the block was first received via this call
      * @returns     If the block was processed, independently of block validity
      */
-    bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock>& block, bool force_processing, bool* new_block, CBlockIndex** ppindex=nullptr) LOCKS_EXCLUDED(cs_main);
+    bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock>& block, bool force_processing, bool* new_block, NodeId node_id = 0, PeerManager *peerman = nullptr) LOCKS_EXCLUDED(cs_main);
 
     /**
      * Process incoming block headers.
@@ -1077,5 +1086,17 @@ CAmount GetProofOfWorkReward(unsigned int nBits);
 CAmount GetProofOfStakeReward(int64_t nCoinAge, const CAmount& nFees);
 CAmount GetProofOfStakeReward(int64_t nCoinAge, const CAmount& nFees, double fInflationAdjustment);
 bool VerifyHashTarget(CChainState* active_chainstate, BlockValidationState& state, CBlockIndex* pindexPrev, const CBlock& block, uint256& hashProof);
+namespace particl {
+
+extern std::map<COutPoint, uint256> mapStakeSeen;
+extern std::list<COutPoint> listStakeSeen;
+
+bool AddToMapStakeSeen(const COutPoint &kernel, const uint256 &blockHash);
+bool CheckStakeUnique(const CBlock &block, bool fUpdate=true);
+inline int64_t FutureDrift(int64_t nTime) { return nTime + 15; }
+
+} // namespace particl
+
+
 
 #endif // BITCOIN_VALIDATION_H
