@@ -21,7 +21,7 @@
 
 // Protocol switch time of v0.1 kernel protocol
 unsigned int nProtocolV01SwitchTime     = std::numeric_limits<unsigned int>::max();
-unsigned int nProtocolV01TestSwitchTime = std::numeric_limits<unsigned int>::max();
+unsigned int nProtocolV01TestSwitchTime = 1671816600; // Friday, December 23, 2022 9:30:00 AM GMT-08:00
 unsigned int nProtocolV01RegTestSwitchTime =  1671676200 ; // Wednesday, December 21, 2022 6:30:00 PM GMT-08:00
 
 
