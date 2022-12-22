@@ -5,6 +5,7 @@
 
 #include <pos/kernelrecord.h>
 
+#include <pos/kernel.h>
 #include <base58.h>
 #include <chainparams.h>
 #include <key_io.h>
@@ -77,7 +78,7 @@ int64_t KernelRecord::getAge() const
 int64_t KernelRecord::getCoinAge() const
 {
     const Consensus::Params& params = Params().GetConsensus();
-    int nDayWeight = (std::min((GetAdjustedTime() - nTime), params.nStakeMaxAge) - params.nStakeMinAge) / 86400;
+    int nDayWeight = (std::min((GetAdjustedTime() - nTime), params.nStakeMaxAge) -(IsProtocolV01(nTime) ? params.nStakeMinAgeV01 : params.nStakeMinAge)) / 86400;
     return std::max(nValue * nDayWeight / COIN, (int64_t) 0);
 }
 
@@ -86,7 +87,7 @@ double KernelRecord::getProbToMintStake(double difficulty, int timeOffset) const
     const Consensus::Params& params = Params().GetConsensus();
     double maxTarget = pow(static_cast<double>(2), 224);
     double target = maxTarget / difficulty;
-    int dayWeight = (std::min((GetAdjustedTime() - nTime) + timeOffset, params.nStakeMaxAge) - params.nStakeMinAge) / 86400;
+    int dayWeight = (std::min((GetAdjustedTime() - nTime) + timeOffset, params.nStakeMaxAge) - (IsProtocolV01(nTime) ? params.nStakeMinAgeV01 : params.nStakeMinAge)) / 86400;
     uint64_t coinAge = std::max(nValue * dayWeight / COIN, (int64_t)0);
     return target * coinAge / std::pow(static_cast<double>(2), 256);
 }

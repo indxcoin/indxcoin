@@ -791,7 +791,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
     BOOST_CHECK_EQUAL(reason, "version");
 
-    t.nVersion = 3;
+    t.nVersion = 4;
     reason.clear();
     BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
     BOOST_CHECK_EQUAL(reason, "version");
@@ -812,7 +812,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
     BOOST_CHECK_EQUAL(reason, "dust");
     // not dust:
-    t.vout[0].nValue = 673;
+    t.vout[0].nValue = 674;
     BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
     dustRelayFee = CFeeRate(DUST_RELAY_TX_FEE);
 
@@ -928,17 +928,17 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vin.clear();
     t.vin.resize(2438); // size per input (empty scriptSig): 41 bytes
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << std::vector<unsigned char>(19, 0); // output size: 30 bytes
-    // tx header:                12 bytes =>     48 vbytes
+    // tx header:                16 bytes =>     64 vbytes
     // 2438 inputs: 2438*41 = 99958 bytes => 399832 vbytes
     //    1 output:              30 bytes =>    120 vbytes
     //                      ===============================
-    //                                total: 400000 vbytes
-    BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(t)), 400000);
+    //                                total: 400016 vbytes
+    BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(t)), 400016);
     BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
 
-    // increase output size by one byte, so we end up with 400004 vbytes
+    // increase output size by one byte, so we end up with 400020 vbytes
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << std::vector<unsigned char>(20, 0); // output size: 31 bytes
-    BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(t)), 400004);
+    BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(t)), 400020);
     reason.clear();
     BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
     BOOST_CHECK_EQUAL(reason, "tx-size");

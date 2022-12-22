@@ -650,6 +650,7 @@ static RPCHelpMan getnetworkinfo()
         obj.pushKV("connections_in", (int)node.connman->GetNodeCount(ConnectionDirection::In));
         obj.pushKV("connections_out", (int)node.connman->GetNodeCount(ConnectionDirection::Out));
     }
+    obj.pushKV("dos_states",    GetNumDOSStates());
     obj.pushKV("networks",      GetNetworksInfo());
     obj.pushKV("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK()));
     obj.pushKV("incrementalfee", ValueFromAmount(::incrementalRelayFee.GetFeePerK()));
@@ -824,6 +825,11 @@ static RPCHelpMan clearbanned()
     }
 
     node.banman->ClearBanned();
+
+    {
+    LOCK(cs_main);
+    ClearDOSStates();
+    }
 
     return NullUniValue;
 },

@@ -2455,6 +2455,8 @@ CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, CAddrMan& addrman_in, b
 {
     SetTryNewOutboundPeer(false);
 
+    SetTryNewOutboundPeer(false);
+
     Options connOptions;
     Init(connOptions);
     SetNetworkActive(network_active);

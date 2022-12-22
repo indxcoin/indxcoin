@@ -11,7 +11,6 @@
 #include <index/disktxpos.h>
 #include <index/txindex.h>
 #include <node/blockstorage.h>
-#include <pos/modifiercache.h>
 #include <random.h>
 #include <script/interpreter.h>
 #include <streams.h>
@@ -19,6 +18,18 @@
 #include <validation.h>
 
 #include <boost/assign/list_of.hpp>
+
+// Protocol switch time of v0.1 kernel protocol
+unsigned int nProtocolV01SwitchTime     = std::numeric_limits<unsigned int>::max();
+unsigned int nProtocolV01TestSwitchTime = std::numeric_limits<unsigned int>::max();
+unsigned int nProtocolV01RegTestSwitchTime =  1671676200 ; // Wednesday, December 21, 2022 6:30:00 PM GMT-08:00
+
+
+// Whether the given transaction is subject to new v0.1 protocol
+bool IsProtocolV01(unsigned int nTimeTx)
+{
+    return ( nTimeTx >= (Params().NetworkIDString() == CBaseChainParams::REGTEST ? nProtocolV01RegTestSwitchTime : Params().NetworkIDString() != CBaseChainParams::MAIN ? nProtocolV01TestSwitchTime : nProtocolV01SwitchTime));
+}
 
 
 typedef std::map<int, unsigned int> MapModifierCheckpoints;
@@ -52,15 +63,26 @@ static std::map<int, unsigned int> mapStakeModifierCheckpointsRegTestNet =
 unsigned int GetStakeModifierChecksum(const CBlockIndex* pindex)
 {
     assert(pindex->pprev || pindex->GetBlockHash() == (Params().GetConsensus().hashGenesisBlock));
-    // Hash previous checksum with flags, hashProofOfStake and nStakeModifier
+    // exclude transient state flags
+    unsigned int nFlags{0}; nFlags |= pindex->nFlags;
+    nFlags &= ~CBlockIndex::BLOCK_ACCEPTED;
+    nFlags &= ~CBlockIndex::BLOCK_FAILED_DUPLICATE_STAKE;
+
+    // Hash previous checksum with hashProofOfStake and nStakeModifier
     CDataStream ss(SER_GETHASH, 0);
     if (pindex->pprev)
         ss << pindex->pprev->nStakeModifierChecksum;
-    ss << pindex->nFlags << (pindex->IsProofOfStake() ? pindex->hashProofOfStake : uint256()) << pindex->nStakeModifier;
+    ss << nFlags << (pindex->IsProofOfStake() ? pindex->hashProofOfStake : uint256()) << pindex->nStakeModifier;
+    
     arith_uint256 hashChecksum = UintToArith256(Hash(ss));
     hashChecksum >>= (256 - 32);
-    LogPrint(BCLog::POS, "%s : Height=%d Flags=%d IsProofOfStake=%s hashProofOfStake=%s StakeModifierChecksum=0x%08x, StakeModifier=0x%016x \n",
-    __func__, pindex->nHeight, pindex->nFlags, (pindex->IsProofOfStake() ? "true" : "false"), 
+    LogPrint(BCLog::POS, "%s : Height=%d Flags=%s%s%s%s%s IsProofOfStake=%s hashProofOfStake=%s StakeModifierChecksum=0x%08x, StakeModifier=0x%016x \n",
+    __func__, pindex->nHeight, nFlags & CBlockIndex::BLOCK_PROOF_OF_STAKE ? "POS, ": " ,",
+    nFlags & CBlockIndex::BLOCK_STAKE_ENTROPY ? "ENTROPY, ": " ,",
+    nFlags & CBlockIndex::BLOCK_STAKE_MODIFIER ? "MODIFIER, ": " ,",
+    nFlags & CBlockIndex::BLOCK_FAILED_DUPLICATE_STAKE ? "DUPLICATE, ": " ,",
+    nFlags & CBlockIndex::BLOCK_ACCEPTED ? "ACCEPTED, ": " ,",
+    (pindex->IsProofOfStake() ? "true" : "false"), 
     pindex->hashProofOfStake.ToString(), hashChecksum.GetLow64(), pindex->nStakeModifier);
     return hashChecksum.GetLow64();
 }
@@ -109,7 +131,7 @@ int64_t GetCoinAgeWeight(int64_t nIntervalBeginning, int64_t nIntervalEnd, const
         return 0;
     }
 
-    int64_t nSeconds = std::max((int64_t)0, nIntervalEnd - nIntervalBeginning - params.nStakeMinAge);
+    int64_t nSeconds = std::max((int64_t)0, nIntervalEnd - nIntervalBeginning - (IsProtocolV01(nIntervalEnd) ? params.nStakeMinAgeV01 : params.nStakeMinAge));
     double days = double(nSeconds) / (24 * 60 * 60);
     double weight = 0;
 
@@ -173,7 +195,7 @@ static bool SelectBlockFromCandidates(CChainState* active_chainstate, std::vecto
         // compute the selection hash by hashing its proof-hash and the
         // previous proof-of-stake modifier
         CDataStream ss(SER_GETHASH, 0);
-        ss << uint256() << nStakeModifierPrev;
+        ss << pindex->hashProofOfStake << nStakeModifierPrev;
         arith_uint256 hashSelection = UintToArith256(Hash(ss));
         // the selection hash is divided by 2**32 so that proof-of-stake block
         // is always favored over proof-of-work block. this is to preserve
@@ -317,21 +339,13 @@ static bool GetKernelStakeModifier(CChainState* active_chainstate, uint256 hashB
     nStakeModifierTime = pindexFrom->GetBlockTime();
     int64_t nStakeModifierSelectionInterval = GetStakeModifierSelectionInterval();
 
-    // Check the cache first
-    uint64_t nCachedModifier;
-    cachedModifier entry { nStakeModifierTime, nStakeModifierHeight };
-    if (cacheCheck(entry, nCachedModifier)) {
-        nStakeModifier = nCachedModifier;
-        LogPrint(BCLog::POS, "%s: nStakeModifier=0x%016x cache hit!\n", __func__, nStakeModifier);
-        return true;
-    }
 
     const CBlockIndex* pindex = pindexFrom;
 
     // loop to find the stake modifier later by a selection interval
     while (nStakeModifierTime < pindexFrom->GetBlockTime() + nStakeModifierSelectionInterval) {
-        if (!active_chainstate->m_chain.Next(pindex)) {
-            if (fPrintProofOfStake || (pindex->GetBlockTime() + params.nStakeMinAge - nStakeModifierSelectionInterval > GetAdjustedTime()))
+        if (!active_chainstate->m_chain.Next(pindex)) { // reached best block; may happen if node is behind on block chain
+            if (fPrintProofOfStake || (pindex->GetBlockTime() + (IsProtocolV01(pindex->GetBlockTime()) ? params.nStakeMinAgeV01 : params.nStakeMinAge) - nStakeModifierSelectionInterval > GetAdjustedTime()))
                 return error("GetKernelStakeModifier() : reached best block at height %d from block at height %d",
                     pindex->nHeight, pindexFrom->nHeight);
             else
@@ -344,7 +358,6 @@ static bool GetKernelStakeModifier(CChainState* active_chainstate, uint256 hashB
         }
     }
     nStakeModifier = pindex->nStakeModifier;
-    cacheAdd(entry, nStakeModifier);
     return true;
 }
 
@@ -385,7 +398,7 @@ bool CheckStakeKernelHash(CChainState* active_chainstate, unsigned int nBits, co
         return false;
     }
 
-    if (nTimeBlockFrom + params.nStakeMinAge > nTimeTx) {// Min age requirement
+    if (nTimeBlockFrom + (IsProtocolV01(nTimeTx) ? params.nStakeMinAgeV01 : params.nStakeMinAge) > nTimeTx) {// Min age requirement
         if (gArgs.GetBoolArg("-debug", false) ){
         LogPrintf("CheckStakeKernelHash() : min age violation\n"); }
         return false;
@@ -445,13 +458,17 @@ bool CheckStakeKernelHash(CChainState* active_chainstate, unsigned int nBits, co
 }
 
 // Check kernel hash target and coinstake signature
-bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& state,  const CTransactionRef& tx, unsigned int nBits, uint256& hashProofOfStake)
+bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& state, CBlockIndex* pindexPrev,  const CTransactionRef& tx, unsigned int nBits, uint256& hashProofOfStake, unsigned int nTimeTx)
 {
+    const Consensus::Params& params = Params().GetConsensus();
+    CScript kernelPubKey;
+
     if (!tx->IsCoinStake())
-        return error("CheckProofOfStake() : called on non-coinstake %s", tx->GetHash().ToString().c_str());
+        return error("CheckProofOfStake() : called on non-coinstake %s \n", tx->GetHash().ToString().c_str());
 
     // Kernel (input 0) must match the stake hash target per coin age (nBits)
     const CTxIn& txin = tx->vin[0];
+
 
     // Transaction index is required to get to block header
     if (!g_txindex)
@@ -460,9 +477,8 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
     // Get transaction index for the previous transaction
     CDiskTxPos postx;
     if (!g_txindex->FindTxPosition(txin.prevout.hash, postx)) {
-        return error("CheckProofOfStake() : tx index not found");
+        return error("CheckProofOfStake() : tx index not found \n");
     }
-
     // Read txPrev and header of its block
     CBlockHeader header;
     CTransactionRef txPrev;
@@ -473,27 +489,137 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
             fseek(file.Get(), postx.nTxOffset, SEEK_CUR);
             file >> txPrev;
         } catch (std::exception& e) {
-            return error("%s() : deserialize or I/O error in CheckProofOfStake()", __PRETTY_FUNCTION__);
+            return error("%s() : deserialize or I/O error in CheckProofOfStake() \n", __PRETTY_FUNCTION__);
         }
         if (txPrev->GetHash() != txin.prevout.hash)
-            return error("%s() : txid mismatch in CheckProofOfStake()", __PRETTY_FUNCTION__);
+            return error("%s() : txid mismatch in CheckProofOfStake() \n", __PRETTY_FUNCTION__);
     }
+
+    Coin coinIn; 
+    if(!active_chainstate->CoinsTip().GetCoin(txin.prevout, coinIn)){
+        LogPrint(BCLog::POS, "%s : Stake kernel does not exist %s",  __func__, txin.prevout.hash.ToString());
+        return state.Invalid(BlockValidationResult::DOS_20, "prevout-not-in-chain", "Stake kerenl does not exist \n");
+    }
+    if(coinIn.IsSpent()){
+        LogPrint(BCLog::POS, "%s : Stake kernel spent %s",  __func__, txin.prevout.hash.ToString());
+        return state.Invalid(BlockValidationResult::DOS_20, "prevout-spent", "Stake prevout spent \n");
+    }
+
+    int nMaxReorgDepth = params.MaxReorganizationDepth; 
+    if(IsProtocolV01(nTimeTx) && pindexPrev->nHeight + 1 - coinIn.nHeight < nMaxReorgDepth +1){
+        LogPrint(BCLog::POS, "%s : Stake kernel min depth, expecting %i and only matured to %i \n", __func__, nMaxReorgDepth +1, pindexPrev->nHeight + 1 - coinIn.nHeight);
+        return state.Invalid(BlockValidationResult::DOS_100, "invalid-prevout" , "Stake kernel is not min depth required, expecting and only matured to \n");
+    }
+    CBlockIndex* blockFrom = pindexPrev->GetAncestor(coinIn.nHeight);
+    if(!blockFrom) {
+        LogPrint(BCLog::POS, "%s : Kernel Block at height %i for prevout can not be loaded \n", __func__, coinIn.nHeight);
+        return state.Invalid(BlockValidationResult::DOS_100, "invalid-prevout", "Block at height for prevout can not be loaded \n");
+    }
+    if ((header.GetBlockTime() + (IsProtocolV01(nTimeTx) ? params.nStakeMinAgeV01 : params.nStakeMinAge)) > nTimeTx) {// Min age requirement
+        LogPrint(BCLog::POS, "%s : Stake kernel does not meet minimum age requirements %s \n",__func__, txin.prevout.hash.ToString());
+        return state.Invalid(BlockValidationResult::DOS_100, "invalid-kernel-age", "Stake kernel does not meet minimum age requirements \n");
+    }
+    kernelPubKey = coinIn.out.scriptPubKey;
+
+
 
         // Verify signature
     {
         int nIn = 0;
-        const CTxOut& prevOut = txPrev->vout[tx->vin[nIn].prevout.n];
-        TransactionSignatureChecker checker(&(*tx), nIn, prevOut.nValue, PrecomputedTransactionData(*tx), MissingDataBehavior::FAIL);
+        TransactionSignatureChecker checker(&(*tx), nIn, coinIn.out.nValue, PrecomputedTransactionData(*tx), MissingDataBehavior::FAIL);
 
-        if (!VerifyScript(tx->vin[nIn].scriptSig, prevOut.scriptPubKey, &(tx->vin[nIn].scriptWitness), SCRIPT_VERIFY_P2SH, checker, nullptr))
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "invalid-pos-script", "VerifyScript failed on coinstake");
+        if (!VerifyScript(tx->vin[nIn].scriptSig, coinIn.out.scriptPubKey, &(tx->vin[nIn].scriptWitness), SCRIPT_VERIFY_P2SH, checker, nullptr))
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "invalid-pos-script", "VerifyScript failed on coinstake \n");
 
     }
 
     // Calculate stakehash
-    if (!CheckStakeKernelHash(active_chainstate, nBits, header, txin.prevout.n, txPrev, txin.prevout, tx->nTime, hashProofOfStake)) {
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-pos-kernel", "check kernel failed on coinstake");
+    if (!CheckStakeKernelHash(active_chainstate, nBits, header, IsProtocolV01(nTimeTx) ? postx.nTxOffset : txin.prevout.n, txPrev, txin.prevout, tx->nTime, hashProofOfStake)) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-pos-kernel", "check kernel failed on coinstake \n");
     }
+
+    // Check all the stake inputs for correct age and value
+    {
+        // Sum value from any extra inputs
+        CAmount amount = 0;
+        for (size_t k = 0; k < tx->vin.size(); ++k) {
+            const CTxIn &txin = tx->vin[k];
+                
+            // Get transaction index for the previous transaction
+            CDiskTxPos postx;
+            if (!g_txindex->FindTxPosition(txin.prevout.hash, postx)) {
+                return error("CheckProofOfStake() : tx index not found \n");
+            }
+            // Read txPrev and header of its block
+            CBlockHeader header;
+            CTransactionRef txPrev;
+            {
+                CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+            try {
+                file >> header;
+                fseek(file.Get(), postx.nTxOffset, SEEK_CUR);
+                file >> txPrev;
+            } catch (std::exception& e) {
+                return error("%s() : deserialize or I/O error in CheckProofOfStake() \n", __PRETTY_FUNCTION__);
+            }
+            if (txPrev->GetHash() != txin.prevout.hash)
+                return error("%s() : txid mismatch in CheckProofOfStake() \n", __PRETTY_FUNCTION__);
+            }
+            
+            Coin coinsIN;
+            if(!active_chainstate->CoinsTip().GetCoin(txin.prevout, coinsIN)){
+                LogPrint(BCLog::POS, "%s : Stake prevout does not exist %s",  __func__, txin.prevout.hash.ToString());
+                return state.Invalid(BlockValidationResult::DOS_20, "prevout-not-in-chain", "Stake prevout does not exist \n");
+            }
+            if(coinsIN.IsSpent()){
+                LogPrint(BCLog::POS, "%s : Stake prevout spent %s",  __func__, txin.prevout.hash.ToString());
+                return state.Invalid(BlockValidationResult::DOS_20, "prevout-spent", "Stake prevout spent \n");
+            }
+            if(IsProtocolV01(nTimeTx) && pindexPrev->nHeight + 1 - coinsIN.nHeight < nMaxReorgDepth +1){
+                LogPrint(BCLog::POS, "%s : Stake prevout is not min depth, expecting %i and only matured to %i \n", __func__, nMaxReorgDepth +1, pindexPrev->nHeight + 1 - coinsIN.nHeight);
+                return state.Invalid(BlockValidationResult::DOS_100, "invalid-prevout" , "Stake prevout is not min depth \n");
+            }
+            CBlockIndex* blockFrom = pindexPrev->GetAncestor(coinsIN.nHeight);
+            if(!blockFrom) {
+                LogPrint(BCLog::POS, "%s : Block at height %i for prevout can not be loaded \n", __func__, coinsIN.nHeight);
+                return state.Invalid(BlockValidationResult::DOS_100, "invalid-prevout", "Block at height for prevout can not be loaded \n");
+            }
+            if ((header.GetBlockTime() + (IsProtocolV01(nTimeTx) ? params.nStakeMinAgeV01 : params.nStakeMinAge)) > nTimeTx) {// Min age requirement
+                LogPrint(BCLog::POS, "%s : Stake prevout does not meet minimum age requirements %s\n",__func__, txin.prevout.hash.ToString());
+                return state.Invalid(BlockValidationResult::DOS_100, "invalid-prevout-age", "Stake prevout does not meet minimum age requirements \n" );
+            }
+            if (kernelPubKey != coinsIN.out.scriptPubKey ) {
+                LogPrint(BCLog::POS, "%s: mixed-prevout-scripts %d\n", __func__, k);
+                LogPrint(BCLog::POS, "%s : coinsIN.out.scriptPubKey=%s  kernelPubKey=%s \n",__func__, HexStr(coinsIN.out.scriptPubKey), HexStr(kernelPubKey));
+               return state.Invalid(BlockValidationResult::DOS_100, "mixed-prevout-scripts", "mixed-prevout-scripts \n");
+            }
+
+            amount += coinsIN.out.nValue;
+        }
+
+        CAmount nVerify = 0;
+        for (const auto &txout : tx->vout) {
+            nVerify += txout.nValue;
+        }
+
+        if (nVerify < amount) {
+            LogPrint(BCLog::POS, "ERROR %s: verify=%d amount=%d : txn %s\n", __func__, nVerify, amount, tx->GetHash().ToString());
+            return state.Invalid(BlockValidationResult::DOS_100, "verify-amount-script-failed" , "ERROR : verify-amount-script-failed \n");
+        }
+        if (amount < (IsProtocolV01(nTimeTx) ? params.nStakeMinAmount : 0 )) {
+            LogPrint(BCLog::POS, "ERROR: %s: stake-amount=%d, txn %s\n", __func__, amount, tx->GetHash().ToString());
+            return state.Invalid(BlockValidationResult::DOS_100, "minimum-stake-amount-failed" , "ERROR : stake-amount under minimum txn \n");
+        }
+
+        LogPrint(BCLog::POS, "%s : Stake Input Amount=%s Stake Output Amount=%s Stake Minimum Amount=%s hashProof=%s \n",
+        __func__,
+        FormatMoney(amount).c_str(),
+        FormatMoney(nVerify).c_str(), 
+        FormatMoney(params.nStakeMinAmount).c_str(), 
+        tx->GetHash().ToString().c_str());
+    }
+
+
 
     return true;
 }
@@ -534,7 +660,7 @@ uint64_t GetCoinAge(CChainState* active_chainstate, const CTransaction& tx, cons
             return 0; // unable to read block of previous transaction
         if (!ReadBlockFromDisk(block, active_chainstate->m_blockman.LookupBlockIndex(hashBlock), params))
             return 0; // unable to read block of previous transaction
-        if (block.nTime + params.nStakeMinAge > tx.nTime)
+        if (block.nTime + (IsProtocolV01(tx.nTime) ? params.nStakeMinAgeV01 : params.nStakeMinAge) > tx.nTime)
             continue; // only count coins meeting min age requirement
 
         // deal with missing timestamps in PoW blocks

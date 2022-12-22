@@ -235,6 +235,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         pblock->nTime      = pblock->vtx[1]->nTime; //same as coinstake timestamp
     else
         UpdateTime(pblock, Params().GetConsensus(), pindexPrev);
+    if (pindexPrev->nHeight >= params.nLastPowHeight)
+        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
+
     pblock->nNonce         = 0;
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
@@ -519,20 +522,12 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
 
 static bool ProcessBlockFound(const CBlock* pblock, ChainstateManager* chainman, CChainState* chainstate, const CChainParams& chainparams)
 {
-    //const CBlock& block = pblock;
     uint256 hash = pblock->GetHash();
-    uint256 hashStake = uint256();
 
 
     if (!pblock->IsProofOfStake()) {
         return error("ProcessStakeFound() : %s is not a proof-of-stake block", hash.GetHex().c_str());
     }
-
-    // verify hash target and signature of coinstake tx
-    BlockValidationState state;
-    if (!CheckProofOfStake(chainstate, state, pblock->vtx[1], pblock->nBits, hashStake))
-        return error("ProcessBlockFound() : proof-of-stake checking failed");
-
 
     // Found a solution
     {
@@ -543,7 +538,7 @@ static bool ProcessBlockFound(const CBlock* pblock, ChainstateManager* chainman,
 
     // Process this block the same as if we had received it from another node
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-    if (!chainman->ProcessNewBlock(Params(), shared_pblock, true, NULL))
+    if (!chainman->ProcessNewBlock(Params(), shared_pblock, true, nullptr))
         return error("ProcessBlockFound() : block not accepted");
 
     return true;
@@ -613,8 +608,8 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
             // Busy-wait for the network to come online so we don't waste time mining
             // on an obsolete chain. In regtest mode we expect to fly solo.
             while(connman == nullptr || connman->GetNodeCount(ConnectionDirection::Both) == 0 || chainstate->IsInitialBlockDownload()) {  
-                if (!connman->interruptNet.sleep_for(std::chrono::seconds(10))){
-                    LogPrint(BCLog::STAKE, "PoSMiner(): sleeping for 10 \n" );   
+                if (!connman->interruptNet.sleep_for(std::chrono::seconds(60))){
+                    LogPrint(BCLog::STAKE, "PoSMiner(): sleeping for 60 \n" );   
                     return;
                 }
                     
@@ -683,12 +678,16 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                         LogPrint(BCLog::STAKE, "PoSMiner(): failed to sign PoS block");
                         continue;
                     }
+                    if (!particl::CheckStakeUnique(*pblock, false)) { // 
+                            LogPrint(BCLog::STAKE, "%s: Stake already used for new block %s \n", __func__, pblock->GetHash().ToString());
+                            continue;
+                    }
                 }
-                LogPrint(BCLog::STAKE, "PoSMiner() : unverified proof-of-stake block found %s\n", pblock->GetHash().ToString());
+                LogPrint(BCLog::STAKE, "%s: unverified proof-of-stake block found %s \n",__func__, pblock->GetHash().ToString());
                 ProcessBlockFound(pblock, chainman, chainstate, Params());
                 reservedest.KeepDestination();
-                // Rest for ~3 minutes after successful block to preserve close quick
-                if (!connman->interruptNet.sleep_for(std::chrono::seconds(60 + GetRand(4))))
+                // Rest for ~1 minutes after successful block to preserve close quick
+                if (!connman->interruptNet.sleep_for(std::chrono::seconds(20 + GetRand(4))))
                     return;
             }
             if (!connman->interruptNet.sleep_for(std::chrono::milliseconds(pos_timio)))
