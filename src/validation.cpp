@@ -4631,20 +4631,11 @@ bool CChainState::PoSContextualBlockChecks(const CBlock& block, BlockValidationS
     // If this is a reorg, check that it is not too deep 
     int nMaxReorgDepth = Params().GetConsensus().MaxReorganizationDepth; 
     if (this->m_chain.Height() - pindex->nHeight >= nMaxReorgDepth)
-        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "older-than-maxreorg", "forked chain older than max reorganization depth");
-
-
-    bool fUpdate = !(fJustCheck);
-    if (block.IsProofOfStake()){
-        if(!pindex->IsProofOfStake())
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "older-than-maxreorg", "forked chain older than max reorganization depth");        
+    
+    if (block.IsProofOfStake() && !pindex->IsProofOfStake()){
             pindex->SetProofOfStake();
-        if (!this->IsInitialBlockDownload()
-                && !particl::CheckStakeUnique(block, fUpdate)) {
-            state.nFlags |= CBlockIndex::BLOCK_FAILED_DUPLICATE_STAKE;
-        }
-        
     }
-        
 
     // PoSV: get stake entropy bit
     if (!pindex->SetStakeEntropyBit(StakeEntropyBitFromHash(hash))) {
@@ -4671,6 +4662,12 @@ bool CChainState::PoSContextualBlockChecks(const CBlock& block, BlockValidationS
     if (!CheckStakeModifierCheckpoints(pindex->nHeight, pindex->nStakeModifierChecksum ))
         return error("%s: Rejected by checkpoint height=%d, modifier=0x%016llx checksum=%08x", __func__, pindex->nHeight, nStakeModifier, nStakeModifierChecksum );
 
+    bool fUpdate = !(fJustCheck);
+    if (!this->IsInitialBlockDownload()
+        && !particl::CheckStakeUnique(block, fUpdate)) {
+        state.nFlags |= CBlockIndex::BLOCK_FAILED_DUPLICATE_STAKE;
+    }
+        
     if (fJustCheck)
         return true;
 
