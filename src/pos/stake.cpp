@@ -157,7 +157,7 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     CAmount nValueIn = 0;
     std::vector<COutput> vAvailableCoins;
     int nMaxReorgDepth = Params().GetConsensus().MaxReorganizationDepth; 
-    CCoinControl temp; temp.m_min_depth = (IsProtocolV01(txNew.nTime) ? nMaxReorgDepth + 1 : 51);
+    CCoinControl temp; temp.m_min_depth = (IsProtocolV00(txNew.nTime) ? nMaxReorgDepth + 1 : 51);
     CoinSelectionParams coin_selection_params;
     pwallet->AvailableCoins(vAvailableCoins, &temp);
     if (!pwallet->SelectCoins(vAvailableCoins, nBalance - nReserveBalance, setCoins, nValueIn, temp, coin_selection_params))

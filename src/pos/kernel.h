@@ -24,6 +24,9 @@ static const bool DEFAULT_PRINTSTAKEMODIFIER = false;
 static const bool DEFAULT_PRINTHASHPROOF = false;
 static const bool DEFAULT_PRINTCOINAGE = false;
 
+// Whether a given transaction is subject to new v0.0 protocol
+bool IsProtocolV00(unsigned int nTimeTx);
+
 // Whether a given transaction is subject to new v0.1 protocol
 bool IsProtocolV01(unsigned int nTimeTx);
 
