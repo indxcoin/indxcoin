@@ -19,11 +19,26 @@
 
 #include <boost/assign/list_of.hpp>
 
-// Protocol switch time of v0.1 kernel protocol
-unsigned int nProtocolV01SwitchTime     = std::numeric_limits<unsigned int>::max();
-unsigned int nProtocolV01TestSwitchTime = 1671816600; // Friday, December 23, 2022 9:30:00 AM GMT-08:00
-unsigned int nProtocolV01RegTestSwitchTime =  1671676200 ; // Wednesday, December 21, 2022 6:30:00 PM GMT-08:00
 
+
+// Protocol switch time of v0.0 kernel protocol
+// enforce tx version 3, min stake depth, mixed stake
+unsigned int nProtocolV00SwitchTime     = std::numeric_limits<unsigned int>::max();
+unsigned int nProtocolV00TestSwitchTime = 1671816600; // Friday, December 23, 2022 9:30:00 AM GMT-08:00
+unsigned int nProtocolV00RegTestSwitchTime =  1671676200 ; // Wednesday, December 21, 2022 6:30:00 PM GMT-08:00
+
+// Protocol switch time of v0.1 kernel protocol
+// enforce new stakig algo, new stake age, min stake amount
+unsigned int nProtocolV01SwitchTime     = std::numeric_limits<unsigned int>::max();
+unsigned int nProtocolV01TestSwitchTime = std::numeric_limits<unsigned int>::max();
+unsigned int nProtocolV01RegTestSwitchTime =  std::numeric_limits<unsigned int>::max();
+
+
+// Whether the given transaction is subject to new v0.1 protocol
+bool IsProtocolV00(unsigned int nTimeTx)
+{
+    return ( nTimeTx >= (Params().NetworkIDString() == CBaseChainParams::REGTEST ? nProtocolV00RegTestSwitchTime : Params().NetworkIDString() != CBaseChainParams::MAIN ? nProtocolV00TestSwitchTime : nProtocolV00SwitchTime));
+}
 
 // Whether the given transaction is subject to new v0.1 protocol
 bool IsProtocolV01(unsigned int nTimeTx)
@@ -506,7 +521,7 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
     }
 
     int nMaxReorgDepth = params.MaxReorganizationDepth; 
-    if(IsProtocolV01(nTimeTx) && pindexPrev->nHeight + 1 - coinIn.nHeight < nMaxReorgDepth +1){
+    if(IsProtocolV00(nTimeTx) && pindexPrev->nHeight + 1 - coinIn.nHeight < nMaxReorgDepth +1){
         LogPrint(BCLog::POS, "%s : Stake kernel min depth, expecting %i and only matured to %i \n", __func__, nMaxReorgDepth +1, pindexPrev->nHeight + 1 - coinIn.nHeight);
         return state.Invalid(BlockValidationResult::DOS_100, "invalid-prevout" , "Stake kernel is not min depth required, expecting and only matured to \n");
     }
@@ -575,7 +590,7 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
                 LogPrint(BCLog::POS, "%s : Stake prevout spent %s",  __func__, txin.prevout.hash.ToString());
                 return state.Invalid(BlockValidationResult::DOS_20, "prevout-spent", "Stake prevout spent \n");
             }
-            if(IsProtocolV01(nTimeTx) && pindexPrev->nHeight + 1 - coinsIN.nHeight < nMaxReorgDepth +1){
+            if(IsProtocolV00(nTimeTx) && pindexPrev->nHeight + 1 - coinsIN.nHeight < nMaxReorgDepth +1){
                 LogPrint(BCLog::POS, "%s : Stake prevout is not min depth, expecting %i and only matured to %i \n", __func__, nMaxReorgDepth +1, pindexPrev->nHeight + 1 - coinsIN.nHeight);
                 return state.Invalid(BlockValidationResult::DOS_100, "invalid-prevout" , "Stake prevout is not min depth \n");
             }
@@ -588,7 +603,7 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
                 LogPrint(BCLog::POS, "%s : Stake prevout does not meet minimum age requirements %s\n",__func__, txin.prevout.hash.ToString());
                 return state.Invalid(BlockValidationResult::DOS_100, "invalid-prevout-age", "Stake prevout does not meet minimum age requirements \n" );
             }
-            if (IsProtocolV01(nTimeTx) && kernelPubKey != coinsIN.out.scriptPubKey ) {
+            if (IsProtocolV00(nTimeTx) && kernelPubKey != coinsIN.out.scriptPubKey ) {
                 LogPrint(BCLog::POS, "%s: mixed-prevout-scripts %d\n", __func__, k);
                 LogPrint(BCLog::POS, "%s : coinsIN.out.scriptPubKey=%s  kernelPubKey=%s \n",__func__, HexStr(coinsIN.out.scriptPubKey), HexStr(kernelPubKey));
                return state.Invalid(BlockValidationResult::DOS_100, "mixed-prevout-scripts", "mixed-prevout-scripts \n");

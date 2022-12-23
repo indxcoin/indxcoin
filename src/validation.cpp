@@ -1584,7 +1584,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
 
     // enforce transaction version 3
-    if (m_active_chainstate.m_chain.Tip()->nHeight >= args.m_chainparams.GetConsensus().nLastPowHeight && (IsProtocolV01(tx.nTime) ? 3 : 1) > tx.nVersion){
+    if (m_active_chainstate.m_chain.Tip()->nHeight >= args.m_chainparams.GetConsensus().nLastPowHeight && (IsProtocolV00(tx.nTime) ? 3 : 1) > tx.nVersion){
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-tx-mp-transaction-version");
     }
 
@@ -4247,7 +4247,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-tx-time", "block timestamp earlier than transaction timestamp");
 
         // enforce transaction version 3
-        if (block.IsProofOfStake() && (IsProtocolV01(block.nTime) ? 3 : 1) > tx->nVersion){
+        if (block.IsProofOfStake() && (IsProtocolV00(block.nTime) ? 3 : 1) > tx->nVersion){
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-tx-transaction-version");
         }
     }
