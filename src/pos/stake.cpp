@@ -42,6 +42,7 @@
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
+#include <wallet/wallet.h>
 #include <wallet/external_signer_scriptpubkeyman.h>
 
 #include <univalue.h>
@@ -126,7 +127,7 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
 {
     // The following split & combine thresholds are important to security
     // Should not be adjusted if you don't understand the consequences
-    static unsigned int nStakeSplitAge = (60 * 60 * 24 * 90);
+    //static unsigned int nStakeSplitAge = (60 * 60 * 24 * 90);
     int64_t nCombineThreshold = 11000 * COIN;
 
     arith_uint256 bnTargetPerCoinDay;
@@ -157,18 +158,24 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     CAmount nValueIn = 0;
     std::vector<COutput> vAvailableCoins;
     int nMaxReorgDepth = Params().GetConsensus().MaxReorganizationDepth; 
-    CCoinControl temp; temp.m_min_depth = (IsProtocolV00(txNew.nTime) ? nMaxReorgDepth + 1 : 51);
-    CoinSelectionParams coin_selection_params;
-    pwallet->AvailableCoins(vAvailableCoins, &temp);
-    if (!pwallet->SelectCoins(vAvailableCoins, nBalance - nReserveBalance, setCoins, nValueIn, temp, coin_selection_params))
+    
+    // Select coins with suitable depth
+    if (!pwallet->SelectCoinsSimple(chainstate, nBalance - nReserveBalance, setCoins, nValueIn, txNew.nTime, (IsProtocolV00(txNew.nTime) ? nMaxReorgDepth + 1 : 51))){
+        LogPrint(BCLog::POS, "%s :pwallet->SelectCoins() False \n",__func__);
         return false;
-    if (setCoins.empty())
+    }
+    if (setCoins.empty()){
+        LogPrint(BCLog::POS, "%s : setCoins.empty() \n",__func__);
         return false;
+    }
     CAmount nCredit = 0;
     CScript scriptPubKeyKernel;
     CScript scriptPubKeyOut;
+    int64_t nloopcount = 0 ;
     for (const auto& pcoin : setCoins)
     {
+
+        LogPrint(BCLog::POS, "%s :Kernel Search Loop =%d \n",__func__, nloopcount);
 
         if (!EnableStaking()) {
             return false;
@@ -238,16 +245,18 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
                 txNew.nTime -= n;
                 txNew.vin.push_back(CTxIn(pcoin.outpoint.hash, pcoin.outpoint.n));
                 nCredit += pcoin.txout.nValue;
-                vwtxPrev.push_back(tx);
-                txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
-                if (header.GetBlockTime() + nStakeSplitAge > txNew.nTime)
-                    txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
+                vwtxPrev.push_back(tx); // kernel stake
+                //txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
+                //if (header.GetBlockTime() + nStakeSplitAge > txNew.nTime)
+                //    txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
                 fKernelFound = true;
                 break;
             }
         }
         if (fKernelFound)
             break; // if kernel is found stop searching
+
+           nloopcount++; 
     }
     if (nCredit == 0 || nCredit > nBalance - nReserveBalance)
         return false;
@@ -332,12 +341,30 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
 
     CAmount nMinFee = 0;
     CAmount nMinFeeBase = MIN_TX_FEE;
+    unsigned int stoutsize = txNew.vin.size() >= 25 ? txNew.vin.size()  + 1: txNew.vin.size() + 2;
+    CAmount nOutCred = (nCredit / (stoutsize - 1)  / CENT) * CENT;
+    CAmount nFinOutCred = nCredit - (nOutCred * (stoutsize - 2) );
+
+        LogPrint(BCLog::POS, "%s: ------------------------------------------------------------------ \n", __func__);
+        for (size_t k = 1; k < stoutsize; ++k) {
+            txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
+            txNew.vout[k].nValue = nOutCred;
+            LogPrint(BCLog::POS, "%s: stake-nOutCred=%s, stake-inputs=%d vout-outputs=%d \n", __func__, FormatMoney(nOutCred).c_str(), txNew.vin.size(), k );
+            if ( k +1 == stoutsize){
+                txNew.vout[k].nValue = nFinOutCred;
+                LogPrint(BCLog::POS, "%s: stake-nFinOutCred=%s, stake-inputs=%d vout-outputs=%d \n", __func__, FormatMoney(nFinOutCred).c_str(), txNew.vin.size(), k );
+            }
+        }
+        LogPrint(BCLog::POS, "%s: ------------------------------------------------------------------ \n", __func__);
+        LogPrint(BCLog::POS, "%s: stake-inputs=%d vout-outputs=%d \n", __func__, txNew.vin.size(), txNew.vout.size() );
+        LogPrint(BCLog::POS, "%s: ------------------------------------------------------------------ \n", __func__);
 
     while(true)
     {
        
 
         // Set output amount
+        /**
         if (txNew.vout.size() == 3)
         {
             txNew.vout[1].nValue = (nCredit / 2 / CENT) * CENT;
@@ -345,6 +372,7 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
         }else{
             txNew.vout[1].nValue = nCredit;
         }
+        **/
         
 
         // Sign
@@ -375,5 +403,104 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     }
 
     // Successfully generated coinstake
+    return true;
+}
+
+void CWallet::AvailableCoinsMinConf(CChainState* chainstate, std::vector<COutput>&  vCoins, int nConf) const
+{
+    vCoins.clear();
+
+    {
+        LOCK(cs_wallet);
+        for (const auto& it : mapWallet)
+        {    
+            //const uint256& wtxid = it.first;
+            const CWalletTx* pcoin = &it.second;
+            CBlockIndex* pindexPrev = chainstate->m_chain.Tip();
+            const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
+            int64_t nLockTimeCutoff = (pindexPrev->GetMedianTimePast());
+
+
+            if (!IsFinalTx(*pcoin->tx, nHeight, nLockTimeCutoff))
+                continue;
+
+            if (!pcoin->IsTrusted())
+                continue;
+
+            if ((pcoin->IsCoinBase() || pcoin->IsCoinStake()) && pcoin->GetBlocksToMaturity() > 0)
+                continue;
+
+            int nDepth = pcoin->GetDepthInMainChain();
+            if(nDepth < nConf)
+                continue;
+
+
+            bool safeTx = pcoin->IsTrusted();
+            if (nDepth == 0 && pcoin->mapValue.count("replaces_txid")) {
+                safeTx = false;
+            }
+            if (nDepth == 0 && pcoin->mapValue.count("replaced_by_txid")) {
+                safeTx = false;
+            }
+
+
+            for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
+
+                if (IsLockedCoin(it.first, i))
+                    continue;
+
+            	isminetype mine = IsMine(pcoin->tx->vout[i]);
+                
+                if (mine == ISMINE_NO) {
+                    continue;
+                }
+
+                    
+                    std::unique_ptr<SigningProvider> provider = GetSolvingProvider(pcoin->tx->vout[i].scriptPubKey);
+
+                    bool solvable = provider ? IsSolvable(*provider, pcoin->tx->vout[i].scriptPubKey) : false;
+                    bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (solvable));
+
+                    vCoins.push_back(COutput(pcoin, i, nDepth, spendable, solvable, safeTx));
+            }
+        }
+    }
+}
+
+// PoS: Select some coins without random shuffle or best subset approximation
+bool CWallet::SelectCoinsSimple(CChainState* chainstate, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, unsigned int nSpendTime, int nMinConf) const
+{
+    std::vector<COutput> vCoins;
+    AvailableCoinsMinConf(chainstate, vCoins, nMinConf);
+
+    setCoinsRet.clear();
+    nValueRet = 0;
+
+    for (const COutput& output : vCoins)
+    {
+        if (!output.fSpendable)
+        	continue;
+
+        // Stop if we've chosen enough inputs
+        if (nValueRet >= nTargetValue)
+            break;
+
+        CAmount n = output.tx->tx->vout[output.i].nValue;
+
+        if (n >= nTargetValue)
+        {
+            // If input value is greater or equal to target then simply insert
+            //    it into the current subset and exit
+            setCoinsRet.insert(CInputCoin(output.tx->tx, output.i));
+            nValueRet += output.tx->tx->vout[output.i].nValue;
+            break;
+        }
+        else if (n < nTargetValue + CENT)
+        {
+            setCoinsRet.insert(CInputCoin(output.tx->tx, output.i));
+            nValueRet += output.tx->tx->vout[output.i].nValue;
+        }
+    }
+
     return true;
 }

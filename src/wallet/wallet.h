@@ -367,6 +367,9 @@ public:
      */
     bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet,
                     const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    bool SelectCoinsSimple(CChainState* chainstate, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, 
+                           CAmount& nValueRet, unsigned int nSpendTime, int nMinConf) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     
     /** Get a name for this wallet for logging/debugging purposes.
      */
@@ -435,6 +438,8 @@ public:
      */
     void AvailableCoins(std::vector<COutput>& vCoins, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    // PoS
+    void AvailableCoinsMinConf(CChainState* chainstate, std::vector<COutput>& vCoins, int nConf) const;
     /**
      * Return list of available coins and locked coins grouped by non-change output address.
      */
