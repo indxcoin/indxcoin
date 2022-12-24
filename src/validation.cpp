@@ -4663,7 +4663,8 @@ bool CChainState::PoSContextualBlockChecks(const CBlock& block, BlockValidationS
         return error("%s: Rejected by checkpoint height=%d, modifier=0x%016llx checksum=%08x", __func__, pindex->nHeight, nStakeModifier, nStakeModifierChecksum );
 
     bool fUpdate = !(fJustCheck);
-    if (!this->IsInitialBlockDownload()
+    if (pindex->IsProofOfStake() 
+        && !this->IsInitialBlockDownload()
         && !particl::CheckStakeUnique(block, fUpdate)) {
         state.nFlags |= CBlockIndex::BLOCK_FAILED_DUPLICATE_STAKE;
     }
@@ -4834,7 +4835,7 @@ bool ChainstateManager::ProcessNewBlock(const CChainParams& chainparams, const s
             GetMainSignals().BlockChecked(*block, state);
             return error("%s: AcceptBlock FAILED (%s)", __func__, state.ToString());
         }
-        if (pindex && state.nFlags & CBlockIndex::BLOCK_FAILED_DUPLICATE_STAKE) {
+        if ((block->IsProofOfStake() && pindex) && state.nFlags & CBlockIndex::BLOCK_FAILED_DUPLICATE_STAKE) {
             pindex->nFlags |= CBlockIndex::BLOCK_FAILED_DUPLICATE_STAKE;
             setDirtyBlockIndex.insert(pindex);
             LogPrint(BCLog::POS, "%s Marking duplicate stake: %s.\n", __func__, pindex->GetBlockHash().ToString());

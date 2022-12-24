@@ -618,11 +618,11 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
         }
 
         if (nVerify < amount) {
-            LogPrint(BCLog::POS, "ERROR %s: verify=%d amount=%d : txn %s\n", __func__, nVerify, amount, tx->GetHash().ToString());
+            LogPrint(BCLog::POS, "ERROR %s: verify=%s amount=%s : txn %s\n", __func__, FormatMoney(nVerify).c_str(), FormatMoney(amount).c_str(), tx->GetHash().ToString());
             return state.Invalid(BlockValidationResult::DOS_100, "verify-amount-script-failed" , "ERROR : verify-amount-script-failed \n");
         }
         if (amount < (IsProtocolV01(nTimeTx) ? params.nStakeMinAmount : 0 )) {
-            LogPrint(BCLog::POS, "ERROR: %s: stake-amount=%d, txn %s\n", __func__, amount, tx->GetHash().ToString());
+            LogPrint(BCLog::POS, "ERROR: %s: stake-amount=%s, txn %s\n", __func__, FormatMoney(amount).c_str(), tx->GetHash().ToString());
             return state.Invalid(BlockValidationResult::DOS_100, "minimum-stake-amount-failed" , "ERROR : stake-amount under minimum txn \n");
         }
 
