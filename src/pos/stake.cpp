@@ -128,6 +128,8 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     // The following split & combine thresholds are important to security
     // Should not be adjusted if you don't understand the consequences
     //static unsigned int nStakeSplitAge = (60 * 60 * 24 * 90);
+    int64_t nStakeSplitAge = (IsProtocolV01(nIntervalEnd) ? consensusParams.nStakeMaxAgeV01 : consensusParams.nStakeMaxAge);
+    bool fSplitAgedStake = false;
     int64_t nCombineThreshold = 11000 * COIN;
 
     arith_uint256 bnTargetPerCoinDay;
@@ -157,7 +159,7 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     std::vector<CTransactionRef> vwtxPrev;
     CAmount nValueIn = 0;
     std::vector<COutput> vAvailableCoins;
-    int nMaxReorgDepth = Params().GetConsensus().MaxReorganizationDepth; 
+    int nMaxReorgDepth = consensusParams.MaxReorganizationDepth; 
     
     // Select coins with suitable depth
     if (!pwallet->SelectCoinsSimple(chainstate, nBalance - nReserveBalance, setCoins, nValueIn, txNew.nTime, (IsProtocolV00(txNew.nTime) ? nMaxReorgDepth + 1 : 51))){
@@ -249,6 +251,10 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
                 //txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
                 //if (header.GetBlockTime() + nStakeSplitAge > txNew.nTime)
                 //    txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
+                if (header.GetBlockTime() + nStakeSplitAge > txNew.nTime){
+                        fSplitAgedStake = true;
+                }
+
                 fKernelFound = true;
                 break;
             }
@@ -341,7 +347,7 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
 
     CAmount nMinFee = 0;
     CAmount nMinFeeBase = MIN_TX_FEE;
-    unsigned int stoutsize = txNew.vin.size() >= 25 ? txNew.vin.size()  + 1: txNew.vin.size() + 2;
+    unsigned int stoutsize = fSplitAgedStake ? txNew.vin.size()  + 2: txNew.vin.size() + 1;
     CAmount nOutCred = (nCredit / (stoutsize - 1)  / CENT) * CENT;
     CAmount nFinOutCred = nCredit - (nOutCred * (stoutsize - 2) );
 

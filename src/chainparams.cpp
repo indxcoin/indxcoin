@@ -124,6 +124,7 @@ public:
         consensus.nStakeMinAgeV01 =  72 * 60 * 60; // 
         consensus.nStakeMinAmount = 10000 * COIN;
         consensus.nStakeMaxAge = 45 * 24 *  60 * 60; // 
+        consensus.nStakeMaxAgeV01 = 2 * 72 * 60 * 60; // 
         consensus.nModifierInterval = 13 * 60;
         consensus.nLastPowHeight = 2200; // 
         consensus.MaxReorganizationDepth = 200; // (<  (minstakeinterval / blockinterval) / 2)
@@ -252,6 +253,7 @@ public:
         consensus.nStakeMinAgeV01 =  72 * 60 * 60; // 
         consensus.nStakeMinAmount = 10000 * COIN; 
         consensus.nStakeMaxAge = 45 * 24 *  60 * 60; // 
+        consensus.nStakeMaxAgeV01 = 2 * 72 * 60 * 60; // 
         consensus.nModifierInterval = 13 * 60;
         consensus.nLastPowHeight = 2200; // 
         consensus.MaxReorganizationDepth = 200; // (<  (minstakeinterval / blockinterval) / 2)
@@ -484,6 +486,7 @@ public:
         consensus.nStakeMinAgeV01 =  72 * 60 * 60; // 
         consensus.nStakeMinAmount = 10000 * COIN;
         consensus.nStakeMaxAge = 45 * 24 *  60 * 60; // 45 * 24 *  60 * 60
+        consensus.nStakeMaxAgeV01 = 2 * 72 * 60 * 60; // 
         consensus.nModifierInterval = 13 * 60;
         consensus.nLastPowHeight = 2200; // 
         consensus.MaxReorganizationDepth = 200; // (<  (minstakeinterval / blockinterval) / 2)
