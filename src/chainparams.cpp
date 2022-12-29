@@ -271,7 +271,7 @@ public:
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,140);  //  prefix = y, hexid = "8C" 
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,141);  //  prefix = y or z, hexid = "8D"
-        base58Prefixes[SECRET_KEY]     = std::vector<unsigned char>(1,138);  // WIF hexid = "12"
+        base58Prefixes[SECRET_KEY]     = std::vector<unsigned char>(1,138);  // WIF hexid = "8A"
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x67, 0xBF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x63, 0x95};
 

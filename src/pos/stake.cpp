@@ -128,7 +128,7 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     // The following split & combine thresholds are important to security
     // Should not be adjusted if you don't understand the consequences
     //static unsigned int nStakeSplitAge = (60 * 60 * 24 * 90);
-    int64_t nStakeSplitAge = (IsProtocolV01(nIntervalEnd) ? consensusParams.nStakeMaxAgeV01 : consensusParams.nStakeMaxAge);
+    int64_t nStakeSplitAge = (IsProtocolV01(txNew.nTime) ? consensusParams.nStakeMaxAgeV01 : consensusParams.nStakeMaxAge);
     bool fSplitAgedStake = false;
     int64_t nCombineThreshold = 11000 * COIN;
 
