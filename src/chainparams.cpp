@@ -124,6 +124,7 @@ public:
         consensus.nStakeMinAgeV01 =  72 * 60 * 60; // 
         consensus.nStakeMinAmount = 10000 * COIN;
         consensus.nStakeMaxAge = 45 * 24 *  60 * 60; // 
+        consensus.nStakeMaxAgeV01 = 2 * 72 * 60 * 60; // 
         consensus.nModifierInterval = 13 * 60;
         consensus.nLastPowHeight = 2200; // 
         consensus.MaxReorganizationDepth = 200; // (<  (minstakeinterval / blockinterval) / 2)
@@ -252,6 +253,7 @@ public:
         consensus.nStakeMinAgeV01 =  72 * 60 * 60; // 
         consensus.nStakeMinAmount = 10000 * COIN; 
         consensus.nStakeMaxAge = 45 * 24 *  60 * 60; // 
+        consensus.nStakeMaxAgeV01 = 2 * 72 * 60 * 60; // 
         consensus.nModifierInterval = 13 * 60;
         consensus.nLastPowHeight = 2200; // 
         consensus.MaxReorganizationDepth = 200; // (<  (minstakeinterval / blockinterval) / 2)
@@ -269,7 +271,7 @@ public:
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,140);  //  prefix = y, hexid = "8C" 
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,141);  //  prefix = y or z, hexid = "8D"
-        base58Prefixes[SECRET_KEY]     = std::vector<unsigned char>(1,138);  // WIF hexid = "12"
+        base58Prefixes[SECRET_KEY]     = std::vector<unsigned char>(1,138);  // WIF hexid = "8A"
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x67, 0xBF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x63, 0x95};
 
@@ -484,6 +486,7 @@ public:
         consensus.nStakeMinAgeV01 =  72 * 60 * 60; // 
         consensus.nStakeMinAmount = 10000 * COIN;
         consensus.nStakeMaxAge = 45 * 24 *  60 * 60; // 45 * 24 *  60 * 60
+        consensus.nStakeMaxAgeV01 = 2 * 72 * 60 * 60; // 
         consensus.nModifierInterval = 13 * 60;
         consensus.nLastPowHeight = 2200; // 
         consensus.MaxReorganizationDepth = 200; // (<  (minstakeinterval / blockinterval) / 2)
@@ -513,7 +516,7 @@ public:
         m_assumeutxo_data = MapAssumeutxo{
             {
                 110,
-                {AssumeutxoHash{uint256S("0x1ebbf5850204c0bdb15bf030f47c7fe91d45c44c712697e4509ba67adb01c618")}, 110},
+                {AssumeutxoHash{uint256S("0xe8e8e90edd38b55d48179e2b1fc3dd90db6b1ab9dcfd7e858f5bcaf0bb03a8c4")}, 110},
             },
             {
                 200,

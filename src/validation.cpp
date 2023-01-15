@@ -1573,7 +1573,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // Coinbase/coinstake is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase() || tx.IsCoinStake())
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "coinbase/coinstake");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "coinbase-coinstake");
 
     // PoS: refuse transactions with pre-PoS versions
     if(m_active_chainstate.m_chain.Tip()->nHeight >= args.m_chainparams.GetConsensus().nLastPowHeight && tx.nVersion <= POW_TX_VERSION)

@@ -14,6 +14,7 @@
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <version.h>
+#include <timedata.h>
 
 #include <iostream>
 
@@ -96,6 +97,7 @@ void static RandomTransaction(CMutableTransaction &tx, bool fSingle) {
     tx.vin.clear();
     tx.vout.clear();
     tx.nLockTime = (InsecureRandBool()) ? InsecureRand32() : 0;
+    tx.nTime = GetAdjustedTime();
     int ins = (InsecureRandBits(2)) + 1;
     int outs = fSingle ? ins : (InsecureRandBits(2)) + 1;
     for (int in = 0; in < ins; in++) {

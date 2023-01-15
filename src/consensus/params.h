@@ -114,6 +114,7 @@ struct Params {
     int64_t nStakeMinAgeV01;
     CAmount nStakeMinAmount;
     int64_t nStakeMaxAge;
+    int64_t nStakeMaxAgeV01;
     int64_t nModifierInterval;
     int nLastPowHeight;
     int MaxReorganizationDepth;

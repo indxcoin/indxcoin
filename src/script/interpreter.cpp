@@ -1542,6 +1542,7 @@ bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata
     // Transaction level data
     ss << tx_to.nVersion;
     ss << tx_to.nLockTime;
+    ss << tx_to.nTime;
     if (input_type != SIGHASH_ANYONECANPAY) {
         ss << cache.m_prevouts_single_hash;
         ss << cache.m_spent_amounts_single_hash;
