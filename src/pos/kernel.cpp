@@ -23,13 +23,13 @@
 
 // Protocol switch time of v0.0 kernel protocol
 // enforce tx version 3, min stake depth, no mixed stake
-unsigned int nProtocolV00SwitchTime     = std::numeric_limits<unsigned int>::max();
+unsigned int nProtocolV00SwitchTime     = 1673829000; // Sunday, January 15, 2023 4:30:00 PM GMT-08:00
 unsigned int nProtocolV00TestSwitchTime = 1671816600; // Friday, December 23, 2022 9:30:00 AM GMT-08:00
 unsigned int nProtocolV00RegTestSwitchTime =  1671676200 ; // Wednesday, December 21, 2022 6:30:00 PM GMT-08:00
 
 // Protocol switch time of v0.1 kernel protocol
 // enforce new stakig algo, new min/max stake age, min stake amount
-unsigned int nProtocolV01SwitchTime     = std::numeric_limits<unsigned int>::max();
+unsigned int nProtocolV01SwitchTime     = 1673829300; // Sunday, January 15, 2023 4:35:00 PM GMT-08:00
 unsigned int nProtocolV01TestSwitchTime = 1673800200; // Sunday, January 15, 2023 8:30:00 AM GMT-08:00
 unsigned int nProtocolV01RegTestSwitchTime =  std::numeric_limits<unsigned int>::max();
 
