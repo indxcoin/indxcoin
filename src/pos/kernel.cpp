@@ -30,7 +30,7 @@ unsigned int nProtocolV00RegTestSwitchTime =  1671676200 ; // Wednesday, Decembe
 // Protocol switch time of v0.1 kernel protocol
 // enforce new stakig algo, new min/max stake age, min stake amount
 unsigned int nProtocolV01SwitchTime     = std::numeric_limits<unsigned int>::max();
-unsigned int nProtocolV01TestSwitchTime = std::numeric_limits<unsigned int>::max();
+unsigned int nProtocolV01TestSwitchTime = 1673800200; // Sunday, January 15, 2023 8:30:00 AM GMT-08:00
 unsigned int nProtocolV01RegTestSwitchTime =  std::numeric_limits<unsigned int>::max();
 
 
