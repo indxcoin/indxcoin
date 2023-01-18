@@ -1,18 +1,24 @@
+.vscode
+
 *.tar.gz
 
 *.exe
 *.pdb
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-gui
-src/bitcoin-node
-src/bitcoin-tx
-src/bitcoin-util
-src/bitcoin-wallet
+
+src/indxcoin
+src/indxcoind
+src/indxcoin-cli
+src/indxcoin-gui
+src/indxcoin-node
+src/indxcoin-tx
+src/indxcoin-util
+src/indxoin-wallet
 src/test/fuzz/fuzz
-src/test/test_bitcoin
-src/qt/test/test_bitcoin-qt
+src/test/test_indxcoin
+src/qt/test/test_indxcoin-qt
+Indxcoin-Qt.app/
+src/bench/bench_indxcoin
+src/indxcoin-wallet
 
 # autoreconf
 Makefile.in

@@ -117,7 +117,7 @@ PRELIMINARY SUPPORT FOR MULTISIGNATURE TRANSACTIONS
 This release has preliminary support for multisignature
 transactions-- transactions that require authorization
 from more than one person or device before they
-will be accepted by the bitcoin network.
+will be accepted by the indxcoin network.
 
 Prior to this release, multisignature transactions
 were considered 'non-standard' and were ignored;
