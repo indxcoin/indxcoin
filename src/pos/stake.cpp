@@ -155,45 +155,65 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
         return error("CreateCoinStake : invalid reserve balance amount");
     if (nBalance <= nReserveBalance)
         return false;
-    std::set<CInputCoin> setCoins;
+    //std::set<CInputCoin> setCoins;
+    CCoinsViewCache* coins_view = &chainstate->CoinsTip();
     std::vector<CTransactionRef> vwtxPrev;
-    CAmount nValueIn = 0;
+    //CAmount nValueIn = 0;
     std::vector<COutput> vAvailableCoins;
     int nMaxReorgDepth = consensusParams.MaxReorganizationDepth; 
     
-    // Select coins with suitable depth
-    if (!pwallet->SelectCoinsSimple(chainstate, nBalance - nReserveBalance, setCoins, nValueIn, txNew.nTime, (IsProtocolV00(txNew.nTime) ? nMaxReorgDepth + 1 : 51))){
-        LogPrint(BCLog::POS, "%s :pwallet->SelectCoins() False \n",__func__);
-        return false;
-    }
-    if (setCoins.empty()){
-        LogPrint(BCLog::POS, "%s : setCoins.empty() \n",__func__);
-        return false;
+    // Select coins with suitable depth  2880 approximately two days of blocks for IsProtocolV01 to be more selective given the increase in min age
+    //if (!pwallet->SelectCoinsSimple(chainstate, nBalance - nReserveBalance, setCoins, nValueIn, txNew.nTime, (IsProtocolV01(txNew.nTime) ? 2880 : IsProtocolV00(txNew.nTime) ? nMaxReorgDepth + 1 : 51)  )){
+    //    LogPrint(BCLog::STAKE, "%s :pwallet->SelectCoins() False \n",__func__);
+    //    return false;
+    //}
+    //if (setCoins.empty()){
+    //    LogPrint(BCLog::STAKE, "%s : setCoins.empty() \n",__func__);
+    //    return false;
+    //}
+    {
+        CCoinControl cctl;
+        cctl.m_avoid_address_reuse = false;
+        cctl.m_min_depth = (IsProtocolV01(txNew.nTime) ? 2880 : IsProtocolV00(txNew.nTime) ? nMaxReorgDepth + 1 : 51);
+        cctl.m_max_depth = 9999999;
+        cctl.m_include_unsafe_inputs = false;
+        LOCK(pwallet->cs_wallet);
+        pwallet->AvailableCoins(vAvailableCoins, &cctl, 1, MAX_MONEY, nBalance - nReserveBalance, 0);
+        if (vAvailableCoins.empty()){
+            LogPrint(BCLog::STAKE, "%s : vAvailableCoins.empty() \n",__func__);
+            return false;
+        }
     }
     CAmount nCredit = 0;
     CScript scriptPubKeyKernel;
     CScript scriptPubKeyOut;
     int64_t nloopcount = 0 ;
-    for (const auto& pcoin : setCoins)
+    for (const auto& pcoin : vAvailableCoins)
     {
+        CInputCoin nCoin = pcoin.GetInputCoin();
+        nloopcount++; 
 
-        LogPrint(BCLog::POS, "%s :Kernel Search Loop =%d \n",__func__, nloopcount);
+        LogPrint(BCLog::STAKE, "%s :Kernel Search Loop =%d  hash=%s \n",__func__, nloopcount, nCoin.outpoint.hash.ToString());
 
         if (!EnableStaking()) {
             return false;
         }
         CDiskTxPos postx;
-        if (!g_txindex->FindTxPosition(pcoin.outpoint.hash, postx))
-            continue;
-        Coin ncoin;
-        if(!chainstate->CoinsTip().GetCoin(pcoin.outpoint, ncoin)){
-            LogPrint(BCLog::STAKE, "%s : Stake kernel does not exist %s",  __func__, pcoin.outpoint.hash.ToString());
+        if (!g_txindex->FindTxPosition(nCoin.outpoint.hash, postx)){
+            LogPrint(BCLog::STAKE, "%s : Stake kernel FindTxPosition Failed %s \n",  __func__, nCoin.outpoint.hash.ToString());
             continue;
         }
-        if(ncoin.IsSpent()){
-            LogPrint(BCLog::STAKE, "%s : Stake kernel spent %s",  __func__, pcoin.outpoint.hash.ToString());
+        
+        Coin ycoin;
+        if(!coins_view->GetCoin(nCoin.outpoint, ycoin)){
+            LogPrint(BCLog::STAKE, "%s : Stake kernel does not exist hash=%s voutindx=%d \n",  __func__, nCoin.outpoint.hash.ToString(), nCoin.outpoint.n );
             continue;
         }
+        if(ycoin.IsSpent()){
+            LogPrint(BCLog::STAKE, "%s : Stake kernel spent %s \n",  __func__, nCoin.outpoint.hash.ToString());
+            continue;
+        }
+        
 
         // Read block header
         CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
@@ -208,8 +228,10 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
         }
 
         static int nMaxStakeSearchInterval = 60;
-        if (header.GetBlockTime() + (IsProtocolV01(txNew.nTime) ? consensusParams.nStakeMinAgeV01 : consensusParams.nStakeMinAge) > txNew.nTime - nMaxStakeSearchInterval)
+        if (header.GetBlockTime() + (IsProtocolV01(txNew.nTime) ? consensusParams.nStakeMinAgeV01 : consensusParams.nStakeMinAge) > txNew.nTime - nMaxStakeSearchInterval){
+            LogPrint(BCLog::STAKE, "%s :Kernel Age not met in Search Loop =%d \n",__func__, nloopcount);
             continue; // only count coins meeting min age requirement
+        }
 
         bool fKernelFound = false;
         for (unsigned int n=0; n<std::min(nSearchInterval,(int64_t)nMaxStakeSearchInterval) && !fKernelFound; n++)
@@ -217,18 +239,18 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
             // Search backward in time from the given txNew timestamp
             // Search nSearchInterval seconds back up to nMaxStakeSearchInterval
             uint256 hashProofOfStake = uint256();
-            COutPoint prevoutStake = pcoin.outpoint;
+            COutPoint prevoutStake = nCoin.outpoint;
             bool foundStake = CheckStakeKernelHash(chainstate, nBits, header, IsProtocolV01(txNew.nTime) ? postx.nTxOffset : prevoutStake.n, tx, prevoutStake, txNew.nTime - n, hashProofOfStake);
             if (foundStake)
             {
                 // Found a kernel
-                LogPrint(BCLog::POS, "%s :: kernel found\n", __func__);
+                LogPrint(BCLog::STAKE, "%s :: kernel found \n", __func__);
                 std::vector<valtype> vSolutions;
                
-                scriptPubKeyKernel = pcoin.txout.scriptPubKey;
+                scriptPubKeyKernel = nCoin.txout.scriptPubKey;
                 TxoutType whichType = Solver(scriptPubKeyKernel, vSolutions);
                 if (whichType != TxoutType::PUBKEY && whichType != TxoutType::PUBKEYHASH && whichType != TxoutType::WITNESS_V0_KEYHASH) {
-                        LogPrint(BCLog::POS, "%s : : no support for kernel type=%s\n", GetTxnOutputType(whichType));
+                        LogPrint(BCLog::STAKE, "%s : : no support for kernel type=%s\n", GetTxnOutputType(whichType));
                     break;
                 }
                 if (whichType == TxoutType::PUBKEYHASH || whichType == TxoutType::WITNESS_V0_KEYHASH) // pay to address type or witness keyhash
@@ -236,7 +258,7 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
                     // convert to pay to public key type
                     CKey key;
                     if (!pwallet->GetLegacyScriptPubKeyMan()->GetKey(CKeyID(uint160(vSolutions[0])), key)) {
-                            LogPrint(BCLog::POS, "%s :failed to get key for kernel type=%s \n",__func__, GetTxnOutputType(whichType));
+                            LogPrint(BCLog::STAKE, "%s :failed to get key for kernel type=%s \n",__func__, GetTxnOutputType(whichType));
                         break;
                     }
                     scriptPubKeyOut << ToByteVector(key.GetPubKey()) << OP_CHECKSIG;
@@ -245,8 +267,8 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
                     scriptPubKeyOut = scriptPubKeyKernel;
 
                 txNew.nTime -= n;
-                txNew.vin.push_back(CTxIn(pcoin.outpoint.hash, pcoin.outpoint.n));
-                nCredit += pcoin.txout.nValue;
+                txNew.vin.push_back(CTxIn(nCoin.outpoint.hash, nCoin.outpoint.n));
+                nCredit += nCoin.txout.nValue;
                 vwtxPrev.push_back(tx); // kernel stake
                 //txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
                 //if (header.GetBlockTime() + nStakeSplitAge > txNew.nTime)
@@ -255,76 +277,96 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
                         fSplitAgedStake = true;
                 }
 
-                fKernelFound = true;
+                for (const auto& ppcoin : vAvailableCoins)
+                {
+                    CInputCoin nnCoin = ppcoin.GetInputCoin();
+
+                    CDiskTxPos ppostx;
+                    if (!g_txindex->FindTxPosition(nnCoin.outpoint.hash, ppostx))
+                        continue;
+                    
+                    Coin ycoin;
+                    if(!chainstate->CoinsTip().GetCoin(nnCoin.outpoint, ycoin)){
+                        LogPrint(BCLog::STAKE, "%s : Stake add coin does not exist hash=%s voutindx=%d \n",  __func__, nnCoin.outpoint.hash.ToString(), nnCoin.outpoint.n );
+                        continue;
+                    }
+                    if(ycoin.IsSpent()){
+                        LogPrint(BCLog::STAKE, "%s : Stake add coin spent %s \n",  __func__, nnCoin.outpoint.hash.ToString(), nnCoin.outpoint.n  );
+                        continue;
+                    }
+                    
+
+                    // Read block header
+                    CAutoFile file(OpenBlockFile(ppostx, true), SER_DISK, CLIENT_VERSION);
+                    CBlockHeader header;
+                    CTransactionRef tx;
+                    try {
+                        file >> header;
+                        fseek(file.Get(), ppostx.nTxOffset, SEEK_CUR);
+                        file >> tx;
+                    } catch (std::exception &e) {
+                        return error("%s() : deserialize or I/O error in CreateCoinStake()", __PRETTY_FUNCTION__);
+                    }
+                    // Do not add input that is still too young
+                    if (header.GetBlockTime() + (IsProtocolV01(txNew.nTime) ? consensusParams.nStakeMinAgeV01 : consensusParams.nStakeMinAge) > txNew.nTime - 60)
+                        continue;
+
+
+                    // Attempt to add more inputs
+                    // Only add coins of the same key/address as kernel
+                    // no mixed types allows stake verification of min stake amount enforcement
+                    LogPrint(BCLog::STAKE, "%s : nnCoin.txout.scriptPubKey=%s  scriptPubKeyKernel=%s scriptPubKeyOut=%s \n",__func__, HexStr(nnCoin.txout.scriptPubKey), HexStr(scriptPubKeyKernel), HexStr(scriptPubKeyOut));
+                    if ((nnCoin.txout.scriptPubKey == scriptPubKeyKernel ) && (nnCoin.outpoint.hash != txNew.vin[0].prevout.hash))
+                    {
+                        // Stop adding more inputs if already too many inputs
+                        if (txNew.vin.size() >= 100)
+                            break;
+                        // Stop adding more inputs if value is already pretty significant
+                        if (nCredit > nCombineThreshold)
+                            break;
+                        // Stop adding inputs if reached reserve limit
+                        if (nCredit + nnCoin.txout.nValue > nBalance - nReserveBalance)
+                            break;
+                        // Do not add additional significant input
+                        if (nnCoin.txout.nValue > nCombineThreshold)
+                            continue;
+                        txNew.vin.push_back(CTxIn(nnCoin.outpoint.hash, nnCoin.outpoint.n));
+                        nCredit += nnCoin.txout.nValue;
+                        vwtxPrev.push_back(tx);
+                    }
+                }
+                // only use stake that meets minimum stake amount requirements 
+                if (nCredit < (IsProtocolV01(txNew.nTime) ? consensusParams.nStakeMinAmount : 0 )) {
+                    LogPrint(BCLog::STAKE, "%s: LOW STAKE stake-amount=%d, required amount=%d  \n", __func__, nCredit, (IsProtocolV01(txNew.nTime) ? consensusParams.nStakeMinAmount : 0 ));
+                    txNew.vin.clear();
+                    txNew.vout.clear();
+                    vwtxPrev.clear();
+
+                    // Mark coin stake transaction
+                    scriptEmpty.clear();
+                    txNew.vout.push_back(CTxOut(0, scriptEmpty));
+                    fKernelFound = false;
+                    
+                }else{
+                    fKernelFound = true;
+                }
+
                 break;
+            }else{
+                LogPrint(BCLog::STAKE, "%s : Stake kernel not found for hash=%s \n",  __func__, nCoin.outpoint.hash.ToString());
             }
         }
-        if (fKernelFound)
+        if (fKernelFound){
+            LogPrint(BCLog::STAKE, "%s : Stake kernel FOUND for hash=%s \n",  __func__, nCoin.outpoint.hash.ToString());
             break; // if kernel is found stop searching
+        }
 
-           nloopcount++; 
+           
     }
     if (nCredit == 0 || nCredit > nBalance - nReserveBalance)
         return false;
-    for (const auto& ppcoin : setCoins)
-    {
-        CDiskTxPos ppostx;
-        if (!g_txindex->FindTxPosition(ppcoin.outpoint.hash, ppostx))
-            continue;
-        Coin ncoin;
-        if(!chainstate->CoinsTip().GetCoin(ppcoin.outpoint, ncoin)){
-            LogPrint(BCLog::STAKE, "%s : Stake add coin does not exist %s",  __func__, ppcoin.outpoint.hash.ToString());
-            continue;
-        }
-        if(ncoin.IsSpent()){
-            LogPrint(BCLog::STAKE, "%s : Stake add coin spent %s",  __func__, ppcoin.outpoint.hash.ToString());
-            continue;
-        }
-
-        // Read block header
-        CAutoFile file(OpenBlockFile(ppostx, true), SER_DISK, CLIENT_VERSION);
-        CBlockHeader header;
-        CTransactionRef tx;
-        try {
-            file >> header;
-            fseek(file.Get(), ppostx.nTxOffset, SEEK_CUR);
-            file >> tx;
-        } catch (std::exception &e) {
-            return error("%s() : deserialize or I/O error in CreateCoinStake()", __PRETTY_FUNCTION__);
-        }
-        // Do not add input that is still too young
-        if (header.GetBlockTime() + (IsProtocolV01(txNew.nTime) ? consensusParams.nStakeMinAgeV01 : consensusParams.nStakeMinAge) > txNew.nTime - 60)
-            continue;
 
 
-        // Attempt to add more inputs
-        // Only add coins of the same key/address as kernel
-        // no mixed types allows stake verification of min stake amount enforcement
-        LogPrint(BCLog::POS, "%s : ppcoin.txout.scriptPubKey=%s  scriptPubKeyKernel=%s scriptPubKeyOut=%s \n",__func__, HexStr(ppcoin.txout.scriptPubKey), HexStr(scriptPubKeyKernel), HexStr(scriptPubKeyOut));
-        if ((ppcoin.txout.scriptPubKey == scriptPubKeyKernel ) && (ppcoin.outpoint.hash != txNew.vin[0].prevout.hash))
-        {
-            // Stop adding more inputs if already too many inputs
-            if (txNew.vin.size() >= 100)
-                break;
-            // Stop adding more inputs if value is already pretty significant
-            if (nCredit > nCombineThreshold)
-                break;
-            // Stop adding inputs if reached reserve limit
-            if (nCredit + ppcoin.txout.nValue > nBalance - nReserveBalance)
-                break;
-            // Do not add additional significant input
-            if (ppcoin.txout.nValue > nCombineThreshold)
-                continue;
-            txNew.vin.push_back(CTxIn(ppcoin.outpoint.hash, ppcoin.outpoint.n));
-            nCredit += ppcoin.txout.nValue;
-            vwtxPrev.push_back(tx);
-        }
-    }
-    // only use stake that meets minimum stake amount requirements 
-    if (nCredit < (IsProtocolV01(txNew.nTime) ? consensusParams.nStakeMinAmount : 0 )) {
-        LogPrint(BCLog::POS, "%s: stake-amount=%d, required amount=%d  \n", __func__, nCredit, (IsProtocolV01(txNew.nTime) ? consensusParams.nStakeMinAmount : 0 ));
-        return false;
-    }
 
     
     // Calculate coin age reward
@@ -430,7 +472,7 @@ void CWallet::AvailableCoinsMinConf(CChainState* chainstate, std::vector<COutput
             if (!IsFinalTx(*pcoin->tx, nHeight, nLockTimeCutoff))
                 continue;
 
-            if (!pcoin->IsTrusted())
+            if (!pcoin->IsTrusted() || pcoin->isConflicted())
                 continue;
 
             if ((pcoin->IsCoinBase() || pcoin->IsCoinStake()) && pcoin->GetBlocksToMaturity() > 0)
