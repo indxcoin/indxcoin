@@ -512,11 +512,11 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
 
     Coin coinIn; 
     if(!active_chainstate->CoinsTip().GetCoin(txin.prevout, coinIn)){
-        LogPrint(BCLog::POS, "%s : Stake kernel does not exist %s",  __func__, txin.prevout.hash.ToString());
+        LogPrint(BCLog::POS, "%s : Stake kernel does not exist hash=%s index=%d \n",  __func__, txin.prevout.hash.ToString(), txin.prevout.n);
         return state.Invalid(BlockValidationResult::DOS_20, "prevout-not-in-chain", "Stake kerenl does not exist \n");
     }
     if(coinIn.IsSpent()){
-        LogPrint(BCLog::POS, "%s : Stake kernel spent %s",  __func__, txin.prevout.hash.ToString());
+        LogPrint(BCLog::POS, "%s : Stake kernel spent %s \n",  __func__, txin.prevout.hash.ToString());
         return state.Invalid(BlockValidationResult::DOS_20, "prevout-spent", "Stake prevout spent \n");
     }
 

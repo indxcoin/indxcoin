@@ -4649,7 +4649,6 @@ bool CChainState::PoSContextualBlockChecks(const CBlock& block, BlockValidationS
         return error("%s - couldnt get next stake modifier (height %d)\n", __func__, pindex->nHeight);
     }
     pindex->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
-    unsigned int nStakeModifierChecksum  = GetStakeModifierChecksum(pindex);
 
     // PoSV: calculate proofhash value
     uint256 hashProofOfStake = uint256();
@@ -4657,10 +4656,20 @@ bool CChainState::PoSContextualBlockChecks(const CBlock& block, BlockValidationS
             return error("%s - error calculating hashproof (height %d)\n", __func__, pindex->nHeight);
     }
     pindex->hashProofOfStake = hashtarget;
-    pindex->nStakeModifierChecksum = nStakeModifierChecksum;
+    if(!(IsProtocolV01(block.nTime))){
+        unsigned int nStakeModifierChecksum  = GetStakeModifierChecksum(pindex);
+        pindex->nStakeModifierChecksum = nStakeModifierChecksum;
 
     if (!CheckStakeModifierCheckpoints(pindex->nHeight, pindex->nStakeModifierChecksum ))
         return error("%s: Rejected by checkpoint height=%d, modifier=0x%016llx checksum=%08x", __func__, pindex->nHeight, nStakeModifier, nStakeModifierChecksum );
+    }else{
+        pindex->hashProofOfStake = hashProofOfStake;
+        unsigned int nStakeModifierChecksum  = GetStakeModifierChecksum(pindex);
+        pindex->nStakeModifierChecksum = nStakeModifierChecksum;
+
+    if (!CheckStakeModifierCheckpoints(pindex->nHeight, pindex->nStakeModifierChecksum ))
+        return error("%s: Rejected by checkpoint height=%d, modifier=0x%016llx checksum=%08x", __func__, pindex->nHeight, nStakeModifier, nStakeModifierChecksum );
+    }
 
     bool fUpdate = !(fJustCheck);
     if (pindex->IsProofOfStake() 
