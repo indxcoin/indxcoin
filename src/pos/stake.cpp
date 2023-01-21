@@ -367,6 +367,9 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
         return false;
 
 
+    // loop finished and stake not found
+    if (txNew.vin.size() < 1)
+        return false;
 
     
     // Calculate coin age reward
