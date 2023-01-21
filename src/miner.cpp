@@ -615,7 +615,7 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                     
             }
 
-            while (chainstate->m_chain.Tip()->nHeight < Params().GetConsensus().nLastPowHeight)
+            while (chainstate->m_chain.Tip()->nHeight < Params().GetConsensus().nLastPowHeight || GuessVerificationProgress(Params().TxData(), chainstate->m_chain.Tip()) < 0.996)
             {
                 LogPrint(BCLog::STAKE, "Minter thread sleeps while sync at %d\n", chainstate->m_chain.Tip()->nHeight );
                 if (strMintWarning != strMintSyncMessage) {
