@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
         LOCK(dummyNode.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode));
     }
-    BOOST_CHECK(banman->IsDiscouraged(addr));
+    BOOST_CHECK(banman->IsBanned(addr));
 
     peerLogic->FinalizeNode(dummyNode);
 }

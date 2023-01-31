@@ -16,7 +16,6 @@
 #include <version.h>
 #include <timedata.h>
 
-#include <iostream>
 
 #include <boost/test/unit_test.hpp>
 

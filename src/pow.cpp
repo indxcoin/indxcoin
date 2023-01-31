@@ -14,7 +14,7 @@
 
 #include <math.h>
 
-unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBlockHeader* pblock, uint64_t TargetBlocksSpacingSeconds, uint64_t PastBlocksMin, uint64_t PastBlocksMax)
+unsigned int KimotoGravityWell(const CBlockIndex* pindexLast, const CBlockHeader* pblock, uint64_t TargetBlocksSpacingSeconds, uint64_t PastBlocksMin, uint64_t PastBlocksMax)
 {
     const Consensus::Params params = Params().GetConsensus();
 
@@ -92,20 +92,11 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBloc
         BlockReading = BlockReading->pprev;
     }
 
-    arith_uint256 bnNew(PastDifficultyAverage);
 
-    if (PastRateActualSeconds != 0 && PastRateTargetSeconds != 0) {
-        bnNew *= PastRateActualSeconds;
-        bnNew /= PastRateTargetSeconds;
-    }
+    //LogPrintf("%s : PrevHeight = %s PastDifficultyAverage = %d  %s, PastRateActualSeconds = %d  PastRateTargetSeconds = %d  fProofOfStake = %s \n", __func__, pindexLast->nHeight, PastDifficultyAverage.GetCompact(), PastDifficultyAverage.GetHex(), PastRateActualSeconds, PastRateTargetSeconds, fProofOfStake ? "true" : "false" );
 
-    if (!fProofOfStake && bnNew > bnPowLimit) {
-        bnNew = bnPowLimit;
-    } else if (fProofOfStake && bnNew > bnPosLimit) {
-        bnNew = bnPosLimit;
-    }
+    return CalculateNextWorkRequired(PastDifficultyAverage, PastRateActualSeconds, PastRateTargetSeconds, fProofOfStake, params);
 
-    return bnNew.GetCompact();
 }
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params)
@@ -156,9 +147,27 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
 
 }
 
-unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
+unsigned int CalculateNextWorkRequired(arith_uint256 PastDifficultyAverage, int64_t PastRateActualSeconds, int64_t PastRateTargetSeconds, bool fProofOfStake, const Consensus::Params& params)
 {
-    return 0;
+
+    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
+    const arith_uint256 bnPosLimit = UintToArith256(params.posLimit);
+
+    arith_uint256 bnNew(PastDifficultyAverage);
+
+
+    if (PastRateActualSeconds != 0 && PastRateTargetSeconds != 0) {
+        bnNew *= PastRateActualSeconds;
+        bnNew /= PastRateTargetSeconds;
+    }
+
+    if (!fProofOfStake && bnNew > bnPowLimit) {
+        bnNew = bnPowLimit;
+    } else if (fProofOfStake && bnNew > bnPosLimit) {
+        bnNew = bnPosLimit;
+    }
+    //LogPrintf("%s : PastDifficultyAverage = %d, PastRateActualSeconds = %d  PastRateTargetSeconds = %d  fProofOfStake = %s bits = %d bits-hex = %08x \n", __func__,  PastDifficultyAverage.GetCompact(), PastRateActualSeconds, PastRateTargetSeconds, fProofOfStake ? "true" : "false", bnNew.GetCompact(), bnNew.GetCompact() );
+    return bnNew.GetCompact();
 }
 
 arith_uint256 GetBlockProof(const CBlockIndex& block)

@@ -4087,7 +4087,7 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
         pindexNew->BuildSkip();
     }
-
+    pindexNew->nTimeMax = (pindexNew->pprev ? std::max(pindexNew->pprev->nTimeMax, pindexNew->nTime) : pindexNew->nTime);
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
     if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
@@ -4155,7 +4155,7 @@ static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& st
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-too-new", "block timestamp too far in the future");
 
     // Check proof of work matches claimed amount
-    if (block.IsProofOfWork() && !CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
+    if (fCheckPOW && block.IsProofOfWork() && !CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-pow", "proof of work failed");
 
     return true; 
@@ -4480,7 +4480,7 @@ bool VerifyHashTarget(CChainState* active_chainstate, BlockValidationState& stat
                 LogPrintf("WARNING: VerifyHashTarget(): check proof-of-stake failed for block %s\n", hash.ToString());
                 }
             } 
-            LogPrint(BCLog::POS, "%s : hashProof %s / nBits %08x\n", __func__, hashProof.ToString(), block.nBits);
+            LogPrint(BCLog::POS, "%s : hashProof %s / nBits %08x \n", __func__, hashProof.ToString(), block.nBits);
             return fValid;
         }
     }
