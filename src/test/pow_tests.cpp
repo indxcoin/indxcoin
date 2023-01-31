@@ -12,51 +12,48 @@
 BOOST_FIXTURE_TEST_SUITE(pow_tests, BasicTestingSetup)
 
 /* Test calculation of next difficulty target with no constraints applying */
+// (arith_uint256 PastDifficultyAverage, int64_t PastRateActualSeconds, int64_t PastRateTargetSeconds, bool fProofOfStake
 BOOST_AUTO_TEST_CASE(get_next_work)
 {
     const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
-    int64_t nLastRetargetTime = 1261130161; // Block #30240
-    CBlockIndex pindexLast;
-    pindexLast.nHeight = 32255;
-    pindexLast.nTime = 1262152739;  // Block #32255
-    pindexLast.nBits = 0x1d00ffff;
-    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00d86aU);
+    arith_uint256 PastDifficultyAverage; PastDifficultyAverage.SetHex("000000005347d0e16bcf632f6fbb00645c854ae10772dde48eb38d8677f6964d");  // Block #12583 to Block #12584
+    int64_t PastRateActualSeconds = 74812;
+    int64_t PastRateTargetSeconds = 78360;
+    bool fProofOfStake = true;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(PastDifficultyAverage, PastRateActualSeconds, PastRateTargetSeconds, fProofOfStake, chainParams->GetConsensus()), 474972798);
 }
 
 /* Test the constraint on the upper bound for next work */
 BOOST_AUTO_TEST_CASE(get_next_work_pow_limit)
 {
     const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
-    int64_t nLastRetargetTime = 1231006505; // Block #0
-    CBlockIndex pindexLast;
-    pindexLast.nHeight = 2015;
-    pindexLast.nTime = 1233061996;  // Block #2015
-    pindexLast.nBits = 0x1d00ffff;
-    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00ffffU);
+    arith_uint256 PastDifficultyAverage; PastDifficultyAverage.SetHex("000000005347d0e16bcf632f6fbb00645c854ae10772dde48eb38d8677f6964d");  
+    int64_t PastRateActualSeconds = 1440;
+    int64_t PastRateTargetSeconds = 86400;
+    bool fProofOfStake = false;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(PastDifficultyAverage, PastRateActualSeconds, PastRateTargetSeconds, fProofOfStake, chainParams->GetConsensus()), 469853012);
 }
 
 /* Test the constraint on the lower bound for actual time taken */
 BOOST_AUTO_TEST_CASE(get_next_work_lower_limit_actual)
 {
     const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
-    int64_t nLastRetargetTime = 1279008237; // Block #66528
-    CBlockIndex pindexLast;
-    pindexLast.nHeight = 68543;
-    pindexLast.nTime = 1279297671;  // Block #68543
-    pindexLast.nBits = 0x1c05a3f4;
-    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1c0168fdU);
+    arith_uint256 PastDifficultyAverage; PastDifficultyAverage.SetHex("000000005347d0e16bcf632f6fbb00645c854ae10772dde48eb38d8677f6964d");  
+    int64_t PastRateActualSeconds = 86400;
+    int64_t PastRateTargetSeconds = 1440;
+    bool fProofOfStake = false;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(PastDifficultyAverage, PastRateActualSeconds, PastRateTargetSeconds, fProofOfStake, chainParams->GetConsensus()), 487818452);
 }
 
-/* Test the constraint on the upper bound for actual time taken */
+/* Test the constraint on the steady state for actual time taken */
 BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
 {
     const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
-    int64_t nLastRetargetTime = 1263163443; // NOTE: Not an actual block time
-    CBlockIndex pindexLast;
-    pindexLast.nHeight = 46367;
-    pindexLast.nTime = 1269211443;  // Block #46367
-    pindexLast.nBits = 0x1c387f6f;
-    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00e1fdU);
+    arith_uint256 PastDifficultyAverage; PastDifficultyAverage.SetHex("000000005347d0e16bcf632f6fbb00645c854ae10772dde48eb38d8677f6964d");  
+    int64_t PastRateActualSeconds = 86400;
+    int64_t PastRateTargetSeconds = 86400;
+    bool fProofOfStake = true;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(PastDifficultyAverage, PastRateActualSeconds, PastRateTargetSeconds, fProofOfStake, chainParams->GetConsensus()), 475219920);
 }
 
 BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_negative_target)
@@ -116,19 +113,20 @@ BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_zero_target)
 BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
 {
     const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
-    std::vector<CBlockIndex> blocks(10000);
-    for (int i = 0; i < 10000; i++) {
+    SetMockTime(1653364802);
+    std::vector<CBlockIndex> blocks(2100);
+    for (int i = 0; i < 2100; i++) {
         blocks[i].pprev = i ? &blocks[i - 1] : nullptr;
         blocks[i].nHeight = i;
-        blocks[i].nTime = 1269211443 + i * chainParams->GetConsensus().nPowTargetSpacing;
-        blocks[i].nBits = 0x207fffff; /* target 0x7fffff000... */
+        blocks[i].nTime = 1653364802 + i * chainParams->GetConsensus().nPowTargetSpacing;
+        blocks[i].nBits = 0x1e0fffff; /* target 0x7fffff000... */
         blocks[i].nChainWork = i ? blocks[i - 1].nChainWork + GetBlockProof(blocks[i - 1]) : arith_uint256(0);
     }
 
-    for (int j = 0; j < 1000; j++) {
-        CBlockIndex *p1 = &blocks[InsecureRandRange(10000)];
-        CBlockIndex *p2 = &blocks[InsecureRandRange(10000)];
-        CBlockIndex *p3 = &blocks[InsecureRandRange(10000)];
+    for (int j = 0; j < 100; j++) {
+        CBlockIndex *p1 = &blocks[InsecureRandRange(2100)];
+        CBlockIndex *p2 = &blocks[InsecureRandRange(2100)];
+        CBlockIndex *p3 = &blocks[InsecureRandRange(2100)];
 
         int64_t tdiff = GetBlockProofEquivalentTime(*p1, *p2, *p3, chainParams->GetConsensus());
         BOOST_CHECK_EQUAL(tdiff, p1->GetBlockTime() - p2->GetBlockTime());
@@ -155,6 +153,8 @@ void sanity_check_chainparams(const ArgsManager& args, std::string chainName)
     BOOST_CHECK(UintToArith256(consensus.powLimit) >= pow_compact);
 
     // check max target * 4*nPowTargetTimespan doesn't overflow -- see pow.cpp:CalculateNextWorkRequired()
+    // consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    // consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); btc
     if (!consensus.fPowNoRetargeting) {
         arith_uint256 targ_max("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
         targ_max /= consensus.nPowTargetTimespan*4;
