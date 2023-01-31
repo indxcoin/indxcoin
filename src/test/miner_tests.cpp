@@ -51,35 +51,36 @@ BlockAssembler MinerTestingSetup::AssemblerForTest(const CChainParams& params)
 constexpr static struct {
     unsigned char extranonce;
     unsigned int nonce;
+    uint64_t nTime;
 } blockinfo[] = {
-    {4, 0xa4a3e223}, {2, 0x15c32f9e}, {1, 0x0375b547}, {1, 0x7004a8a5},
-    {2, 0xce440296}, {2, 0x52cfe198}, {1, 0x77a72cd0}, {2, 0xbb5d6f84},
-    {2, 0x83f30c2c}, {1, 0x48a73d5b}, {1, 0xef7dcd01}, {2, 0x6809c6c4},
-    {2, 0x0883ab3c}, {1, 0x087bbbe2}, {2, 0x2104a814}, {2, 0xdffb6daa},
-    {1, 0xee8a0a08}, {2, 0xba4237c1}, {1, 0xa70349dc}, {1, 0x344722bb},
-    {3, 0xd6294733}, {2, 0xec9f5c94}, {2, 0xca2fbc28}, {1, 0x6ba4f406},
-    {2, 0x015d4532}, {1, 0x6e119b7c}, {2, 0x43e8f314}, {2, 0x27962f38},
-    {2, 0xb571b51b}, {2, 0xb36bee23}, {2, 0xd17924a8}, {2, 0x6bc212d9},
-    {1, 0x630d4948}, {2, 0x9a4c4ebb}, {2, 0x554be537}, {1, 0xd63ddfc7},
-    {2, 0xa10acc11}, {1, 0x759a8363}, {2, 0xfb73090d}, {1, 0xe82c6a34},
-    {1, 0xe33e92d7}, {3, 0x658ef5cb}, {2, 0xba32ff22}, {5, 0x0227a10c},
-    {1, 0xa9a70155}, {5, 0xd096d809}, {1, 0x37176174}, {1, 0x830b8d0f},
-    {1, 0xc6e3910e}, {2, 0x823f3ca8}, {1, 0x99850849}, {1, 0x7521fb81},
-    {1, 0xaacaabab}, {1, 0xd645a2eb}, {5, 0x7aea1781}, {5, 0x9d6e4b78},
-    {1, 0x4ce90fd8}, {1, 0xabdc832d}, {6, 0x4a34f32a}, {2, 0xf2524c1c},
-    {2, 0x1bbeb08a}, {1, 0xad47f480}, {1, 0x9f026aeb}, {1, 0x15a95049},
-    {2, 0xd1cb95b2}, {2, 0xf84bbda5}, {1, 0x0fa62cd1}, {1, 0xe05f9169},
-    {1, 0x78d194a9}, {5, 0x3e38147b}, {5, 0x737ba0d4}, {1, 0x63378e10},
-    {1, 0x6d5f91cf}, {2, 0x88612eb8}, {2, 0xe9639484}, {1, 0xb7fabc9d},
-    {2, 0x19b01592}, {1, 0x5a90dd31}, {2, 0x5bd7e028}, {2, 0x94d00323},
-    {1, 0xa9b9c01a}, {1, 0x3a40de61}, {1, 0x56e7eec7}, {5, 0x859f7ef6},
-    {1, 0xfd8e5630}, {1, 0x2b0c9f7f}, {1, 0xba700e26}, {1, 0x7170a408},
-    {1, 0x70de86a8}, {1, 0x74d64cd5}, {1, 0x49e738a1}, {2, 0x6910b602},
-    {0, 0x643c565f}, {1, 0x54264b3f}, {2, 0x97ea6396}, {2, 0x55174459},
-    {2, 0x03e8779a}, {1, 0x98f34d8f}, {1, 0xc07b2b07}, {1, 0xdfe29668},
-    {1, 0x3141c7c1}, {1, 0xb3b595f4}, {1, 0x735abf08}, {5, 0x623bfbce},
-    {2, 0xd351e722}, {1, 0xf4ca48c9}, {1, 0x5b19c670}, {1, 0xa164bf0e},
-    {2, 0xbbbeb305}, {2, 0xfe1c810a},
+    {4, 0x00045919, 1653364802}, {2, 0x0001faad, 1653364867}, {1, 0x001c1303, 1653364932}, {1, 0x00120ca5, 1653364997},
+    {2, 0x003862a8, 1653365062}, {2, 0x00010b27, 1653365127}, {1, 0x001f95ba, 1653365192}, {2, 0x000e1eb3, 1653365257},
+    {2, 0x00104975, 1653365322}, {1, 0x001510f5, 1653365387}, {1, 0x00035304, 1653365452}, {2, 0x0016ab9b, 1653365517},
+    {2, 0x0000b4d8, 1653365582}, {1, 0x000ae882, 1653365647}, {2, 0x0006fe95, 1653365712}, {2, 0x000b3f01, 1653365777},
+    {1, 0x001dbe70, 1653365842}, {2, 0x0048dbb6, 1653365907}, {1, 0x00235471, 1653365972}, {1, 0x0022dbb5, 1653366037},
+    {3, 0x0010d67d, 1653366102}, {2, 0x00079f83, 1653366167}, {2, 0x00017619, 1653366232}, {1, 0x001276f6, 1653366297},
+    {2, 0x000f7710, 1653366362}, {1, 0x0006b4aa, 1653366427}, {2, 0x000c9de2, 1653366492}, {2, 0x000cc440, 1653366557},
+    {2, 0x004b5b24, 1653366622}, {2, 0x000d4dc6, 1653366687}, {2, 0x0020050c, 1653366752}, {2, 0x0000ed58, 1653366817},
+    {1, 0x000c8e45, 1653366882}, {2, 0x000aff29, 1653366947}, {2, 0x00004602, 1653367012}, {1, 0x00159a11, 1653367077},
+    {2, 0x0004e04d, 1653367142}, {1, 0x000ecd6a, 1653367207}, {2, 0x0008ab02, 1653367272}, {1, 0x0020e62a, 1653367337},
+    {1, 0x002cf470, 1653367402}, {3, 0x0028a7a1, 1653367467}, {2, 0x0014fec5, 1653367532}, {5, 0x000160ef, 1653367597},
+    {1, 0x00130d45, 1653367662}, {5, 0x000eece7, 1653367727}, {1, 0x0004a77a, 1653367792}, {1, 0x0001de2d, 1653367857},
+    {1, 0x000e1fb8, 1653367922}, {2, 0x0004d96c, 1653367987}, {1, 0x000c5f43, 1653368052}, {1, 0x000ee962, 1653368117},
+    {1, 0x0012f929, 1653368182}, {1, 0x0002961e, 1653368247}, {5, 0x0012d7f4, 1653368312}, {5, 0x000f02da, 1653368377},
+    {1, 0x000a4f02, 1653368442}, {1, 0x00076773, 1653368507}, {6, 0x001a6307, 1653368572}, {2, 0x00017fdb, 1653368637},
+    {2, 0x001a1054, 1653368702}, {1, 0x000042c9, 1653368767}, {1, 0x0002aedd, 1653368832}, {1, 0x000154b4, 1653368897},
+    {2, 0x000ae93f, 1653368962}, {2, 0x0008fd9e, 1653369027}, {1, 0x00000dcd, 1653369092}, {1, 0x000ea35b, 1653369157},
+    {1, 0x000e3c7c, 1653369222}, {5, 0x000754cb, 1653369287}, {5, 0x00193038, 1653369352}, {1, 0x00010067, 1653369417},
+    {1, 0x0006b7d5, 1653369482}, {2, 0x0010f8da, 1653369547}, {2, 0x0001b093, 1653369612}, {1, 0x001166ff, 1653369677},
+    {2, 0x00050413, 1653369742}, {1, 0x00145b15, 1653369807}, {2, 0x000e01b0, 1653369872}, {2, 0x00019f20, 1653369937},
+    {1, 0x000bdace, 1653370002}, {1, 0x001d5a7d, 1653370067}, {1, 0x0016cac0, 1653370132}, {5, 0x0016378c, 1653370197},
+    {1, 0x000067d7, 1653370262}, {1, 0x002692d8, 1653370327}, {1, 0x0009a1ea, 1653370392}, {1, 0x0002b38d, 1653370457},
+    {1, 0x00026486, 1653370522}, {1, 0x001e7367, 1653370587}, {1, 0x0000c9b5, 1653370652}, {2, 0x001ecc0d, 1653370717},
+    {0, 0x000b190c, 1653370782}, {1, 0x00176997, 1653370847}, {2, 0x0001b8e7, 1653370912}, {2, 0x001c3541, 1653370977},
+    {2, 0x0000e724, 1653371042}, {1, 0x00000fdc, 1653371107}, {1, 0x00028609, 1653371172}, {1, 0x00057d82, 1653371237},
+    {1, 0x000203cb, 1653371302}, {1, 0x001a8620, 1653371367}, {1, 0x0011e407, 1653371432}, {5, 0x0029ee90, 1653371497},
+    {2, 0x0006208e, 1653371562}, {1, 0x00179e97, 1653371627}, {1, 0x001dc871, 1653371692}, {1, 0x000dd6b6, 1653371757},
+    {2, 0x001b03f3, 1653371822}, {2, 0x0000119e, 1653371887},
 };
 
 static CBlockIndex CreateBlockIndex(int nHeight, CBlockIndex* active_chain_tip) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -204,7 +205,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // Note that by default, these tests run with size accounting enabled.
     const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
     const CChainParams& chainparams = *chainParams;
-    CScript scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
+    CScript scriptPubKey = CScript() << ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9") << OP_CHECKSIG;
     std::unique_ptr<CBlockTemplate> pblocktemplate;
     CMutableTransaction tx;
     CScript script;
@@ -220,17 +221,19 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // We can't make transactions until we have inputs
     // Therefore, load 110 blocks :)
-    static_assert(std::size(blockinfo) == 110, "Should have 110 blocks to import");
+    static_assert(std::size(blockinfo) == 110, "Should have 110 blocks to import"); //110, "Should have 110 blocks to import");
     int baseheight = 0;
     std::vector<CTransactionRef> txFirst;
     for (const auto& bi : blockinfo) {
+        SetMockTime(bi.nTime);
         CBlock *pblock = &pblocktemplate->block; // pointer for convenience
         {
             LOCK(cs_main);
             pblock->nVersion = 1;
-            pblock->nTime = m_node.chainman->ActiveChain().Tip()->GetMedianTimePast()+1;
+            pblock->nTime = bi.nTime;
             CMutableTransaction txCoinbase(*pblock->vtx[0]);
-            txCoinbase.nVersion = 1;
+            txCoinbase.nVersion = 3;
+            txCoinbase.nTime = bi.nTime; 
             txCoinbase.vin[0].scriptSig = CScript();
             txCoinbase.vin[0].scriptSig.push_back(bi.extranonce);
             txCoinbase.vin[0].scriptSig.push_back(m_node.chainman->ActiveChain().Height());
@@ -243,6 +246,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
                 txFirst.push_back(pblock->vtx[0]);
             pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
             pblock->nNonce = bi.nonce;
+            pblock->nBits = 0x1e0fffff;
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
         BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(chainparams, shared_pblock, true, nullptr));
@@ -255,13 +259,15 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // Just to make sure we can still make simple blocks
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
 
-    const CAmount BLOCKSUBSIDY = 50*COIN;
-    const CAmount LOWFEE = CENT;
+    const CAmount BLOCKSUBSIDY = 500000*COIN;
+    const CAmount LOWFEE =  CENT;
     const CAmount HIGHFEE = COIN;
     const CAmount HIGHERFEE = 4*COIN;
+    SetMockTime(1653371952);
 
     // block sigops > limit: 1000 CHECKMULTISIG + 1
     tx.vin.resize(1);
+    tx.nTime = 1653371952;
     // NOTE: OP_NOP is used to force 20 SigOps for the CHECKMULTISIG
     tx.vin[0].scriptSig = CScript() << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1;
     tx.vin[0].prevout.hash = txFirst[0]->GetHash();
@@ -274,7 +280,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         hash = tx.GetHash();
         bool spendsCoinbase = i == 0; // only first tx spends coinbase
         // If we don't set the # of sig ops in the CTxMemPoolEntry, template creation fails
-        m_node.mempool->addUnchecked(entry.Fee(LOWFEE).Time(GetTime()).SpendsCoinbase(spendsCoinbase).FromTx(tx));
+        m_node.mempool->addUnchecked(entry.Fee(LOWFEE).Time(1653371952).SpendsCoinbase(spendsCoinbase).FromTx(tx));
         tx.vin[0].prevout.hash = hash;
     }
 
@@ -365,8 +371,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // subsidy changing
     int nHeight = m_node.chainman->ActiveChain().Height();
-    // Create an actual 209999-long block chain (without valid blocks).
-    while (m_node.chainman->ActiveChain().Tip()->nHeight < 209999) {
+    // Create an actual 2000-long block chain (without valid blocks).
+    while (m_node.chainman->ActiveChain().Tip()->nHeight < 2000) {
         CBlockIndex* prev = m_node.chainman->ActiveChain().Tip();
         CBlockIndex* next = new CBlockIndex();
         next->phashBlock = new uint256(InsecureRand256());
@@ -377,8 +383,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         m_node.chainman->ActiveChain().SetTip(next);
     }
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
-    // Extend to a 210000-long block chain.
-    while (m_node.chainman->ActiveChain().Tip()->nHeight < 210000) {
+    // Extend to a 2100-long block chain.
+    while (m_node.chainman->ActiveChain().Tip()->nHeight < 2100) {
         CBlockIndex* prev = m_node.chainman->ActiveChain().Tip();
         CBlockIndex* next = new CBlockIndex();
         next->phashBlock = new uint256(InsecureRand256());
