@@ -9,6 +9,11 @@
 #include <primitives/transaction.h>
 #include <wallet/wallet.h>
 
+class CBlock;
+class CWallet;
+class LegacyScriptPubKeyMan;
+
+
 bool SignBlock(CBlock& block, const CWallet& keystore);
 bool CheckBlockSignature(const CBlock& block);
 
