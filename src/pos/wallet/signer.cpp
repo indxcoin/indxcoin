@@ -2,21 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <pos/signer.h>
+#include <pos/wallet/signer.h>
 
 #include <chainparams.h>
 
 typedef std::vector<unsigned char> valtype;
 
-bool CheckBlockSignature(const CBlock& block)
+bool SignBlock(CBlock& block, const CWallet& keystore)
 {
-    if (!block.IsProofOfStake())
-        return block.vchBlockSig.empty();
-    if (block.vchBlockSig.empty())
-        return false;
-    if (block.vtx[1]->vin.size() < 1)
-        return false;
-
     std::vector<valtype> vSolutions;
     const CTxOut& txout = block.IsProofOfStake() ? block.vtx[1]->vout[1] : block.vtx[0]->vout[0];
 
@@ -26,6 +19,16 @@ bool CheckBlockSignature(const CBlock& block)
 
     const valtype& vchPubKey = vSolutions[0];
 
-    CPubKey key(vchPubKey);
-    return key.Verify(block.GetHash(), block.vchBlockSig);
+    CKey key;
+    if (!keystore.GetLegacyScriptPubKeyMan()->GetKey(CKeyID(Hash160(vchPubKey)), key)) {
+        return false;
+    }
+
+    if (key.GetPubKey() != CPubKey(vchPubKey)) {
+        return false;
+    }
+
+    return key.Sign(block.GetHash(), block.vchBlockSig, 0);
 }
+
+

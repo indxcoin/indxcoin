@@ -33,6 +33,12 @@ unsigned int nProtocolV01SwitchTime     = 1673829300; // Sunday, January 15, 202
 unsigned int nProtocolV01TestSwitchTime = 1673800200; // Sunday, January 15, 2023 8:30:00 AM GMT-08:00
 unsigned int nProtocolV01RegTestSwitchTime =  std::numeric_limits<unsigned int>::max();
 
+// Protocol switch time of v0.2 kernel protocol
+// placeholder
+unsigned int nProtocolV02SwitchTime     = std::numeric_limits<unsigned int>::max();
+unsigned int nProtocolV02TestSwitchTime = std::numeric_limits<unsigned int>::max();
+unsigned int nProtocolV02RegTestSwitchTime =  std::numeric_limits<unsigned int>::max();
+
 
 // Whether the given transaction is subject to new v0.1 protocol
 bool IsProtocolV00(unsigned int nTimeTx)
@@ -46,6 +52,11 @@ bool IsProtocolV01(unsigned int nTimeTx)
     return ( nTimeTx >= (Params().NetworkIDString() == CBaseChainParams::REGTEST ? nProtocolV01RegTestSwitchTime : Params().NetworkIDString() != CBaseChainParams::MAIN ? nProtocolV01TestSwitchTime : nProtocolV01SwitchTime));
 }
 
+// Whether the given transaction is subject to new v0.2 protocol
+bool IsProtocolV02(unsigned int nTimeTx)
+{
+    return ( nTimeTx >= (Params().NetworkIDString() == CBaseChainParams::REGTEST ? nProtocolV02RegTestSwitchTime : Params().NetworkIDString() != CBaseChainParams::MAIN ? nProtocolV02TestSwitchTime : nProtocolV02SwitchTime));
+}
 
 typedef std::map<int, unsigned int> MapModifierCheckpoints;
 
@@ -196,6 +207,7 @@ static int64_t GetStakeModifierSelectionInterval()
 // nSelectionIntervalStop.
 static bool SelectBlockFromCandidates(CChainState* active_chainstate, std::vector<std::pair<int64_t, uint256>>& vSortedByTimestamp, std::map<uint256, const CBlockIndex*>& mapSelectedBlocks, int64_t nSelectionIntervalStop, uint64_t nStakeModifierPrev, const CBlockIndex** pindexSelected)
 {
+    LOCK(cs_main);
     bool fSelected = false;
     arith_uint256 hashBest = arith_uint256();
     *pindexSelected = nullptr;
@@ -344,6 +356,7 @@ bool ComputeNextStakeModifier(CChainState* active_chainstate, const CBlockIndex*
 // modifier about a selection interval later than the coin generating the kernel
 static bool GetKernelStakeModifier(CChainState* active_chainstate, uint256 hashBlockFrom, uint64_t& nStakeModifier, int& nStakeModifierHeight, int64_t& nStakeModifierTime, bool fPrintProofOfStake)
 {
+    LOCK(cs_main);
     const Consensus::Params& params = Params().GetConsensus();
     nStakeModifier = 0;
     const CBlockIndex* pindexFrom = active_chainstate->m_blockman.LookupBlockIndex(hashBlockFrom);
@@ -439,13 +452,15 @@ bool CheckStakeKernelHash(CChainState* active_chainstate, unsigned int nBits, co
     ss << nTimeBlockFrom << nTxPrevOffset << nTimeTxPrev << prevout.n << nTimeTx;
     hashProofOfStake = Hash(ss);
 
-
+    {
+    LOCK(cs_main);
     LogPrint(BCLog::POS, "%s: using modifier 0x%016x at height=%d timestamp=%s for block from height=%d timestamp=%s\n",
         __func__,
         nStakeModifier, nStakeModifierHeight,
         DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nStakeModifierTime),
         active_chainstate->m_blockman.LookupBlockIndex(hashBlockFrom)->nHeight,
         DateTimeStrFormat("%Y-%m-%d %H:%M:%S", blockFrom.GetBlockTime()));
+    }
 
     LogPrint(BCLog::POS, "%s : check modifier=0x%016x nTimeBlockFrom=%u nTxPrevOffset=%u nTimeTxPrev=%u nPrevout=%u nTimeTx=%u hashProof=%s\n",
         __func__,
@@ -477,6 +492,7 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
 {
     const Consensus::Params& params = Params().GetConsensus();
     CScript kernelPubKey;
+    LOCK(cs_main);
 
     if (!tx->IsCoinStake())
         return error("CheckProofOfStake() : called on non-coinstake %s \n", tx->GetHash().ToString().c_str());
@@ -661,6 +677,7 @@ uint64_t GetCoinAge(CChainState* active_chainstate, const CTransaction& tx, cons
         return 0;
 
     for (const CTxIn& txin : tx.vin) {
+        LOCK(cs_main);
         // First try finding the previous transaction in database
         CTransactionRef txPrevious;
         uint256 hashTxPrev = txin.prevout.hash;

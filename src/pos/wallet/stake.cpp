@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <pos/stake.h>
+#include <pos/wallet/stake.h>
 
 #include <chain.h>
 #include <consensus/consensus.h>
@@ -17,13 +17,13 @@
 #include <interfaces/wallet.h>
 #include <key.h>
 #include <key_io.h>
-#include <miner.h>
+#include <pos/kernel.h>
+#include <pos/signer.h>
+#include <pos/wallet/miner.h>
 #include <node/blockstorage.h>
 #include <outputtype.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
-#include <pos/kernel.h>
-#include <pos/signer.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <psbt.h>
@@ -51,7 +51,7 @@
 #include <assert.h>
 #include <optional>
 
-bool GetStakeWeight(const CWallet* pwallet, uint64_t& nAverageWeight, uint64_t & nTotalWeight, const Consensus::Params& consensusParams)
+bool GetStakeWeight(const CWallet* pwallet, CChainState* chainstate, uint64_t& nAverageWeight, uint64_t & nTotalWeight, const Consensus::Params& consensusParams)
 {
       // Choose coins to use
       LOCK(pwallet->cs_wallet);
@@ -62,60 +62,85 @@ bool GetStakeWeight(const CWallet* pwallet, uint64_t& nAverageWeight, uint64_t &
       if (nBalance <= nReserveBalance)
           return false;
 
-      std::vector<CTransactionRef> vwtxPrev;
-      std::set<CInputCoin> setCoins;
+        CCoinsViewCache* coins_view = &chainstate->CoinsTip();
+        std::vector<COutput> vAvailableCoins;
+        int nMaxReorgDepth = consensusParams.MaxReorganizationDepth; 
+    
+    {
+        LOCK(pwallet->cs_wallet);
+        CCoinControl cctl;
+        cctl.m_avoid_address_reuse = false;
+        cctl.m_min_depth = (IsProtocolV01(GetAdjustedTime()) ? 2880 : IsProtocolV00(GetAdjustedTime()) ? nMaxReorgDepth + 1 : 51);
+        cctl.m_max_depth = 9999999;
+        cctl.m_include_unsafe_inputs = false;
+        pwallet->AvailableCoins(vAvailableCoins, &cctl, 1, MAX_MONEY, nBalance - nReserveBalance, 0);
+        if (vAvailableCoins.empty()){
+            LogPrint(BCLog::STAKE, "%s : vAvailableCoins.empty() \n",__func__);
+            return false;
+        }
+    }
 
-      CAmount nValueIn = 0;
-
-      std::vector<COutput> vAvailableCoins;
-      CCoinControl temp;
-      CoinSelectionParams coin_selection_params;
-      pwallet->AvailableCoins(vAvailableCoins, &temp);
-      if (!pwallet->SelectCoins(vAvailableCoins, nBalance - nReserveBalance, setCoins, nValueIn, temp, coin_selection_params))
-	  return false;
-      if (setCoins.empty())
-	  return false;
 
       nAverageWeight = nTotalWeight = 0;
       uint64_t nWeightCount = 0;
 
-      for (const auto& pcoin : setCoins)
+      for (const auto& pcoin : vAvailableCoins)   
       {
-	  CDiskTxPos postx;
-	  if (!g_txindex->FindTxPosition(pcoin.outpoint.hash, postx))
-	      continue;
+            CInputCoin nCoin = pcoin.GetInputCoin(); 
 
-	  // Read block header
-	  CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
-	  CBlockHeader header;
-	  CTransactionRef txRef;
-	  try {
-	      file >> header;
-	      fseek(file.Get(), postx.nTxOffset, SEEK_CUR);
-	      file >> txRef;
-	  } catch (std::exception &e) {
-	      return error("%s() : deserialize or I/O error in GetStakeWeight()", __PRETTY_FUNCTION__);
-	  }
+            CDiskTxPos postx;
+            if (!g_txindex->FindTxPosition(nCoin.outpoint.hash, postx)) 
+                continue;
 
-	  CMutableTransaction tx(*txRef);
+            
+            Coin ycoin;
+            if(!coins_view->GetCoin(nCoin.outpoint, ycoin)){
+                LogPrint(BCLog::STAKE, "%s : Stake does not exist hash=%s voutindx=%d \n",  __func__, nCoin.outpoint.hash.ToString(), nCoin.outpoint.n );
+                continue;
+            }
+            if(ycoin.IsSpent()){
+                LogPrint(BCLog::STAKE, "%s : Stake spent %s \n",  __func__, nCoin.outpoint.hash.ToString());
+                continue;
+            }
 
-	  // Deal with transaction timestmap
-	  unsigned int nTimeTx = tx.nTime ? tx.nTime : header.GetBlockTime();
+            // Read block header
+            CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+            CBlockHeader header;
+            CTransactionRef txRef;
+            try {
+                file >> header;
+                fseek(file.Get(), postx.nTxOffset, SEEK_CUR);
+                file >> txRef;
+            } catch (std::exception &e) {
+                return error("%s() : deserialize or I/O error in GetStakeWeight()", __PRETTY_FUNCTION__);
+            }
 
-	  int64_t nTimeWeight = GetCoinAgeWeight((int64_t)nTimeTx, (int64_t)GetTime(), consensusParams);
-	  arith_uint256 bnCoinDayWeight = arith_uint256(pcoin.txout.nValue) * nTimeWeight / COIN / (24 * 60 * 60);
+            CMutableTransaction tx(*txRef);
 
-	  // Weight is greater than zero
-	  if (nTimeWeight > 0)
-	  {
-	      nTotalWeight += bnCoinDayWeight.GetLow64();
-	      nWeightCount++;
-	  }
+                // account for stake age in calculation    
+                static int nMaxStakeSearchInterval = 60;
+                if (header.GetBlockTime() + (IsProtocolV01(GetAdjustedTime()) ? consensusParams.nStakeMinAgeV01 : consensusParams.nStakeMinAge) > GetAdjustedTime() - nMaxStakeSearchInterval){
+                    LogPrint(BCLog::STAKE, "%s :Stake Age not met \n",__func__ );
+                    continue; // only count coins meeting min age requirement
+                }
 
-      }
+            // Deal with transaction timestmap
+            unsigned int nTimeTx = tx.nTime ? tx.nTime : header.GetBlockTime();
 
-  if (nWeightCount > 0)
-      nAverageWeight = nTotalWeight / nWeightCount;
+            int64_t nTimeWeight = GetCoinAgeWeight((int64_t)nTimeTx, (int64_t)GetTime(), consensusParams);
+            arith_uint256 bnCoinDayWeight = arith_uint256(nCoin.txout.nValue) * nTimeWeight / COIN / (24 * 60 * 60); 
+
+            // Weight is greater than zero
+            if (nTimeWeight > 0)
+            {
+                nTotalWeight += bnCoinDayWeight.GetLow64();
+                nWeightCount++;
+            }
+
+        }
+
+        if (nWeightCount > 0)
+            nAverageWeight = nTotalWeight / nWeightCount;
 
   return true;
 }
@@ -139,7 +164,7 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     if (!g_txindex)
         return error("CreateCoinStake : transaction index unavailable");
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    
     txNew.vin.clear();
     txNew.vout.clear();
 
@@ -149,35 +174,26 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     txNew.vout.push_back(CTxOut(0, scriptEmpty));
 
     // Choose coins to use
+    LOCK2(cs_main, pwallet->cs_wallet);
     CAmount nBalance = pwallet->GetBalance().m_mine_trusted;
     CAmount nReserveBalance = 0;
     if (gArgs.IsArgSet("-reservebalance") && !ParseMoney(gArgs.GetArg("-reservebalance", ""), nReserveBalance))
         return error("CreateCoinStake : invalid reserve balance amount");
     if (nBalance <= nReserveBalance)
         return false;
-    //std::set<CInputCoin> setCoins;
+
     CCoinsViewCache* coins_view = &chainstate->CoinsTip();
     std::vector<CTransactionRef> vwtxPrev;
-    //CAmount nValueIn = 0;
     std::vector<COutput> vAvailableCoins;
     int nMaxReorgDepth = consensusParams.MaxReorganizationDepth; 
     
-    // Select coins with suitable depth  2880 approximately two days of blocks for IsProtocolV01 to be more selective given the increase in min age
-    //if (!pwallet->SelectCoinsSimple(chainstate, nBalance - nReserveBalance, setCoins, nValueIn, txNew.nTime, (IsProtocolV01(txNew.nTime) ? 2880 : IsProtocolV00(txNew.nTime) ? nMaxReorgDepth + 1 : 51)  )){
-    //    LogPrint(BCLog::STAKE, "%s :pwallet->SelectCoins() False \n",__func__);
-    //    return false;
-    //}
-    //if (setCoins.empty()){
-    //    LogPrint(BCLog::STAKE, "%s : setCoins.empty() \n",__func__);
-    //    return false;
-    //}
     {
+        LOCK(pwallet->cs_wallet);
         CCoinControl cctl;
         cctl.m_avoid_address_reuse = false;
         cctl.m_min_depth = (IsProtocolV01(txNew.nTime) ? 2880 : IsProtocolV00(txNew.nTime) ? nMaxReorgDepth + 1 : 51);
         cctl.m_max_depth = 9999999;
         cctl.m_include_unsafe_inputs = false;
-        LOCK(pwallet->cs_wallet);
         pwallet->AvailableCoins(vAvailableCoins, &cctl, 1, MAX_MONEY, nBalance - nReserveBalance, 0);
         if (vAvailableCoins.empty()){
             LogPrint(BCLog::STAKE, "%s : vAvailableCoins.empty() \n",__func__);
@@ -190,6 +206,7 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     int64_t nloopcount = 0 ;
     for (const auto& pcoin : vAvailableCoins)
     {
+        
         CInputCoin nCoin = pcoin.GetInputCoin();
         nloopcount++; 
 
@@ -270,9 +287,6 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
                 txNew.vin.push_back(CTxIn(nCoin.outpoint.hash, nCoin.outpoint.n));
                 nCredit += nCoin.txout.nValue;
                 vwtxPrev.push_back(tx); // kernel stake
-                //txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
-                //if (header.GetBlockTime() + nStakeSplitAge > txNew.nTime)
-                //    txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
                 if (header.GetBlockTime() + nStakeSplitAge > txNew.nTime){
                         fSplitAgedStake = true;
                 }
@@ -413,18 +427,7 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     while(true)
     {
        
-
-        // Set output amount
-        /**
-        if (txNew.vout.size() == 3)
-        {
-            txNew.vout[1].nValue = (nCredit / 2 / CENT) * CENT;
-            txNew.vout[2].nValue = nCredit - txNew.vout[1].nValue;
-        }else{
-            txNew.vout[1].nValue = nCredit;
-        }
-        **/
-        
+    
 
         // Sign
         int nIn = 0;
@@ -457,101 +460,3 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     return true;
 }
 
-void CWallet::AvailableCoinsMinConf(CChainState* chainstate, std::vector<COutput>&  vCoins, int nConf) const
-{
-    vCoins.clear();
-
-    {
-        LOCK(cs_wallet);
-        for (const auto& it : mapWallet)
-        {    
-            //const uint256& wtxid = it.first;
-            const CWalletTx* pcoin = &it.second;
-            CBlockIndex* pindexPrev = chainstate->m_chain.Tip();
-            const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
-            int64_t nLockTimeCutoff = (pindexPrev->GetMedianTimePast());
-
-
-            if (!IsFinalTx(*pcoin->tx, nHeight, nLockTimeCutoff))
-                continue;
-
-            if (!pcoin->IsTrusted() || pcoin->isConflicted())
-                continue;
-
-            if ((pcoin->IsCoinBase() || pcoin->IsCoinStake()) && pcoin->GetBlocksToMaturity() > 0)
-                continue;
-
-            int nDepth = pcoin->GetDepthInMainChain();
-            if(nDepth < nConf)
-                continue;
-
-
-            bool safeTx = pcoin->IsTrusted();
-            if (nDepth == 0 && pcoin->mapValue.count("replaces_txid")) {
-                safeTx = false;
-            }
-            if (nDepth == 0 && pcoin->mapValue.count("replaced_by_txid")) {
-                safeTx = false;
-            }
-
-
-            for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
-
-                if (IsLockedCoin(it.first, i))
-                    continue;
-
-            	isminetype mine = IsMine(pcoin->tx->vout[i]);
-                
-                if (mine == ISMINE_NO) {
-                    continue;
-                }
-
-                    
-                    std::unique_ptr<SigningProvider> provider = GetSolvingProvider(pcoin->tx->vout[i].scriptPubKey);
-
-                    bool solvable = provider ? IsSolvable(*provider, pcoin->tx->vout[i].scriptPubKey) : false;
-                    bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (solvable));
-
-                    vCoins.push_back(COutput(pcoin, i, nDepth, spendable, solvable, safeTx));
-            }
-        }
-    }
-}
-
-// PoS: Select some coins without random shuffle or best subset approximation
-bool CWallet::SelectCoinsSimple(CChainState* chainstate, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, unsigned int nSpendTime, int nMinConf) const
-{
-    std::vector<COutput> vCoins;
-    AvailableCoinsMinConf(chainstate, vCoins, nMinConf);
-
-    setCoinsRet.clear();
-    nValueRet = 0;
-
-    for (const COutput& output : vCoins)
-    {
-        if (!output.fSpendable)
-        	continue;
-
-        // Stop if we've chosen enough inputs
-        if (nValueRet >= nTargetValue)
-            break;
-
-        CAmount n = output.tx->tx->vout[output.i].nValue;
-
-        if (n >= nTargetValue)
-        {
-            // If input value is greater or equal to target then simply insert
-            //    it into the current subset and exit
-            setCoinsRet.insert(CInputCoin(output.tx->tx, output.i));
-            nValueRet += output.tx->tx->vout[output.i].nValue;
-            break;
-        }
-        else if (n < nTargetValue + CENT)
-        {
-            setCoinsRet.insert(CInputCoin(output.tx->tx, output.i));
-            nValueRet += output.tx->tx->vout[output.i].nValue;
-        }
-    }
-
-    return true;
-}

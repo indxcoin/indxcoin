@@ -9,7 +9,7 @@
 #include <index/base.h>
 #include <txdb.h>
 
-class CDiskTxPos;
+struct CDiskTxPos;
 
 /**
  * TxIndex is used to look up transactions included in the blockchain by hash.

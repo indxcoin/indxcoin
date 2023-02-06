@@ -200,9 +200,11 @@ BITCOIN_CORE_H = \
   policy/rbf.h \
   policy/settings.h \
   pos/kernel.h \
-  pos/kernelrecord.h \
   pos/signer.h \
-  pos/stake.h \
+  pos/wallet/miner.h \
+  pos/wallet/stake.h \
+  pos/wallet/signer.h \
+  pos/wallet/kernelrecord.h \
   pow.h \
   protocol.h \
   psbt.h \
@@ -361,9 +363,7 @@ libbitcoin_server_a_SOURCES = \
   policy/rbf.cpp \
   policy/settings.cpp \
   pos/kernel.cpp \
-  pos/kernelrecord.cpp \
   pos/signer.cpp \
-  pos/stake.cpp \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
@@ -428,6 +428,10 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/transaction.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
+  pos/wallet/miner.cpp \
+  pos/wallet/stake.cpp \
+  pos/wallet/signer.cpp \
+  pos/wallet/kernelrecord.cpp \
   wallet/walletutil.cpp \
   wallet/coinselection.cpp \
   $(BITCOIN_CORE_H)

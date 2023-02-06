@@ -4467,6 +4467,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
 // Verify hash target and signature of coinstake tx
 bool VerifyHashTarget(CChainState* active_chainstate, BlockValidationState& state, CBlockIndex* pindexPrev, const CBlock& block, uint256& hashProof)
 {
+    LOCK(cs_main);
     AssertLockHeld(cs_main);
 
     bool fValid;

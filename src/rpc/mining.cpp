@@ -18,7 +18,6 @@
 #include <node/context.h>
 #include <policy/fees.h>
 #include <pos/kernel.h>
-#include <pos/stake.h>
 #include <pow.h>
 #include <rpc/blockchain.h>
 #include <rpc/mining.h>
@@ -39,7 +38,12 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <warnings.h>
+
+#ifdef ENABLE_WALLET
+#include <pos/wallet/stake.h>
+#include <pos/wallet/miner.h>
 #include <wallet/rpcwallet.h>
+#endif
 
 #include <memory>
 #include <stdint.h>
@@ -247,6 +251,7 @@ static RPCHelpMan generatetodescriptor()
     };
 }
 
+#ifdef ENABLE_WALLET
 static RPCHelpMan staking()
 {
     return RPCHelpMan{"staking",
@@ -290,6 +295,7 @@ static RPCHelpMan staking()
     };
 
 }
+#endif
 
 static RPCHelpMan generate()
 {
@@ -493,6 +499,7 @@ static RPCHelpMan getmininginfo()
     };
 }
 
+#ifdef ENABLE_WALLET
 static RPCHelpMan getstakinginfo()
 {
     return RPCHelpMan{"getstakinginfo",
@@ -528,6 +535,7 @@ static RPCHelpMan getstakinginfo()
     const Consensus::Params params = Params().GetConsensus();
 
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     if (!pwallet) return NullUniValue;
 
     // Make sure the results are valid at least up to the most recent block
@@ -536,9 +544,8 @@ static RPCHelpMan getstakinginfo()
 
     uint64_t nAverageWeight = 0, nTotalWeight = 0;
 
-    GetStakeWeight(pwallet.get(), nAverageWeight, nTotalWeight, chainparams.GetConsensus());
+    GetStakeWeight(pwallet.get(), &node.chainman->ActiveChainstate(), nAverageWeight, nTotalWeight, chainparams.GetConsensus());
 
-    NodeContext& node = EnsureAnyNodeContext(request.context);
     const CTxMemPool& mempool = EnsureMemPool(node);
     ChainstateManager& chainman = EnsureChainman(node);
     LOCK(cs_main);
@@ -570,7 +577,7 @@ static RPCHelpMan getstakinginfo()
 },
     };
 }
-
+#endif
 
 // NOTE: Unlike wallet RPC (which use BTC values), mining RPCs follow GBT (BIP 22) in using satoshi amounts
 static RPCHelpMan prioritisetransaction()
@@ -1380,7 +1387,9 @@ static const CRPCCommand commands[] =
   //  ---------------------  -----------------------
     { "mining",              &getnetworkhashps,        },
     { "mining",              &getmininginfo,           },
+    #ifdef ENABLE_WALLET
     { "mining",              &getstakinginfo,          },
+    #endif
     { "mining",              &prioritisetransaction,   },
     { "mining",              &getblocktemplate,        },
     { "mining",              &submitblock,             },
@@ -1390,7 +1399,9 @@ static const CRPCCommand commands[] =
     { "generating",          &generatetoaddress,       },
     { "generating",          &generatetodescriptor,    },
     { "generating",          &generateblock,           },
+    #ifdef ENABLE_WALLET
     { "generating",          &staking,                 },
+    #endif
 
     { "util",                &estimatesmartfee,        },
 
