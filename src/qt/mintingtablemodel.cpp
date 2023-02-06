@@ -2,7 +2,7 @@
 #include <qt/mintingfilterproxy.h>
 
 #include <pos/kernel.h>
-#include <pos/kernelrecord.h>
+#include <pos/wallet/kernelrecord.h>
 #include <qt/transactiondesc.h>
 #include <qt/transactionrecord.h>
 #include <qt/walletmodel.h>

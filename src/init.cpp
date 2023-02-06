@@ -41,6 +41,7 @@
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <pos/kernel.h>
+#include <pos/wallet/miner.h>
 #include <protocol.h>
 #include <rpc/blockchain.h>
 #include <rpc/register.h>
@@ -1805,10 +1806,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     StartupNotify(args);
 #endif
 
+#ifdef ENABLE_WALLET
     if (HasWallets() && GetWallets()[0]) {
         gArgs.ForceSetArg("-staking", "1");
         StartMintStake(gArgs.GetBoolArg("-staking", true), GetWallets()[0], node.chainman.get(), &node.chainman->ActiveChainstate(), node.connman.get(), node.mempool.get());
     }
+#endif
 
     return true;
 }

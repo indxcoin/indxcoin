@@ -9,8 +9,6 @@
 #include <primitives/block.h>
 #include <txmempool.h>
 #include <validation.h>
-#include <wallet/coincontrol.h>
-#include <wallet/wallet.h>
 
 #include <memory>
 #include <optional>
@@ -19,12 +17,9 @@
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 
-extern int64_t nLastCoinStakeSearchInterval;
-
 class CBlockIndex;
 class CChainParams;
 class CScript;
-class CWallet;
 
 namespace Consensus { struct Params; };
 
@@ -166,7 +161,7 @@ public:
     explicit BlockAssembler(CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet=nullptr, bool* pfPoSCancel=nullptr);
+    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
 
     inline static std::optional<int64_t> m_last_block_num_txs{};
     inline static std::optional<int64_t> m_last_block_weight{};
@@ -212,9 +207,6 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
 void RegenerateCommitments(CBlock& block, ChainstateManager& chainman);
 
-void StartMintStake(bool fGenerate, std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CChainState* chainstate, CConnman* connman, CTxMemPool* mempool);
-/** Returns true if a staking is enabled, false otherwise. */
-bool EnableStaking();
-void StopMintStake();
+
 
 #endif // BITCOIN_MINER_H
