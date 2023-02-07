@@ -103,7 +103,7 @@ void BlockAssembler::resetBlock()
     nFees = 0;
 }
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn /**,CWallet* pwallet,  bool* pfPoSCancel**/)
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn )
 {
     const Consensus::Params params = Params().GetConsensus();
     int64_t nTimeStart = GetTimeMicros();

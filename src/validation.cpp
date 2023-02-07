@@ -1113,6 +1113,7 @@ Mutex g_best_block_mutex;
 std::condition_variable g_best_block_cv;
 uint256 g_best_block;
 bool g_parallel_script_checks{false};
+std::atomic_bool fBusyImporting(false);        // covers ActivateBestChain too
 bool fRequireStandard = true;
 bool fCheckBlockIndex = false;
 bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;

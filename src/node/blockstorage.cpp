@@ -494,6 +494,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
 {
     ScheduleBatchPriority();
 
+    fBusyImporting = true;
     {
         CImportingNow imp;
 
@@ -562,4 +563,5 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
         }
     } // End scope of CImportingNow
     chainman.ActiveChainstate().LoadMempool(args);
+    fBusyImporting = false;
 }

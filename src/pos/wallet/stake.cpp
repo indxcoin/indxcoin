@@ -157,8 +157,6 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     bool fSplitAgedStake = false;
     int64_t nCombineThreshold = 11000 * COIN;
 
-    arith_uint256 bnTargetPerCoinDay;
-    bnTargetPerCoinDay.SetCompact(nBits);
 
     // Transaction index is required to get to block header
     if (!g_txindex)
@@ -212,7 +210,7 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
 
         LogPrint(BCLog::STAKE, "%s :Kernel Search Loop =%d  hash=%s \n",__func__, nloopcount, nCoin.outpoint.hash.ToString());
 
-        if (!EnableStaking()) {
+        if (!EnableStaking() ||  StakingOld(chainstate)) {
             return false;
         }
         CDiskTxPos postx;

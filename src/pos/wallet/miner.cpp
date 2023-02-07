@@ -17,6 +17,7 @@
 #include <miner.h>
 #include <net_processing.h>
 #include <node/ui_interface.h>
+#include <node/blockstorage.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pos/signer.h>
@@ -24,6 +25,7 @@
 #include <pos/wallet/stake.h>
 #include <pos/wallet/signer.h>
 #include <pow.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <shutdown.h>
 #include <timedata.h>
@@ -50,6 +52,16 @@ bool EnableStaking()
     return fEnableStaking;
 }
 
+bool StakingOld(CChainState* chainstate)
+{
+    int nBestHeader = 0; int nTipHeight = 0;
+    {
+        nBestHeader = pindexBestHeader->nHeight;
+        nTipHeight = chainstate->m_chain.Tip()->nHeight;
+    }
+    //LogPrintf( "%s: header = %d tip = %d  Istrue = %s \n",__func__, nBestHeader, nTipHeight, (((nBestHeader != nTipHeight)) ? "true" : "false") );
+    return ((nBestHeader != nTipHeight)) ;
+}
 
 static bool ProcessBlockFound(const CBlock* pblock, ChainstateManager* chainman, CChainState* chainstate, const CChainParams& chainparams)
 {
@@ -136,6 +148,14 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                 }
                    
             }
+       
+            while (fReindex || fImporting || fBusyImporting) {
+                
+                LogPrint(BCLog::POS, "%s: Block import/reindex.\n", __func__);
+                if (!connman->interruptNet.sleep_for(std::chrono::seconds(120)))
+                    return;
+            }
+
 
             // Busy-wait for the network to come online so we don't waste time mining
             // on an obsolete chain. In regtest mode we expect to fly solo.
@@ -146,6 +166,23 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                 }
                     
             }
+
+            
+            int nBestHeader = 0; int nTipHeight = 0;
+            {
+                nBestHeader = pindexBestHeader->nHeight;
+                nTipHeight = chainstate->m_chain.Tip()->nHeight;
+            }
+            
+
+            if(nTipHeight < nBestHeader -5 ){
+                if (!connman->interruptNet.sleep_for(std::chrono::seconds(120))){
+                LogPrintf( "Minter thread sleeps while header = %d tip = %d \n", nBestHeader, nTipHeight );
+                LogPrint(BCLog::STAKE, "Minter thread sleeps while header = %d tip = %d \n", nBestHeader, nTipHeight );
+                return;
+                }
+            }
+
 
             while (chainstate->m_chain.Tip()->nHeight < Params().GetConsensus().nLastPowHeight || GuessVerificationProgress(Params().TxData(), chainstate->m_chain.Tip()) < 0.996)
             {
@@ -171,7 +208,7 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
             bool fPoSCancel = false;
             CScript scriptPubKey = GetScriptForDestination(dest);
             std::unique_ptr<CBlockTemplate> pblocktemplate;
-            pblocktemplate = BlockAssembler(*chainstate, *mempool, Params()).CreateNewBlock(scriptPubKey /**, &fPoSCancel **/);
+            pblocktemplate = BlockAssembler(*chainstate, *mempool, Params()).CreateNewBlock(scriptPubKey );
             CBlock *pblock = &pblocktemplate->block;
             CAmount stakeFees = 0;
             static int64_t nLastCoinStakeSearchTime = GetAdjustedTime();
@@ -191,6 +228,7 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                 fPoSCancel = true;
                 pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, Params().GetConsensus());
                 CMutableTransaction txCoinStake;
+                txCoinStake.nTime = std::max(GetAdjustedTime() + 15, pblock->GetMaxTransactionTime() + 25); // bad-tx-time fix
                 int64_t nSearchTime = txCoinStake.nTime; // search to current time
                 if (nSearchTime > nLastCoinStakeSearchTime)
                 {  
@@ -204,13 +242,14 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                             pblock->vtx[0] = MakeTransactionRef(std::move(tmpcoinbaseTx));
                             pblock->vtx.insert(pblock->vtx.begin() + 1, MakeTransactionRef(CTransaction(txCoinStake)));
                             pblock->nTime      = pblock->vtx[1]->nTime;
-                            pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
+                            //LogPrintf("%s: One block time: %d tx kernel time: %d \n", __func__, pblock->nTime, pblock->vtx[1]->nTime );
                             fPoSCancel = false;
                         }
                     }
                     nLastCoinStakeSearchInterval = nSearchTime - nLastCoinStakeSearchTime;
                     
                 }
+                //LogPrintf("%s: Three block time: %d tx kernel time: %d  \n", __func__, pblock->nTime, pblock->vtx[1]->nTime );
                 if (fPoSCancel == true) // indxcoin: there is no point to continue if we failed to create coinstake
                 {
                     if (!connman->interruptNet.sleep_for(std::chrono::milliseconds(pos_timio))){
