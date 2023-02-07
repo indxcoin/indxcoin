@@ -13,6 +13,7 @@
 #include <wallet/wallet.h>
 #include <miner.h>  // remove maybe
 
+#include <atomic>
 #include <memory>
 #include <optional>
 #include <stdint.h>
@@ -37,6 +38,7 @@ namespace Consensus { struct Params; };
 void StartMintStake(bool fGenerate, std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CChainState* chainstate, CConnman* connman, CTxMemPool* mempool);
 /** Returns true if a staking is enabled, false otherwise. */
 bool EnableStaking();
+bool StakingOld(CChainState* chainstate);
 void StopMintStake();
 
 
