@@ -228,8 +228,9 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                 fPoSCancel = true;
                 pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, Params().GetConsensus());
                 CMutableTransaction txCoinStake;
-                txCoinStake.nTime = std::max(GetAdjustedTime() + 15, pblock->GetMaxTransactionTime() + 25); // bad-tx-time fix
+                txCoinStake.nTime = std::max(GetAdjustedTime() + 61, pblock->GetMaxTransactionTime() + 61); // bad-tx-time fix
                 int64_t nSearchTime = txCoinStake.nTime; // search to current time
+                //LogPrintf("%s: One nSearchTime time: %d nLastCoinStakeSearchTime time: %d \n", __func__, nSearchTime, nLastCoinStakeSearchTime );
                 if (nSearchTime > nLastCoinStakeSearchTime)
                 {  
                     if (CreateCoinStake(pwallet.get(), chainstate, pblock->nBits, nSearchTime-nLastCoinStakeSearchTime, txCoinStake, Params().GetConsensus(), stakeFees)) 
@@ -242,7 +243,7 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                             pblock->vtx[0] = MakeTransactionRef(std::move(tmpcoinbaseTx));
                             pblock->vtx.insert(pblock->vtx.begin() + 1, MakeTransactionRef(CTransaction(txCoinStake)));
                             pblock->nTime      = pblock->vtx[1]->nTime;
-                            //LogPrintf("%s: One block time: %d tx kernel time: %d \n", __func__, pblock->nTime, pblock->vtx[1]->nTime );
+                            //LogPrintf("%s: Two block time: %d tx GetMax time: %d \n", __func__, pblock->nTime, pblock->GetMaxTransactionTime() );
                             fPoSCancel = false;
                         }
                     }
