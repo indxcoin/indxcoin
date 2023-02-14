@@ -1,0 +1,27 @@
+name: Build Core Wallets
+
+on:
+  push:
+    branches: [ "indxcoin-22.x_actions" ]
+
+jobs:
+  build:
+
+    runs-on: self-hosted
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: configure
+      run: 
+        apt-get install -y build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
+        apt-get install -y libevent-dev libboost-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
+        COIN_ROOT=$(pwd)
+        ./contrib/install_db4.sh .
+        export BDB_PREFIX="${COIN_ROOT}/db4"
+        ./autogen.sh
+        ./configure BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include" --disable-bench --disable-tests --with-gui=no
+        make -j2 ./configure
+
+    - name: Make the Core Wallet
+      run: make
