@@ -175,8 +175,8 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
             }
             
 
-            if(nTipHeight < nBestHeader -5 ){
-                if (!connman->interruptNet.sleep_for(std::chrono::seconds(120))){
+            if(nTipHeight < nBestHeader ){
+                if (!connman->interruptNet.sleep_for(std::chrono::seconds(12))){
                 LogPrintf( "Minter thread sleeps while header = %d tip = %d \n", nBestHeader, nTipHeight );
                 LogPrint(BCLog::STAKE, "Minter thread sleeps while header = %d tip = %d \n", nBestHeader, nTipHeight );
                 return;
@@ -248,7 +248,7 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                         }
                     }
                     nLastCoinStakeSearchInterval = nSearchTime - nLastCoinStakeSearchTime;
-                    
+                    nLastCoinStakeSearchTime = nSearchTime;
                 }
                 //LogPrintf("%s: Three block time: %d tx kernel time: %d  \n", __func__, pblock->nTime, pblock->vtx[1]->nTime );
                 if (fPoSCancel == true) // indxcoin: there is no point to continue if we failed to create coinstake
