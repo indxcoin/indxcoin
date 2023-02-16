@@ -29,6 +29,7 @@
 #include <policy/settings.h>
 #include <pos/kernel.h>
 #include <pos/signer.h>
+#include <pos/modifiercache.h>
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>

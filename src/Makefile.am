@@ -201,6 +201,7 @@ BITCOIN_CORE_H = \
   policy/settings.h \
   pos/kernel.h \
   pos/signer.h \
+  pos/modifiercache.h \
   pos/wallet/miner.h \
   pos/wallet/stake.h \
   pos/wallet/signer.h \
@@ -364,6 +365,7 @@ libbitcoin_server_a_SOURCES = \
   policy/settings.cpp \
   pos/kernel.cpp \
   pos/signer.cpp \
+  pos/modifiercache.cpp \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \

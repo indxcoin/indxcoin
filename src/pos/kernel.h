@@ -7,6 +7,7 @@
 #define BITCOIN_POS_KERNEL_H
 
 #include <primitives/transaction.h> // CTransaction(Ref)
+#include <pos/modifiercache.h>
 #include <validation.h>
 
 class BlockValidationState;
