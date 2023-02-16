@@ -501,6 +501,7 @@ public:
         consensus.nModifierInterval = 13 * 60;
         consensus.nLastPowHeight = 2200; // 
         consensus.MaxReorganizationDepth = 200; // (<  (minstakeinterval / blockinterval) / 2)
+        nStakeTimestampMask = 0;
 
         UpdateActivationParametersFromArgs(args);
 
