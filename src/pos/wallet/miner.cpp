@@ -93,9 +93,6 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
     util::ThreadRename("indxcoin-stake-minter");
     //LogPrintf("PoSMiner(): Start Algo \n" ); // UpdateMe   
 
-    int nBestHeight; 
-    int64_t nBestTime;
-
     unsigned int nExtraNonce = 0;
 
     OutputType output_type = pwallet->m_default_address_type;
@@ -178,40 +175,14 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
             }
             
 
-            if(nTipHeight < nBestHeader -5 ){
-                if (!connman->interruptNet.sleep_for(std::chrono::seconds(120))){
+            if(nTipHeight < nBestHeader ){
+                if (!connman->interruptNet.sleep_for(std::chrono::seconds(12))){
                 LogPrintf( "Minter thread sleeps while header = %d tip = %d \n", nBestHeader, nTipHeight );
                 LogPrint(BCLog::STAKE, "Minter thread sleeps while header = %d tip = %d \n", nBestHeader, nTipHeight );
                 return;
                 }
             }
 
-            {
-            LOCK(cs_main);
-            nBestHeight = chainman->ActiveChain().Height();
-            nBestTime = chainman->ActiveChain().Tip()->nTime;
-            }
-
-            int64_t nTime = GetAdjustedTime();
-            int64_t nMask = Params().GetStakeTimestampMask(nBestHeight+1);
-            int64_t nSearchTime = nTime & ~nMask;
-            //LogPrintf( "%s: nBestTime = %d  nSearchTime = %d  nTime = %d Mask = %d \n", __func__, nBestTime,  nSearchTime, nTime, nMask);
-            if (nSearchTime <= nBestTime) {
-                if (nTime < nBestTime) {
-                    if (!connman->interruptNet.sleep_for(std::chrono::seconds(std::min((nBestTime - nTime), (int64_t)30) ) ) )
-                        LogPrintf("%s: Can't stake before last block time.  nBestTime = %d  nTime = %d \n", __func__, nBestTime, nTime);
-                        //LogPrint(BCLog::POS, "%s: Can't stake before last block time.  nBestTime = %d  nTime = %d \n", __func__, nBestTime, nTime);
-
-                    continue;
-                }
-
-                int64_t nNextSearch = nSearchTime + nMask;
-                if (!connman->interruptNet.sleep_for(std::chrono::seconds(std::min((nNextSearch - nTime), (int64_t)10)))) //{}
-                    LogPrintf( "%s: nNextSearch. nBestTime = %d  nNextSearch = %d  nSearchTime = %d  Mask = %d \n", __func__, nBestTime, nNextSearch, nSearchTime, nMask);
-                    //LogPrint(BCLog::POS, "%s: nNextSearch. nBestTime = %d  nNextSearch = %d  nSearchTime = %d  Mask = %d \n", __func__, nBestTime, nNextSearch, nSearchTime, nMask);
-
-                continue;
-            }
 
 
             while (chainstate->m_chain.Tip()->nHeight < Params().GetConsensus().nLastPowHeight || GuessVerificationProgress(Params().TxData(), chainstate->m_chain.Tip()) < 0.996)

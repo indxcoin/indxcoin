@@ -36,11 +36,8 @@ void cacheMaintain(CChainState* active_chainstate)
         currentTip = active_chainstate->m_chain.Tip()->GetBlockHash();
     }
 
-    if(lastTip != currentTip)
+    if(lastTip != currentTip || cachedModifiers.size() > DEFAULT_FLUSH_MODIFIER_CACHE)
        cacheInit(active_chainstate);
-
-    if (cachedModifiers.size() >
-        DEFAULT_FLUSH_MODIFIER_CACHE) cacheInit(active_chainstate);
 
     if(cacheHit + cacheMiss > 2500000000){
         //reset Hit count

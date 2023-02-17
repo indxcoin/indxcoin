@@ -371,12 +371,13 @@ static bool GetKernelStakeModifier(CChainState* active_chainstate, uint256 hashB
     // Check the cache first
     uint64_t nCachedModifier;
     cachedModifier entry { nStakeModifierTime, nStakeModifierHeight };
-    if (cacheCheck(active_chainstate, entry, nCachedModifier)) {
-        nStakeModifier = nCachedModifier;
-        LogPrint(BCLog::POS, "%s: nStakeModifier=0x%016x cache hit!\n", __func__, nStakeModifier);
-        return true;
+    {
+        if (cacheCheck(active_chainstate, entry, nCachedModifier)) {
+            nStakeModifier = nCachedModifier;
+            LogPrint(BCLog::POS, "%s: nStakeModifier=0x%016x cache hit!\n", __func__, nStakeModifier);
+            return true;
+        }
     }
-
     const CBlockIndex* pindex = pindexFrom;
 
     // loop to find the stake modifier later by a selection interval
