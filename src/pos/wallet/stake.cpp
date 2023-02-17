@@ -297,6 +297,9 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
 
                 for (const auto& ppcoin : vAvailableCoins)
                 {
+                        if (!EnableStaking() ||  StakingOld(chainstate)) {
+                            return false;
+                        }
                     CInputCoin nnCoin = ppcoin.GetInputCoin();
 
                     CDiskTxPos ppostx;
@@ -383,6 +386,10 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     }
     if (nCredit == 0 || nCredit > nBalance - nReserveBalance)
         return false;
+
+    if (!EnableStaking() ||  StakingOld(chainstate)) {
+            return false;
+        }
 
 
     // loop finished and stake not found
