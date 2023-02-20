@@ -180,11 +180,6 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
     if (nBalance <= nReserveBalance)
         return false;
 
-    if ( nBalance < (IsProtocolV01(txNew.nTime) ? consensusParams.nStakeMinAmount : 0 ) )
-    {
-        StopMintStake();
-        return false;
-    }
 
     CCoinsViewCache* coins_view = &chainstate->CoinsTip();
     std::vector<CTransactionRef> vwtxPrev;
@@ -466,6 +461,10 @@ bool CreateCoinStake(const CWallet* pwallet, CChainState* chainstate, unsigned i
             break;
         }
     }
+
+        if (!EnableStaking() ||  StakingOld(chainstate)) {
+            return false;
+        }
 
     // Successfully generated coinstake
     return true;

@@ -60,7 +60,6 @@ struct PrecomputedTransactionData;
 struct LockPoints;
 struct AssumeutxoData;
 
-static const int64_t COIN_YEAR_REWARD = 5 * CENT; // 5% per year
 
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
