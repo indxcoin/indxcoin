@@ -3250,7 +3250,9 @@ bool CChainState::FlushStateToDisk(
                 std::vector<const CBlockIndex*> vBlocks;
                 vBlocks.reserve(setDirtyBlockIndex.size());
                 for (std::set<CBlockIndex*>::iterator it = setDirtyBlockIndex.begin(); it != setDirtyBlockIndex.end(); ) {
-                    vBlocks.push_back(*it);
+                    if ((*it)->nFlags & CBlockIndex::BLOCK_ACCEPTED) {
+                        vBlocks.push_back(*it);
+                    }
                     setDirtyBlockIndex.erase(it++);
                 }
                 if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks)) {
@@ -5519,6 +5521,7 @@ bool CChainState::LoadGenesisBlock()
         if (blockPos.IsNull())
             return error("%s: writing genesis block to disk failed", __func__);
         CBlockIndex *pindex = m_blockman.AddToBlockIndex(block);
+        pindex->nFlags |= CBlockIndex::BLOCK_ACCEPTED;
         ReceivedBlockTransactions(block, pindex, blockPos);
     } catch (const std::runtime_error& e) {
         return error("%s: failed to write genesis block: %s", __func__, e.what());
