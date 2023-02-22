@@ -128,7 +128,7 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
 
     std::string strMintMessage = _("Info: Staking suspended due to locked wallet.").translated;
     std::string strMintSyncMessage = _("Info: Staking suspended while synchronizing wallet.").translated;
-    std::string strMintDisabledMessage = _("Info: Staking disabled by 'nominting' option.").translated;
+    std::string strMintDisabledMessage = _("Info: Staking disabled by 'staking false' option.").translated;
     std::string strMintBlockMessage = _("Info: Staking suspended due to block creation failure.").translated;
     std::string strMintEmpty = "";
     if (!gArgs.GetBoolArg("-staking", false))
@@ -155,15 +155,15 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                 }
                 fNeedToClear = true;
                     
-                    LogPrint(BCLog::STAKE, "%s: Wallet must be unlocked for staking \n", __func__);
-                    LogPrintf("%s: Wallet must be unlocked for staking \n", __func__);
-                    condWaitFor(300);
+                    LogPrint(BCLog::STAKE, "%s: Wallet must be unlocked for staking sleeping for 60 \n", __func__);
+                    //LogPrintf("%s: Wallet must be unlocked for staking sleeping for 60 \n", __func__);
+                    condWaitFor(60);
             }
        
             while (fReindex || fImporting || fBusyImporting) {
-                    LogPrint(BCLog::STAKE, "%s: Block import/reindex.\n", __func__);
-                    LogPrintf("%s: Block import/reindex.\n", __func__);
-                    condWaitFor(120);
+                    LogPrint(BCLog::STAKE, "%s: Block import/reindex. sleep 60 \n", __func__);
+                    //LogPrintf("%s: Block import/reindex. sleep 60 \n", __func__);
+                    condWaitFor(60);
             }
 
             {
@@ -173,17 +173,17 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
 
             while ( nBalance < (IsProtocolV01(GetAdjustedTime()) ? Params().GetConsensus().nStakeMinAmount : 0 ) )
             {
-                    LogPrint(BCLog::STAKE, "%s: sleeping for 60 \n",__func__ );
-                    LogPrintf("%s: sleeping for 60 \n", __func__ ); 
-                    condWaitFor(600);
+                    LogPrint(BCLog::STAKE, "%s: sleeping for 60 low balance \n",__func__ );
+                    //LogPrintf("%s: sleeping for 60 low balance \n", __func__ ); 
+                    condWaitFor(60);
             }
 
 
             // Busy-wait for the network to come online so we don't waste time mining
             // on an obsolete chain. In regtest mode we expect to fly solo.
             while(connman == nullptr || connman->GetNodeCount(ConnectionDirection::Both) == 0 || chainstate->IsInitialBlockDownload()) {  
-                    LogPrint(BCLog::STAKE, "%s: sleeping for 60 \n",__func__ );
-                    LogPrintf("%s: sleeping for 60 \n", __func__ );  
+                    LogPrint(BCLog::STAKE, "%s: sleeping for 60 syncing \n",__func__ );
+                    //LogPrintf("%s: sleeping for 60 syncing \n", __func__ );  
                     condWaitFor(60);
             }
 
@@ -195,8 +195,8 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                     uiInterface.NotifyAlertChanged();
                 }
                 fNeedToClear = true;
-                    LogPrint(BCLog::STAKE, "%s: Minter thread sleeps while sync at %d\n",__func__, chainstate->m_chain.Tip()->nHeight );
-                    LogPrintf("%s: Minter thread sleeps while sync at %d\n",__func__, chainstate->m_chain.Tip()->nHeight );
+                    LogPrint(BCLog::STAKE, "%s: Minter thread sleeps 60 while sync at %d\n",__func__, chainstate->m_chain.Tip()->nHeight );
+                    //LogPrintf("%s: Minter thread sleeps 60 while sync at %d\n",__func__, chainstate->m_chain.Tip()->nHeight );
                     condWaitFor(60);
             }
 
@@ -210,7 +210,7 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
             
 
             if (nTipHeight < nBestHeader ){
-                LogPrintf( "%s: Minter thread sleeps for 12 sec header = %d tip = %d \n",__func__, nBestHeader, nTipHeight );
+                //LogPrintf( "%s: Minter thread sleeps for 12 sec header = %d tip = %d \n",__func__, nBestHeader, nTipHeight );
                 LogPrint(BCLog::STAKE, "%s: Minter thread sleeps for 12 sec header = %d tip = %d \n",__func__, nBestHeader, nTipHeight );
                 condWaitFor(12);
                 continue;
@@ -278,7 +278,7 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                 if (fPoSCancel == true) // indxcoin: there is no point to continue if we failed to create coinstake
                 {
                         //LogPrintf("%s: pos_timio %d \n",__func__ , pos_timio/1000); 
-                        LogPrint(BCLog::STAKE, "%s: pos_timio %d \n",__func__ , pos_timio/1000); 
+                        LogPrint(BCLog::STAKE, "%s: sleeping for pos_timio %d \n",__func__ , pos_timio/1000); 
                         condWaitFor(pos_timio/1000);
                     continue;
                 }
