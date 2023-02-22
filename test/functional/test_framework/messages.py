@@ -38,7 +38,7 @@ MAX_BLOOM_FILTER_SIZE = 36000
 MAX_BLOOM_HASH_FUNCS = 50
 
 COIN = 100000000  # 1 btc in satoshis
-MAX_MONEY = 21000000 * COIN
+MAX_MONEY = 1000000000 * COIN
 
 BIP125_SEQUENCE_NUMBER = 0xfffffffd  # Sequence number that is rbf-opt-in (BIP 125) and csv-opt-out (BIP 68)
 
@@ -503,7 +503,7 @@ class CTxWitness:
 
 class CTransaction:
     __slots__ = ("hash", "nLockTime", "nVersion", "sha256", "vin", "vout",
-                 "wit")
+                 "wit", "nTime")
 
     def __init__(self, tx=None):
         if tx is None:
@@ -512,6 +512,7 @@ class CTransaction:
             self.vout = []
             self.wit = CTxWitness()
             self.nLockTime = 0
+            self.nTime = 0
             self.sha256 = None
             self.hash = None
         else:
@@ -519,6 +520,7 @@ class CTransaction:
             self.vin = copy.deepcopy(tx.vin)
             self.vout = copy.deepcopy(tx.vout)
             self.nLockTime = tx.nLockTime
+            self.nTime = tx.nTime
             self.sha256 = tx.sha256
             self.hash = tx.hash
             self.wit = copy.deepcopy(tx.wit)
@@ -542,19 +544,23 @@ class CTransaction:
         else:
             self.wit = CTxWitness()
         self.nLockTime = struct.unpack("<I", f.read(4))[0]
+        if self.nVersion > 1:
+           self.nTime = struct.unpack("<I", f.read(4))[0]
         self.sha256 = None
         self.hash = None
 
-    def serialize_without_witness(self):
+    def serialize_without_witness(self, skip_nTime=False):
         r = b""
         r += struct.pack("<i", self.nVersion)
         r += ser_vector(self.vin)
         r += ser_vector(self.vout)
         r += struct.pack("<I", self.nLockTime)
+        if self.nVersion > 1 and not skip_nTime:
+            r += struct.pack("<I", self.nTime)
         return r
 
     # Only serialize with witness when explicitly called for
-    def serialize_with_witness(self):
+    def serialize_with_witness(self, skip_nTime=False):
         flags = 0
         if not self.wit.is_null():
             flags |= 1
@@ -574,6 +580,8 @@ class CTransaction:
                     self.wit.vtxinwit.append(CTxInWitness())
             r += self.wit.serialize()
         r += struct.pack("<I", self.nLockTime)
+        if self.nVersion > 1 and not skip_nTime:
+            r += struct.pack("<I", self.nTime)
         return r
 
     # Regular serialization is with witness -- must explicitly
@@ -604,7 +612,7 @@ class CTransaction:
     def is_valid(self):
         self.calc_sha256()
         for tout in self.vout:
-            if tout.nValue < 0 or tout.nValue > 21000000 * COIN:
+            if tout.nValue < 0 or tout.nValue > MAX_MONEY:
                 return False
         return True
 
@@ -616,8 +624,8 @@ class CTransaction:
         return math.ceil(((WITNESS_SCALE_FACTOR - 1) * without_witness_size + with_witness_size) / WITNESS_SCALE_FACTOR)
 
     def __repr__(self):
-        return "CTransaction(nVersion=%i vin=%s vout=%s wit=%s nLockTime=%i)" \
-            % (self.nVersion, repr(self.vin), repr(self.vout), repr(self.wit), self.nLockTime)
+        return "CTransaction(nVersion=%i vin=%s vout=%s wit=%s nLockTime=%i nTime=%i)" \
+            % (self.nVersion, repr(self.vin), repr(self.vout), repr(self.wit), self.nLockTime, self.nTime)
 
 
 class CBlockHeader:
@@ -694,15 +702,18 @@ BLOCK_HEADER_SIZE = len(CBlockHeader().serialize())
 assert_equal(BLOCK_HEADER_SIZE, 80)
 
 class CBlock(CBlockHeader):
-    __slots__ = ("vtx",)
+    __slots__ = ("vtx", "vchBlockSig")
 
     def __init__(self, header=None):
         super().__init__(header)
         self.vtx = []
+        self.vchBlockSig = b""
 
     def deserialize(self, f):
         super().deserialize(f)
         self.vtx = deser_vector(f, CTransaction)
+        if self.nVersion > 2:
+            self.vchBlockSig = deser_string(f)
 
     def serialize(self, with_witness=True):
         r = b""
@@ -711,6 +722,8 @@ class CBlock(CBlockHeader):
             r += ser_vector(self.vtx, "serialize_with_witness")
         else:
             r += ser_vector(self.vtx, "serialize_without_witness")
+        if self.nVersion > 2:
+            r += ser_string(self.vchBlockSig)
         return r
 
     # Calculate the merkle root given a vector of transaction hashes
@@ -762,9 +775,9 @@ class CBlock(CBlockHeader):
             self.rehash()
 
     def __repr__(self):
-        return "CBlock(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x vtx=%s)" \
+        return "CBlock(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x vtx=%s, vchBlockSig=%s)" \
             % (self.nVersion, self.hashPrevBlock, self.hashMerkleRoot,
-               time.ctime(self.nTime), self.nBits, self.nNonce, repr(self.vtx))
+               time.ctime(self.nTime), self.nBits, self.nNonce, repr(self.vtx), repr(self.vchBlockSig))
 
 
 class PrefilledTransaction:
