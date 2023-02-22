@@ -3250,7 +3250,9 @@ bool CChainState::FlushStateToDisk(
                 std::vector<const CBlockIndex*> vBlocks;
                 vBlocks.reserve(setDirtyBlockIndex.size());
                 for (std::set<CBlockIndex*>::iterator it = setDirtyBlockIndex.begin(); it != setDirtyBlockIndex.end(); ) {
-                    vBlocks.push_back(*it);
+                    if ((*it)->nFlags & CBlockIndex::BLOCK_ACCEPTED) {
+                        vBlocks.push_back(*it);
+                    }
                     setDirtyBlockIndex.erase(it++);
                 }
                 if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks)) {
@@ -4502,6 +4504,14 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
         if (miSelf != m_block_index.end()) {
             // Block header is already known.
             CBlockIndex* pindex = miSelf->second;
+            if (state.m_chainman && !state.m_peerman) {
+                state.m_peerman = state.m_chainman->m_peerman;
+            }
+            if (!fRequested &&
+                !state.m_chainman->ActiveChainstate().IsInitialBlockDownload() && state.nodeId >= 0 &&
+                !state.m_peerman->IncDuplicateHeaders(state.nodeId)) {
+                state.m_punish_for_duplicates = true;
+            }
             if (ppindex)
                 *ppindex = pindex;
             if (pindex->nStatus & BLOCK_FAILED_MASK) {
@@ -5511,6 +5521,7 @@ bool CChainState::LoadGenesisBlock()
         if (blockPos.IsNull())
             return error("%s: writing genesis block to disk failed", __func__);
         CBlockIndex *pindex = m_blockman.AddToBlockIndex(block);
+        pindex->nFlags |= CBlockIndex::BLOCK_ACCEPTED;
         ReceivedBlockTransactions(block, pindex, blockPos);
     } catch (const std::runtime_error& e) {
         return error("%s: failed to write genesis block: %s", __func__, e.what());

@@ -638,6 +638,7 @@ public:
     bool IncPersistentDiscouraged(NodeId node_id) override EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void DecMisbehaving(NodeId nodeid, int howmuch) override;
     void MisbehavingByAddr(CNetAddr addr, int misbehavior_cfwd, int howmuch, const std::string& message) override EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool IncDuplicateHeaders(NodeId node_id) override EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 } // namespace
 
@@ -1536,6 +1537,29 @@ void PeerManagerImpl::MisbehavingByAddr(CNetAddr addr, int misbehavior_cfwd, int
     }
 }
 
+bool PeerManagerImpl::IncDuplicateHeaders(NodeId node_id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    CNodeState *state = State(node_id);
+    if (state == nullptr) {
+        return true; // Node already disconnected
+    }
+    const CService &node_address = state->address;
+
+    PeerRef peer = GetPeerRef(node_id);
+    if (peer == nullptr) return true;
+    auto it = map_dos_state.find(node_address);
+    if (it != map_dos_state.end()) {
+        ++it->second.m_duplicate_count;
+        it->second.m_last_used_time = GetTime();
+        if (it->second.m_duplicate_count < MAX_DUPLICATE_HEADERS) {
+            return true;
+        }
+        return false;
+    }
+    map_dos_state[node_address].m_duplicate_count = 1;
+    map_dos_state[node_address].m_last_used_time = GetTime();
+    return true;
+}
 
 void PeerManagerImpl::IncPersistentMisbehaviour(NodeId node_id, int howmuch)
 {

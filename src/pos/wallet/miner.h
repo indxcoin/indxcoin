@@ -30,6 +30,19 @@ class CScript;
 class CWallet;
 struct CBlockTemplate;
 
+
+class StakeThread
+{
+public:
+    StakeThread() {};
+    std::thread thread;
+    std::string sName;
+    CThreadInterrupt m_thread_interrupt;
+};
+
+extern std::vector<StakeThread*> vStakeThreads;
+
+
 namespace Consensus { struct Params; };
 
 

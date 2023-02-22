@@ -82,9 +82,10 @@ logger = logging.getLogger("TestFramework.p2p")
 MIN_P2P_VERSION_SUPPORTED = 60001
 # The P2P version that this test framework implements and sends in its `version` message
 # Version 70016 supports wtxid relay
-P2P_VERSION = 70016
+P2P_VERSION = 80000
 # The services that this test framework offers in its `version` message
-P2P_SERVICES = NODE_NETWORK | NODE_WITNESS
+# P2P_SERVICES = NODE_NETWORK | NODE_WITNESS
+P2P_SERVICES = NODE_NETWORK 
 # The P2P user agent string that this test framework sends in its `version` message
 P2P_SUBVERSION = "/python-p2p-tester:0.0.3/"
 # Value for relay that this test framework sends in its `version` message
@@ -125,9 +126,9 @@ MESSAGEMAP = {
 }
 
 MAGIC_BYTES = {
-    "mainnet": b"\xf9\xbe\xb4\xd9",   # mainnet
-    "testnet3": b"\x0b\x11\x09\x07",  # testnet3
-    "regtest": b"\xfa\xbf\xb5\xda",   # regtest
+    "mainnet": b"\xfc\xc5\xd7\xb6",   # mainnet
+    "testnet3": b"\x1a\xbe\xb6\xc5",  # testnet3
+    "regtest": b"\xfb\xc0\xb6\xdb",   # regtest
     "signet": b"\x0a\x03\xcf\x40",    # signet
 }
 
@@ -432,7 +433,7 @@ class P2PInterface(P2PConnection):
 
     def on_version(self, message):
         assert message.nVersion >= MIN_P2P_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_P2P_VERSION_SUPPORTED)
-        if message.nVersion >= 70016 and self.wtxidrelay:
+        if message.nVersion >= 80016 and self.wtxidrelay:
             self.send_message(msg_wtxidrelay())
         if self.support_addrv2:
             self.send_message(msg_sendaddrv2())
