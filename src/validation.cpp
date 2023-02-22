@@ -4502,6 +4502,14 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
         if (miSelf != m_block_index.end()) {
             // Block header is already known.
             CBlockIndex* pindex = miSelf->second;
+            if (state.m_chainman && !state.m_peerman) {
+                state.m_peerman = state.m_chainman->m_peerman;
+            }
+            if (!fRequested &&
+                !state.m_chainman->ActiveChainstate().IsInitialBlockDownload() && state.nodeId >= 0 &&
+                !state.m_peerman->IncDuplicateHeaders(state.nodeId)) {
+                state.m_punish_for_duplicates = true;
+            }
             if (ppindex)
                 *ppindex = pindex;
             if (pindex->nStatus & BLOCK_FAILED_MASK) {
