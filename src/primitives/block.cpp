@@ -35,6 +35,23 @@ bool CBlockHeader::IsProofOfStake() const
     return (nVersion > POW_BLOCK_VERSION  );
 }
 
+
+std::string CBlockHeader::ToString() const
+{
+
+    std::stringstream s;
+    s << strprintf("CBlockHeader(hash=%s, ver=0x%08x, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, type=%s \n",
+        GetHash().ToString(),
+        nVersion,
+        hashPrevBlock.ToString(),
+        hashMerkleRoot.ToString(),
+        nTime, nBits, nNonce,
+        IsProofOfStake() ? "PoS" : "PoW");
+    
+    return s.str();
+}
+
+
 std::string CBlock::ToString() const
 {
     std::stringstream s;
