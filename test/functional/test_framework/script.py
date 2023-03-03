@@ -662,7 +662,7 @@ def LegacySignatureHash(script, txTo, inIdx, hashtype):
         txtmp.vin = []
         txtmp.vin.append(tmp)
 
-    s = txtmp.serialize_without_witness(skip_nTime=True)
+    s = txtmp.serialize_without_witness(skip_nTime=False)
     s += struct.pack(b"<I", hashtype)
 
     hash = hash256(s)

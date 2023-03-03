@@ -55,12 +55,12 @@ std::string CBlockHeader::ToString() const
 std::string CBlock::ToString() const
 {
     std::stringstream s;
-    s << strprintf("CBlock(hash=%s, ver=0x%08x, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, type=%s, vtx=%u)\n",
+    s << strprintf("CBlock(hash=%s, ver=0x%08x, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vchBlockSig=%s, type=%s, vtx=%u)\n",
         GetHash().ToString(),
         nVersion,
         hashPrevBlock.ToString(),
         hashMerkleRoot.ToString(),
-        nTime, nBits, nNonce,
+        nTime, nBits, nNonce, HexStr(vchBlockSig),
         IsProofOfStake() ? "PoS" : "PoW",
         vtx.size());
     for (const auto& tx : vtx) {

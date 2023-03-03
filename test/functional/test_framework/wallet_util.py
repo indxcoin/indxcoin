@@ -29,7 +29,8 @@ from test_framework.script_util import (
 )
 from test_framework.util import hex_str_to_bytes
 
-Key = namedtuple('Key', ['privkey',
+Key = namedtuple('Key', ['eckey',
+                         'privkey',
                          'pubkey',
                          'p2pkh_script',
                          'p2pkh_addr',
@@ -73,7 +74,8 @@ def get_generate_key():
     eckey.generate()
     privkey = bytes_to_wif(eckey.get_bytes())
     pubkey = eckey.get_pubkey().get_bytes().hex()
-    return Key(privkey=privkey,
+    return Key(eckey=eckey,
+               privkey=privkey,
                pubkey=pubkey,
                p2pkh_script=key_to_p2pkh_script(pubkey).hex(),
                p2pkh_addr=key_to_p2pkh(pubkey),

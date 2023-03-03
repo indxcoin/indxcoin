@@ -776,9 +776,12 @@ class CBlock(CBlockHeader):
     def solve(self):
         self.rehash()
         target = uint256_from_compact(self.nBits)
-        while self.scrypt256 > target:
+        while self.scrypt256 > target and self.nVersion == 1:
             self.nNonce += 1
             self.rehash()
+        if self.nVersion == 4:
+            self.nNonce = 0
+        self.rehash()
 
     def __repr__(self):
         return "CBlock(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x vtx=%s, vchBlockSig=%s)" \

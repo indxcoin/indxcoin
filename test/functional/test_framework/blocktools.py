@@ -131,7 +131,7 @@ def create_coinbase(height, pubkey=None, extra_output_script=None, fees=0, nValu
     coinbaseoutput = CTxOut()
     
     if height > 0:
-        coinbaseoutput.nValue=500000 if height < 2000 else 0
+        coinbaseoutput.nValue=50000000000000 if height < 2000 else 0
     else:
         coinbaseoutput.nValue = nValue * COIN
         #halvings = int(height / 150)  # regtest 

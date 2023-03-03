@@ -4,13 +4,23 @@
 
 #include <consensus/tx_verify.h>
 
+#include <chainparams.h>
 #include <consensus/consensus.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <consensus/validation.h>
+#include <index/disktxpos.h>
+#include <index/txindex.h>
+#include <node/blockstorage.h>
 #include <pos/kernel.h>
+#include <streams.h>
 #include <validation.h>
 #include <timedata.h>
+
+#include <logging.h>
+#include <tinyformat.h>
+#include <util/strencodings.h>
+#include <util/system.h>
 
 // TODO remove the following dependencies
 #include <chain.h>
@@ -170,6 +180,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
 
 bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee)
 {
+    const Consensus::Params *params = &::Params().GetConsensus();
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
         return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-missingorspent",
@@ -218,6 +229,62 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
 
         txfee = txfee_aux;
     }
+    if (tx.IsCoinStake())
+    {
+        CAmount amount = 0;
+        for (size_t k = 0; k < tx.vin.size(); ++k) {
+            const CTxIn &txin = tx.vin[k];
+                
+            // Get transaction index for the previous transaction
+            CDiskTxPos postx;
+            if (!g_txindex->FindTxPosition(txin.prevout.hash, postx)) {
+                return error("CheckTxInputs() : tx index not found \n");
+            }
+            // Read txPrev and header of its block
+            CBlockHeader header;
+            CTransactionRef txPrev;
+            {
+                CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+            try {
+                file >> header;
+                fseek(file.Get(), postx.nTxOffset, SEEK_CUR);
+                file >> txPrev;
+            } catch (std::exception& e) {
+                return error("%s() : deserialize or I/O error in CheckTxInputs() \n", __PRETTY_FUNCTION__);
+            }
+            if (txPrev->GetHash() != txin.prevout.hash)
+                return error("%s() : txid mismatch in CheckTxInputs() \n", __PRETTY_FUNCTION__);
+            }
+            
+            const Coin& coinsIN = inputs.AccessCoin(txin.prevout);
+
+            amount += coinsIN.out.nValue;
+        }
+
+        CAmount nVerify = 0;
+        for (const auto &txout : tx.vout) {
+            nVerify += txout.nValue;
+        }
+
+        if (nVerify < amount) {
+            LogPrintf("ERROR %s: verify=%s amount=%s : txn %s\n", __func__, FormatMoney(nVerify).c_str(), FormatMoney(amount).c_str(), tx.GetHash().ToString());
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "verify-amount-script-failed" , "ERROR : verify-amount-script-failed \n");
+        }
+        if (amount < (IsProtocolV01(tx.nTime) ? params->nStakeMinAmount : 0 )) {
+            LogPrintf("ERROR: %s: stake-amount=%s, txn %s \n", __func__, FormatMoney(amount).c_str(), tx.GetHash().ToString());
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "minimum-stake-amount-failed" , "ERROR : stake-amount under minimum txn \n");
+        }
+
+        LogPrintf("%s : Stake Input Amount=%s Stake Output Amount=%s Stake Minimum Amount=%s hashProof=%s \n",
+        __func__,
+        FormatMoney(amount).c_str(),
+        FormatMoney(nVerify).c_str(), 
+        FormatMoney(params->nStakeMinAmount).c_str(), 
+        tx.GetHash().ToString().c_str());
+
+    }
+
+
     return true;
 }
 
