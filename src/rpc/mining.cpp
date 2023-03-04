@@ -159,7 +159,7 @@ static UniValue generateBlocks(ChainstateManager& chainman, const CTxMemPool& me
     }
     unsigned int nExtraNonce = 0;
     UniValue blockHashes(UniValue::VARR);
-    while (nHeight < nHeightEnd && !ShutdownRequested())
+    while (nHeight < nHeightEnd && !ShutdownRequested() && nHeight < Params().GetConsensus().nLastPowHeight)
     {
         std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(chainman.ActiveChainstate(), mempool, Params()).CreateNewBlock(coinbase_script));
         if (!pblocktemplate.get())

@@ -155,9 +155,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         previous_releases_path = os.getenv("PREVIOUS_RELEASES_DIR") or os.getcwd() + "/releases"
         parser = argparse.ArgumentParser(usage="%(prog)s [options]")
         parser.add_argument("--nocleanup", dest="nocleanup", default=False, action="store_true",
-                            help="Leave bitcoinds and test.* datadir on exit or error")
+                            help="Leave indxcoinds and test.* datadir on exit or error")
         parser.add_argument("--noshutdown", dest="noshutdown", default=False, action="store_true",
-                            help="Don't stop bitcoinds after the test execution")
+                            help="Don't stop indxcoinds after the test execution")
         parser.add_argument("--cachedir", dest="cachedir", default=os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../../cache"),
                             help="Directory for caching pregenerated datadirs (default: %(default)s)")
         parser.add_argument("--tmpdir", dest="tmpdir", help="Root directory for datadirs")
@@ -735,7 +735,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             cache_node.wait_for_rpc_connection()
 
             # Set a time in the past, so that blocks don't end up in the future
+
             cache_node.setmocktime(cache_node.getblockheader(cache_node.getbestblockhash())['time'])
+            
 
             # Create a 199-block-long chain; each of the 3 first nodes
             # gets 25 mature blocks and 25 immature.
@@ -743,13 +745,14 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # block in the cache does not age too much (have an old tip age).
             # This is needed so that we are out of IBD when the test starts,
             # see the tip age check in IsInitialBlockDownload().
-            gen_addresses = [k.address for k in TestNode.PRIV_KEYS][:3] + [ADDRESS_BCRT1_P2WSH_OP_TRUE]
-            assert_equal(len(gen_addresses), 4)
-            for i in range(8):
+            ####gen_addresses = [k.address for k in TestNode.PRIV_KEYS][:3] + [ADDRESS_BCRT1_P2WSH_OP_TRUE]
+            gen_addresses = [k.address for k in TestNode.PRIV_KEYS][:3] 
+            assert_equal(len(gen_addresses), 3)
+            for i in range(25):
+                cache_node.setmocktime(cache_node.getblockheader(cache_node.getbestblockhash())['time'])
                 cache_node.generatetoaddress(
-                    nblocks=25 if i != 7 else 24,
-                    address=gen_addresses[i % len(gen_addresses)],
-                )
+                    nblocks=8 if i != 24 else 7,
+                    address=gen_addresses[i % len(gen_addresses)])
 
             assert_equal(cache_node.getblockchaininfo()["blocks"], 199)
 

@@ -75,6 +75,8 @@ public:
         //    LogPrintf("GetStakeEntropyBit: hashBlock=%s nEntropyBit=%u\n", GetHash().ToString().c_str(), nEntropyBit);
         return nEntropyBit;
     }
+
+    std::string ToString() const;
 };
 
 

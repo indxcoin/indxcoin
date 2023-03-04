@@ -4221,7 +4221,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     if (block.IsProofOfStake() && (block.vtx.empty() || !block.vtx[1]->IsCoinStake()))
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cs-missing", "second tx is not coinstake");
 
-    // Only the second transaction can be the optional coinstake
+    // Only the second transaction can be the coinstake
     for (unsigned int i = 2; i < block.vtx.size(); i++)
         if (block.IsProofOfStake() && block.vtx[i]->IsCoinStake())
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cs-missing", "coinstake in wrong position");
@@ -4481,8 +4481,9 @@ bool VerifyHashTarget(CChainState* active_chainstate, BlockValidationState& stat
             fValid = true;
             if (!CheckProofOfStake(active_chainstate, state, pindexPrev, block.vtx[1], block.nBits, hashProof, block.nTime)) {
                 fValid = false;
-                if (gArgs.GetBoolArg("-debug", false) && gArgs.GetBoolArg("-printcoinstake", false)){
-                LogPrintf("WARNING: VerifyHashTarget(): check proof-of-stake failed for block %s\n", hash.ToString());
+                if (gArgs.GetBoolArg("-debug", false) ){
+                LogPrintf("%s: check proof-of-stake failed for block: %s state: %s \n",__func__, hash.ToString(), state.ToString());
+                LogPrintf("%s: check  block: %s \n",__func__, block.ToString());
                 }
             } 
             LogPrint(BCLog::POS, "%s : hashProof %s / nBits %08x \n", __func__, hashProof.ToString(), block.nBits);

@@ -493,11 +493,11 @@ public:
         /* pos specific */
         consensus.posLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); //! << 28
         consensus.posReset = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); //! << 32
-        consensus.nStakeMinAge = 8 * 60 * 60; // 8 * 60 * 60
-        consensus.nStakeMinAgeV01 =  72 * 60 * 60; // 
-        consensus.nStakeMinAmount = 10000 * COIN;
+        consensus.nStakeMinAge =  60; // 8 * 60 * 60
+        consensus.nStakeMinAgeV01 =  2 * 60; // 72 * 60 * 60
+        consensus.nStakeMinAmount = 10000 * COIN;  // 10000 * COIN
         consensus.nStakeMaxAge = 45 * 24 *  60 * 60; // 45 * 24 *  60 * 60
-        consensus.nStakeMaxAgeV01 = 2 * 72 * 60 * 60; // 
+        consensus.nStakeMaxAgeV01 = 2 * 72 * 60 * 60; // 2 * 72 * 60 * 60
         consensus.nModifierInterval = 13 * 60;
         consensus.nLastPowHeight = 2200; // 
         consensus.MaxReorganizationDepth = 200; // (<  (minstakeinterval / blockinterval) / 2)

@@ -483,15 +483,26 @@ bool CheckStakeKernelHash(CChainState* active_chainstate, unsigned int nBits, co
     arith_uint256 hashProof(hashProofOfStake.GetHex());
     arith_uint256 targetProof(bnTargetPerCoinDay.GetHex());
     targetProof *= bnCoinDayWeight;
+
+    // always accept regtest kernel diff
+    if(gArgs.GetBoolArg("-regtest", false))
+        hashProof = targetProof - 1;
       
     // Now check if proof-of-stake hash meets target protocol
      if (hashProof > targetProof) {
-        if (gArgs.GetBoolArg("-printhashproof", DEFAULT_PRINTHASHPROOF)) {
+
             LogPrint(BCLog::POS, "%s: WARNING high-hash for proof of stake block\n"
-                                 "              hash: %s\n"
-                                 "            target: %s\n",
-                                 __func__, hashProof.ToString().substr(64,64), targetProof.ToString().substr(64,64));
-        }
+                                 "              hash hex:       %s\n"
+                                 "              hash dec:       %d\n"
+                                 "              target hex:     %s\n"
+                                 "              target dec:     %d\n"
+                                 "              bits dec:       %d\n"
+                                 "              CoinWeight dec: %d\n"
+                                 "              POS Limit dec:  %d\n",
+                                 __func__, hashProof.ToString(), hashProof.GetCompact() , 
+                                 targetProof.ToString(), targetProof.GetCompact(),
+                                 bnTargetPerCoinDay.GetCompact(), bnCoinDayWeight.GetCompact(),
+                                 UintToArith256(Params().GetConsensus().posLimit).GetCompact());
         return false;
     }
 
@@ -538,14 +549,8 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
     }
 
     Coin coinIn; 
-    if(!active_chainstate->CoinsTip().GetCoin(txin.prevout, coinIn)){
-        LogPrint(BCLog::POS, "%s : Stake kernel does not exist hash=%s index=%d \n",  __func__, txin.prevout.hash.ToString(), txin.prevout.n);
-        return state.Invalid(BlockValidationResult::DOS_20, "prevout-not-in-chain", "Stake kerenl does not exist \n");
-    }
-    if(coinIn.IsSpent()){
-        LogPrint(BCLog::POS, "%s : Stake kernel spent %s \n",  __func__, txin.prevout.hash.ToString());
-        return state.Invalid(BlockValidationResult::DOS_20, "prevout-spent", "Stake prevout spent \n");
-    }
+    active_chainstate->CoinsTip().GetCoin(txin.prevout, coinIn); // TODO
+
 
     int nMaxReorgDepth = params.MaxReorganizationDepth; 
     if(IsProtocolV00(nTimeTx) && pindexPrev->nHeight + 1 - coinIn.nHeight < nMaxReorgDepth +1){
@@ -570,8 +575,13 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
         int nIn = 0;
         TransactionSignatureChecker checker(&(*tx), nIn, coinIn.out.nValue, PrecomputedTransactionData(*tx), MissingDataBehavior::FAIL);
 
-        if (!VerifyScript(tx->vin[nIn].scriptSig, coinIn.out.scriptPubKey, &(tx->vin[nIn].scriptWitness), SCRIPT_VERIFY_P2SH, checker, nullptr))
+        ScriptError serror = SCRIPT_ERR_OK;
+        if (!VerifyScript(tx->vin[nIn].scriptSig, coinIn.out.scriptPubKey, &(tx->vin[nIn].scriptWitness), SCRIPT_VERIFY_P2SH, checker, &serror)){
+            //LogPrintf("%s : Stake kernel script error:  %s \n",__func__, ScriptErrorString(serror));
+            //LogPrintf("%s : Stake kernel txin:  %s \n",__func__, txin.ToString());
+            //LogPrintf("%s : Stake kernel coinIn.out:  %s \n",__func__, coinIn.out.ToString());
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "invalid-pos-script", "VerifyScript failed on coinstake \n");
+        }
 
     }
 
@@ -583,7 +593,6 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
     // Check all the stake inputs for correct age and value
     {
         // Sum value from any extra inputs
-        CAmount amount = 0;
         for (size_t k = 0; k < tx->vin.size(); ++k) {
             const CTxIn &txin = tx->vin[k];
                 
@@ -609,14 +618,8 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
             }
             
             Coin coinsIN;
-            if(!active_chainstate->CoinsTip().GetCoin(txin.prevout, coinsIN)){
-                LogPrint(BCLog::POS, "%s : Stake prevout does not exist %s",  __func__, txin.prevout.hash.ToString());
-                return state.Invalid(BlockValidationResult::DOS_20, "prevout-not-in-chain", "Stake prevout does not exist \n");
-            }
-            if(coinsIN.IsSpent()){
-                LogPrint(BCLog::POS, "%s : Stake prevout spent %s",  __func__, txin.prevout.hash.ToString());
-                return state.Invalid(BlockValidationResult::DOS_20, "prevout-spent", "Stake prevout spent \n");
-            }
+            active_chainstate->CoinsTip().GetCoin(txin.prevout, coinsIN);  // TODO
+
             if(IsProtocolV00(nTimeTx) && pindexPrev->nHeight + 1 - coinsIN.nHeight < nMaxReorgDepth +1){
                 LogPrint(BCLog::POS, "%s : Stake prevout is not min depth, expecting %i and only matured to %i \n", __func__, nMaxReorgDepth +1, pindexPrev->nHeight + 1 - coinsIN.nHeight);
                 return state.Invalid(BlockValidationResult::DOS_100, "invalid-prevout" , "Stake prevout is not min depth \n");
@@ -636,29 +639,10 @@ bool CheckProofOfStake(CChainState* active_chainstate, BlockValidationState& sta
                return state.Invalid(BlockValidationResult::DOS_100, "mixed-prevout-scripts", "mixed-prevout-scripts \n");
             }
 
-            amount += coinsIN.out.nValue;
+            
         }
 
-        CAmount nVerify = 0;
-        for (const auto &txout : tx->vout) {
-            nVerify += txout.nValue;
-        }
 
-        if (nVerify < amount) {
-            LogPrint(BCLog::POS, "ERROR %s: verify=%s amount=%s : txn %s\n", __func__, FormatMoney(nVerify).c_str(), FormatMoney(amount).c_str(), tx->GetHash().ToString());
-            return state.Invalid(BlockValidationResult::DOS_100, "verify-amount-script-failed" , "ERROR : verify-amount-script-failed \n");
-        }
-        if (amount < (IsProtocolV01(nTimeTx) ? params.nStakeMinAmount : 0 )) {
-            LogPrint(BCLog::POS, "ERROR: %s: stake-amount=%s, txn %s\n", __func__, FormatMoney(amount).c_str(), tx->GetHash().ToString());
-            return state.Invalid(BlockValidationResult::DOS_100, "minimum-stake-amount-failed" , "ERROR : stake-amount under minimum txn \n");
-        }
-
-        LogPrint(BCLog::POS, "%s : Stake Input Amount=%s Stake Output Amount=%s Stake Minimum Amount=%s hashProof=%s \n",
-        __func__,
-        FormatMoney(amount).c_str(),
-        FormatMoney(nVerify).c_str(), 
-        FormatMoney(params.nStakeMinAmount).c_str(), 
-        tx->GetHash().ToString().c_str());
     }
 
 

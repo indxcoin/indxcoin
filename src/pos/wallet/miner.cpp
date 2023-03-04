@@ -141,12 +141,8 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
     try {
         bool fNeedToClear = false;
         while (!fStopMinerProc) {
-            if (ShutdownRequested()){
-                return;
-                }
-            if (!EnableStaking()){
-                return;
-                }
+            if (ShutdownRequested() || !EnableStaking()){ return; }
+
             while (pwallet->IsLocked() && !pwallet->IsStakingOnly()) {
                 if (strMintWarning != strMintMessage) {
                     strMintWarning = strMintMessage;
@@ -158,12 +154,14 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                     LogPrint(BCLog::STAKE, "%s: Wallet must be unlocked for staking sleeping for 60 \n", __func__);
                     //LogPrintf("%s: Wallet must be unlocked for staking sleeping for 60 \n", __func__);
                     condWaitFor(60);
+                    if (ShutdownRequested() || !EnableStaking()){ return; }
             }
        
             while (fReindex || fImporting || fBusyImporting) {
                     LogPrint(BCLog::STAKE, "%s: Block import/reindex. sleep 60 \n", __func__);
                     //LogPrintf("%s: Block import/reindex. sleep 60 \n", __func__);
                     condWaitFor(60);
+                    if (ShutdownRequested() || !EnableStaking()){ return; }
             }
 
             {
@@ -176,6 +174,7 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                     LogPrint(BCLog::STAKE, "%s: sleeping for 60 low balance \n",__func__ );
                     //LogPrintf("%s: sleeping for 60 low balance \n", __func__ ); 
                     condWaitFor(60);
+                    if (ShutdownRequested() || !EnableStaking()){ return; }
             }
 
 
@@ -185,6 +184,7 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                     LogPrint(BCLog::STAKE, "%s: sleeping for 60 syncing \n",__func__ );
                     //LogPrintf("%s: sleeping for 60 syncing \n", __func__ );  
                     condWaitFor(60);
+                    if (ShutdownRequested() || !EnableStaking()){ return; }
             }
 
             while (chainstate->m_chain.Tip()->nHeight < Params().GetConsensus().nLastPowHeight || GuessVerificationProgress(Params().TxData(), chainstate->m_chain.Tip()) < 0.996)
@@ -198,6 +198,7 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
                     LogPrint(BCLog::STAKE, "%s: Minter thread sleeps 60 while sync at %d\n",__func__, chainstate->m_chain.Tip()->nHeight );
                     //LogPrintf("%s: Minter thread sleeps 60 while sync at %d\n",__func__, chainstate->m_chain.Tip()->nHeight );
                     condWaitFor(60);
+                    if (ShutdownRequested() || !EnableStaking()){ return; }
             }
 
             
@@ -210,6 +211,7 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet, ChainstateManager* chainman, CCh
             
 
             if (nTipHeight < nBestHeader ){
+                if (ShutdownRequested() || !EnableStaking()){ return; }
                 //LogPrintf( "%s: Minter thread sleeps for 12 sec header = %d tip = %d \n",__func__, nBestHeader, nTipHeight );
                 LogPrint(BCLog::STAKE, "%s: Minter thread sleeps for 12 sec header = %d tip = %d \n",__func__, nBestHeader, nTipHeight );
                 condWaitFor(12);
