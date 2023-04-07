@@ -681,6 +681,10 @@ void BitcoinGUI::setWalletController(WalletController* wallet_controller)
 
     GUIUtil::ExceptionSafeConnect(wallet_controller, &WalletController::walletAdded, this, &BitcoinGUI::addWallet);
     connect(wallet_controller, &WalletController::walletRemoved, this, &BitcoinGUI::removeWallet);
+    connect(wallet_controller, &WalletController::destroyed, this, [this] {
+        // wallet_controller gets destroyed manually, but it leaves our member copy dangling
+        m_wallet_controller = nullptr;
+    });
 
     for (WalletModel* wallet_model : m_wallet_controller->getOpenWallets()) {
         addWallet(wallet_model);
@@ -694,7 +698,7 @@ WalletController* BitcoinGUI::getWalletController()
 
 void BitcoinGUI::addWallet(WalletModel* walletModel)
 {
-    if (!walletFrame) return;
+    if (!walletFrame || !m_wallet_controller) return;
 
     WalletView* wallet_view = new WalletView(platformStyle, walletFrame);
     if (!walletFrame->addWallet(walletModel, wallet_view)) return;
@@ -724,7 +728,7 @@ void BitcoinGUI::addWallet(WalletModel* walletModel)
 
 void BitcoinGUI::removeWallet(WalletModel* walletModel)
 {
-    if (!walletFrame) return;
+    if (!walletFrame || !m_wallet_controller) return;
 
     labelWalletHDStatusIcon->hide();
     lockWalletControl->hide();
