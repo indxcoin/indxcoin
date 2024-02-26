@@ -1,10 +1,10 @@
 Indxcoin Core integration/staging tree
 =====================================
 
-https://www.indxcoin.org/
+https://www.indxcoin.com/
 
 For an immediately usable, binary version of the Indxcoin Core software, see
-https://www.indxcoin.org/download/.
+[Latest Release](https://github.com/indxcoin/indxcoin/releases/tag/v11.22).
 
 Further information about Indxcoin Core is available in the [doc folder](/doc).
 
